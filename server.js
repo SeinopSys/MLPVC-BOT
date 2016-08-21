@@ -15,6 +15,11 @@ var Discord = require('discord.io'),
 		});
 	},
 	request = require('request'),
+	readline = require('readline'),
+	rl = readline.createInterface({
+		input: process.stdin,
+		output: process.stdout
+	}),
 	OurServer;
 
 bot.on('ready', ready);
@@ -25,30 +30,35 @@ function ready() {
 	bot.setPresence({ idle_since: null });
 	console.log('Logged in as '+bot.username);
 
-	var serverIDs = Object.keys(bot.servers);
-	if (serverIDs.length === 0){
-		var readline = require('readline'),
-			rl = readline.createInterface({
-				input: process.stdin,
-				output: process.stdout
-			});
-
-		console.log('Bot is not part of any server.'+(config.LOCAL?' To join the bot to a server, get your client ID from https://discordapp.com/developers/applications/me and enter it below.':''));
-
-		if (!config.LOCAL)
-			process.exit();
-
-		var openAuthPage = function(clientID, closerl){
-			var url = 'https://discordapp.com/oauth2/authorize?client_id='+(clientID.trim())+'&scope=bot&permissions=0';
-			console.log('Opening default browser to authorization URL ('+url+')');
-			var browser = require('opener')(url);
-			browser.unref();
-			browser.stdin.unref();
-			browser.stdout.unref();
-			browser.stderr.unref();
-			if (closerl === true)
+	var serverIDs = Object.keys(bot.servers),
+		getClientID = function(){
+			if (typeof config.CLIENT_ID !== 'undefined')
+				return config.CLIENT_ID;
+			else rl.question('Enter app Client ID (or ^C to exit): ', function(answer){
+				if (/\D/.test(answer))
+					return console.log('> ID must be numeric, try again (or ^C to exit): ');
 				rl.close();
-			rl.question('Press enter to re-run script (or ^C to exit)', function(){
+				return answer;
+			});
+		},
+		getAuthURL = function(){
+			return 'https://discordapp.com/oauth2/authorize?client_id='+getClientID()+'&scope=bot&permissions=0';
+		};
+	if (serverIDs.length === 0){
+		console.log('Bot is not part of any server. To join the bot to a server, get your client ID from https://discordapp.com/developers/applications/me and enter it below.');
+
+		var openAuthPage = function(clientID){
+			var url = getAuthURL();
+			if (config.LOCAL){
+				console.log('Opening default browser to authorization URL ('+url+')');
+				var browser = require('opener')(url);
+				browser.unref();
+				browser.stdin.unref();
+				browser.stdout.unref();
+				browser.stderr.unref();
+			}
+			else console.log('Open '+url+' in your favourite browser to continue.');
+			rl.question('When you\'re done, press enter to re-run script (or ^C to exit)', function(){
 				console.log('Reconnecting...\n');
 				bot.disconnect();
 				bot.connect();
@@ -56,13 +66,7 @@ function ready() {
 			});
 		};
 
-		if (typeof config.CLIENT_ID !== 'undefined')
-			openAuthPage(config.CLIENT_ID);
-		else rl.question('Enter app Client ID (or ^C to exit): ', function(answer){
-			if (/\D/.test(answer))
-				return console.log('> ID must be numeric, try again (or ^C to exit): ');
-			openAuthPage(answer, true);
-		});
+		openAuthPage();
 		return;
 	}
 
@@ -73,8 +77,7 @@ function ready() {
 			var id = serverIDs[i];
 			console.log('    '+id+' '+'('+bot.servers[id].name+')');
 		}
-		console.log('\nSet one of the IDs above as the SERVER_ID configuration option.');
-		process.exit();
+		console.log('\nSet one of the IDs above as the SERVER_ID configuration option.\nTo join the bot to another server, visit '+getAuthURL());
 		process.exit();
 	}
 	console.log('Found Our server!');
