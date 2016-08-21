@@ -16,15 +16,20 @@ var Discord = require('discord.io'),
 	},
 	request = require('request'),
 	readline = require('readline'),
-	rl = readline.createInterface({
-		input: process.stdin,
-		output: process.stdout
-	}),
+	rl,
+	getRl = function(){
+		if (typeof rl === 'undefined')
+			rl = readline.createInterface({
+				input: process.stdin,
+				output: process.stdout
+			});
+		return rl;
+	},
 	OurServer;
 
 bot.on('ready', ready);
 
-function ready() {
+function ready(){
 	var i;
 
 	bot.setPresence({ idle_since: null });
@@ -34,7 +39,7 @@ function ready() {
 		getClientID = function(){
 			if (typeof config.CLIENT_ID !== 'undefined')
 				return config.CLIENT_ID;
-			else rl.question('Enter app Client ID (or ^C to exit): ', function(answer){
+			else getRl().question('Enter app Client ID (or ^C to exit): ', function(answer){
 				if (/\D/.test(answer))
 					return console.log('> ID must be numeric, try again (or ^C to exit): ');
 				rl.close();
@@ -58,7 +63,7 @@ function ready() {
 				browser.stderr.unref();
 			}
 			else console.log('Open '+url+' in your favourite browser to continue.');
-			rl.question('When you\'re done, press enter to re-run script (or ^C to exit)', function(){
+			getRl().question('When you\'re done, press enter to re-run script (or ^C to exit)', function(){
 				console.log('Reconnecting...\n');
 				bot.disconnect();
 				bot.connect();
@@ -80,7 +85,7 @@ function ready() {
 		console.log('\nSet one of the IDs above as the SERVER_ID configuration option.\nTo join the bot to another server, visit '+getAuthURL());
 		process.exit();
 	}
-	console.log('Found Our server!');
+	console.log('Found Our server ('+OurServer.name+')');
 
 	var OurRoleIDs = {},
 		OurChannelIDs = {},
@@ -297,6 +302,9 @@ function ready() {
 	}
 
 	function onMessage(_, userID, channelID, message, event) {
+		if (typeof OurServer.channels[event.d.channel_id] === 'undefined')
+			return;
+
 		var args = [].slice.call(arguments,1);
 		if (/^!/.test(message))
 			return ProcessCommand.apply(this, args);
