@@ -1,0 +1,17 @@
+{
+  "name": "MLPVC-BOT",
+  "version": "1.0.0",
+  "description": "Discord bot for MLPVC-RR",
+  "dependencies": {
+    "chalk": "^1.1.3",
+    "discord.io": "^2.0.1",
+    "opener": "^1.4.1",
+    "request": "^2.74.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ponydevs/MLPVC-BOT"
+  },
+  "author": "SeinopSys <seinopsys@gmail.com> (https://github.com/SeinopSys)",
+  "private": true
+}
