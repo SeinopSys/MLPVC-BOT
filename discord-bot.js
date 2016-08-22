@@ -208,6 +208,7 @@ function ready(){
 				if (!args.length)
 					return respond(channelID, replyTo(userID, 'This command can be used to quickly link to an appearance using the site\'s  "I\'m feeling lucky" search'));
 				var query = args.join(' ');
+				bot.simulateTyping(channelID);
 				request.get('https://mlpvc-rr.ml/cg/1?js=true&q='+encodeURIComponent(query)+'&GOFAST=true', function(error, res, body){
 					if (error || typeof body !== 'string'){
 						console.log(error, body);
@@ -284,6 +285,11 @@ function ready(){
 					break;
 				}
 			break;
+			default:
+				bot.sendMessage({
+					to: channelID,
+					message: replyTo(userID, 'Command !'+command+' not found'),
+				});
 		}
 	}
 
