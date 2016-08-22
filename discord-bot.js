@@ -185,6 +185,19 @@ function ready(){
 				}
 				respond(channelID, replyTo(userID, "Channels on this server:\n```"+ids.join('\n')+'```'));
 			break;
+			case "editme":
+				bot.editMessage({
+					channelID: channelID,
+					messageID: event.d.id,
+					message: 'This message was edited by the chat bot.',
+				},function(err){
+					var response = 'Edit attempt';
+
+					response = addErrorMessageToResponse(err, response);
+
+					respond(channelID, replyTo(userID, response));
+				});
+			break;
 			case "myid":
 				if (!hasOwner){
 					if (myIDran)
