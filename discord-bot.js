@@ -25,6 +25,7 @@ var Discord = require('discord.io'),
 			});
 		return rl;
 	},
+	moment = require('moment'),
 	OurServer;
 
 bot.on('ready', ready);
@@ -210,6 +211,27 @@ function ready(){
 				respond(channelID, replyTo(userID, 'Your user ID was sent to you in a private message'));
 				respond(userID, 'Your user ID is `'+userID+'`');
 			break;
+			case "ver":
+				bot.simulateTyping(channelID);
+
+				var exec = require('child_process').exec;
+				exec('git rev-parse --short=4 HEAD', function(_, version) {
+					if (_){
+						console.log('Error getting version', _);
+						return respond(channelID, replyTo(userID, 'Error while getting version number'+(hasOwner?' (<@'+config.OWNER_ID+'> Logs may contain more info)':'')));
+					}
+					exec('git log -1 --date=short --pretty=format:%ci', function(_, ts) {
+						if (_){
+							console.log('Error getting creation time', _);
+							return respond(channelID, replyTo(userID, 'Error while getting creation time'+(hasOwner?' (<@'+config.OWNER_ID+'> Logs may contain more info)':'')));
+						}
+
+						var ver = version.trim();
+						respond(channelID, replyTo(userID, 'Bot is running version `'+ver+'` created '+(moment(ts).fromNow())+'\nView commit on GitHub: http://github.com/ponydevs/MLPVC-BOT/commit/'+ver));
+					});
+				});
+
+			break;
 			case "casual":
 				var url = config.OFFTOCASUAL_URL;
 				if (!isNaN(args[0]))
@@ -232,7 +254,7 @@ function ready(){
 					if (!data.status)
 						return respond(channelID, replyTo(userID, data.message));
 
-					wipeMessage(channelID, event.d.id, 'https://mlpvc-rr.ml'+data.goto);
+					respond(channelID, replyTo(userID, 'https://mlpvc-rr.ml'+data.goto));
 				});
 			break;
 			case "nsfw":
