@@ -165,7 +165,7 @@ function ready(){
 		});
 	}
 
-	function CallCommand(userID, channelID, message, event, command, argStr, args){
+	function CallCommand(userID, channelID, message, event, userIdent, command, argStr, args){
 		switch (command){
 			case "channels":
 				if (!isOwner(userID))
@@ -383,7 +383,7 @@ function ready(){
 			argStr = commandMatch[2] ? commandMatch[2].trim() : '',
 			args = argStr ? argStr.split(/\s+/) : [];
 
-		CallCommand(userID, channelID, message, event, command, argStr, args);
+		CallCommand(userID, channelID, message, event, userIdent, command, argStr, args);
 	}
 
 	function ProfanityFilter(userID, channelID, message, event){
