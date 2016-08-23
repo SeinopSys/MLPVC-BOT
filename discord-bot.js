@@ -387,7 +387,7 @@ function ready(){
 	}
 
 	function ProfanityFilter(userID, channelID, message, event){
-		if (userID === bot.id)
+		if (userID === bot.id || isStaff(userID))
 			return;
 
 		var matching = /\b(f+[u4a]+[Ссc]+k+(?:tard|[1i]ng)?|[Ссc]un[7t]|a[5$s]{2,}(?:h[0o]+l[3e]+)|(?:d[1i]+|[Ссc][0o])[Ссc]k(?:h[3e][4a]*d)?|b[1ie3a4]+t[Ссc]h)\b/ig,
