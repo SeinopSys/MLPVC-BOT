@@ -165,20 +165,7 @@ function ready(){
 		});
 	}
 
-	function ProcessCommand(userID, channelID, message, event){
-		var commandRegex = /^!(\w+)(?:\s+([ -~]+)?)?$/,
-			user = bot.users[userID],
-			userIdent = user.username+'#'+user.discriminator;
-		console.log(userIdent+' ran '+message);
-		if (!commandRegex.test(message))
-			bot.sendMessage({
-				to: channelID,
-				message: replyTo(userID, 'Invalid command: '+(message.replace(/^(!\S+).*/,''))),
-			});
-		var commandMatch = message.match(commandRegex),
-			command = commandMatch[1],
-			args = commandMatch[2] ? commandMatch[2].split(/\s+/) : [];
-
+	function CallCommand(userID, channelID, message, event, command, argStr, args){
 		switch (command){
 			case "channels":
 				if (!isOwner(userID))
@@ -262,12 +249,12 @@ function ready(){
 			case "cg":
 				if (!args.length)
 					return respond(channelID, replyTo(userID, 'This command can be used to quickly link to an appearance using the site\'s  "I\'m feeling lucky" search'));
-				var query = args.join(' ');
+
 				bot.simulateTyping(channelID);
-				request.get('https://mlpvc-rr.ml/cg/1?js=true&q='+encodeURIComponent(query)+'&GOFAST=true', function(error, res, body){
+				request.get('https://mlpvc-rr.ml/cg/1?js=true&q='+encodeURIComponent(argStr)+'&GOFAST=true', function(error, res, body){
 					if (error || typeof body !== 'string'){
 						console.log(error, body);
-						return respond(channelID, replyTo(userID, 'Search failed. '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' can see what caused the issue in the logs.'));
+						return respond(channelID, replyTo(userID, 'Color Guide search failed (HTTP '+res.statusCode+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
 					}
 
 					var data = JSON.parse(body);
@@ -275,6 +262,34 @@ function ready(){
 						return respond(channelID, replyTo(userID, data.message));
 
 					respond(channelID, replyTo(userID, 'https://mlpvc-rr.ml'+data.goto));
+				});
+			break;
+			case "kym":
+				command = 'google';
+				argStr = 'kym '+argStr;
+				args.splice(0,0,['kym']);
+
+				return CallCommand(userID, channelID, message, event, command, argStr, args);
+			case "google":
+				if (!args.length)
+					return respond(channelID, replyTo(userID, 'This command can be used ot perform an "I\'m feeling lucky" Google search and return the first result.'));
+				bot.simulateTyping(channelID);
+				var searchUrl = 'https://google.com/search?q='+encodeURIComponent(argStr);
+				request.head(searchUrl+'&btnI', {followRedirect:function(res){
+					if (typeof res.headers.location !== 'string')
+						return true;
+
+					return /(www\.)google\.((co\.)?[a-z]+)/.test(require('url').parse(res.headers.location).host);
+				}}, function(error, res, body){
+					if (error || typeof body !== 'string' || [302, 200].indexOf(res.statusCode) === -1){
+						console.log(error, body);
+						return respond(channelID, replyTo(userID, 'Google search failed (HTTP '+res.statusCode+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+					}
+
+					if (typeof res.headers.location === 'string')
+						return respond(channelID, replyTo(userID, res.headers.location));
+
+					respond(channelID, replyTo(userID, 'No obvious first result. Link to search page: '+searchUrl));
 				});
 			break;
 			case "nsfw":
@@ -342,12 +357,33 @@ function ready(){
 			break;
 			default:
 				var isProfanity = ProfanityFilter(userID, channelID, message, event);
-				if (!isProfanity)
+				if (!isProfanity){
+					var notfound = 'Command !'+command+' not found';
+					console.log(notfound);
 					bot.sendMessage({
 						to: channelID,
-						message: replyTo(userID, 'Command !'+command+' not found'),
+						message: replyTo(userID, notfound),
 					});
+				}
 		}
+	}
+
+	function ProcessCommand(userID, channelID, message, event){
+		var commandRegex = /^!(\w+)(?:\s+([ -~]+)?)?$/,
+			user = bot.users[userID],
+			userIdent = user.username+'#'+user.discriminator;
+		console.log(userIdent+' ran '+message);
+		if (!commandRegex.test(message))
+			bot.sendMessage({
+				to: channelID,
+				message: replyTo(userID, 'Invalid command: '+(message.replace(/^(!\S+).*/,''))),
+			});
+		var commandMatch = message.match(commandRegex),
+			command = commandMatch[1],
+			argStr = commandMatch[2] ? commandMatch[2].trim() : '',
+			args = argStr ? argStr.split(/\s+/) : [];
+
+		CallCommand(userID, channelID, message, event, command, argStr, args);
 	}
 
 	function ProfanityFilter(userID, channelID, message, event){
