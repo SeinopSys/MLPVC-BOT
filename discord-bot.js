@@ -318,13 +318,15 @@ function ready(){
 			break;
 			case "derpi":
 				if (!args.length)
-					return respond(channelID, replyTo(userID, 'This command can be used to return the first result of a Derpibooru search.\n**Note:** Any rooms aside from #nsfw will only show results with the `safe` tag'));
+					return respond(channelID, replyTo(userID, 'This command can be used to return the first result of a Derpibooru search.\n**Note:** Any rooms aside from #nsfw will only show results accessible by the site\'s default filter'));
 
 				bot.simulateTyping(channelID);
-				var query = argStr;
-				if (channelID !== OurChannelIDs.nsfw)
-					query = '('+query+') && safe';
-				request.get('https://derpibooru.org/search.json?q='+encodeURIComponent(query), function(error, res, body){
+				var query = argStr,
+					filter = '',
+					inNSFW = channelID === OurChannelIDs.nsfw;
+				if (inNSFW)
+					filter = '&filter_id=56027';
+				request.get('https://derpibooru.org/search.json?q='+encodeURIComponent(query)+filter, function(error, res, body){
 					if (error || typeof body !== 'string'){
 						console.log(error, body);
 						return respond(channelID, replyTo(userID, 'Derpibooru search failed (HTTP '+res.statusCode+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
@@ -332,7 +334,10 @@ function ready(){
 
 					var data = JSON.parse(body);
 					if (typeof data.search === 'undefined' || typeof data.search[0] === 'undefined')
-						return respond(channelID, replyTo(userID, 'Derpibooru search returned no results.'));
+						return respond(channelID, replyTo(userID, 'Derpibooru search returned no results.'+(
+							/(explicit|questionable|suggestive)/.test(query) && !inNSFW ?
+							' Searching for system tags other than `safe` is likely to produce no results outside the <#'+OurChannelIDs.nsfw+'> channel.' :''
+						)));
 
 					var image = data.search[0];
 					if (!image.is_rendered){
