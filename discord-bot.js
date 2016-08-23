@@ -26,7 +26,11 @@ var Discord = require('discord.io'),
 		return rl;
 	},
 	moment = require('moment'),
+	YouTube = require('youtube-node'),
+	yt = new YouTube(),
 	OurServer;
+
+yt.setKey(config.YT_API_KEY);
 
 require("console-stamp")(console, {
 	formatter: function(){
@@ -272,7 +276,7 @@ function ready(){
 				return CallCommand(userID, channelID, message, event, command, argStr, args);
 			case "google":
 				if (!args.length)
-					return respond(channelID, replyTo(userID, 'This command can be used ot perform an "I\'m feeling lucky" Google search and return the first result.'));
+					return respond(channelID, replyTo(userID, 'This command can be used to perform an "I\'m feeling lucky" Google search and return the first result.'));
 				bot.simulateTyping(channelID);
 				var searchUrl = 'https://google.com/search?q='+encodeURIComponent(argStr);
 				request.head(searchUrl+'&btnI', {followRedirect:function(res){
@@ -290,6 +294,23 @@ function ready(){
 						return respond(channelID, replyTo(userID, res.headers.location));
 
 					respond(channelID, replyTo(userID, 'No obvious first result. Link to search page: '+searchUrl));
+				});
+			break;
+			case "youtube":
+			case "yt":
+				if (!args.length)
+					return respond(channelID, replyTo(userID, 'This command can be used to return the first result of a YouTube search'));
+				bot.simulateTyping(channelID);
+				yt.addParam('type', 'video');
+				yt.addParam('regionCode', 'US');
+				yt.addParam('relevanceLanguage', 'en');
+				yt.search(argStr, 1, function(error, result) {
+					if (error || typeof result.items === 'undefined' || typeof result.items[0] === 'undefined' || typeof result.items[0].id.videoId === 'undefined'){
+						console.log(error, result.items);
+						return respond(channelID, replyTo(userID, 'YouTube search failed. '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+					}
+
+					respond(channelID, replyTo(userID, 'https://youtube.com/watch?v='+result.items[0].id.videoId));
 				});
 			break;
 			case "nsfw":

@@ -4,5 +4,6 @@ module.exports = {
 	SERVER_ID: '',
 	OWNER_ID: '',
 	STAFFROLE_NAME: '',
+	YT_API_KEY: '',
 	LOCAL: true,
 };
