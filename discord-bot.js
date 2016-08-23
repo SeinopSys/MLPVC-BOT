@@ -318,15 +318,37 @@ function ready(){
 			break;
 			case "derpi":
 				if (!args.length)
-					return respond(channelID, replyTo(userID, 'This command can be used to return the first result of a Derpibooru search.\n**Note:** Any rooms aside from #nsfw will only show results accessible by the site\'s default filter'));
+					return respond(channelID, replyTo(userID,
+						'This command can be used to return the first result of a Derpibooru search.\n'+
+						'**Note:** Any rooms aside from <#'+OurChannelIDs.nsfw+'> will only show results accessible by the site\'s default filter\n\n'+
+						'__**Bot-secific search keywords:**__\n\n'+
+						' ● `o:<desc|asc>` - Order of the results (if ommited, defaults to `desc`)\n'+
+						' ● `by:<score|relevance|width|height|comments|random>` - Same as "Sort by" on the actual site\n\n'+
+						'*Examples:* `/derpi safe,o:asc`, `/derpi safe,rd o:asc`, `/derpi ts by:random`'
+					));
 
 				bot.simulateTyping(channelID);
 				var query = argStr,
-					filter = '',
-					inNSFW = channelID === OurChannelIDs.nsfw;
+					extra = '',
+					inNSFW = channelID === OurChannelIDs.nsfw,
+					orderTest = /\bo:(desc|asc)\b/i,
+					sortbyTest = /\bby:(score|relevance|width|height|comments|random)\b/i;
 				if (inNSFW)
-					filter = '&filter_id=56027';
-				request.get('https://derpibooru.org/search.json?q='+encodeURIComponent(query)+filter, function(error, res, body){
+					extra += '&filter_id=56027';
+				if (orderTest.test(query)){
+					var order = query.match(orderTest);
+					query = query.replace(orderTest, '');
+					extra += '&sd='+order[1];
+				}
+				if (sortbyTest.test(query)){
+					var sortby = query.match(sortbyTest);
+					query = query.replace(sortbyTest, '');
+					extra += '&sf='+sortby[1];
+				}
+				query = query.replace(/,{2,}/g,',').replace(/(^,|,$)/,'');
+				var url = 'https://derpibooru.org/search.json?q='+encodeURIComponent(query)+extra;
+				console.log('Derpi search for '+chalk.blue(url));
+				request.get(url, function(error, res, body){
 					if (error || typeof body !== 'string'){
 						console.log(error, body);
 						return respond(channelID, replyTo(userID, 'Derpibooru search failed (HTTP '+res.statusCode+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
