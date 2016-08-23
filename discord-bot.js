@@ -406,7 +406,10 @@ function ready(){
 			return false;
 		}
 
-		wipeMessage(channelID, event.d.id, 'Please avoid using swear words.', userID);
+		wipeMessage(channelID, event.d.id, function(msg){
+			msg = 'Please avoid using swear words.\nYour message (shown below) in <#'+channelID+'> contained inapproperiate language and it was promptly removed.'+msg+'\n\n**Original message:**\n'+(message.replace(matching,'__*$1*__'));
+			respond(userID, msg);
+		});
 		return true;
 	}
 
