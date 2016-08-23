@@ -210,7 +210,7 @@ function ready(){
 			},
 			{
 				name: 'youtube',
-				desc: 'Search entries of Know Your Meme, a popular wiki of Internet memes',
+				desc: 'Search for YouTube videos - results are based on US region & English language',
 				perm: everyone,
 				aliases: ['yt'],
 			},
