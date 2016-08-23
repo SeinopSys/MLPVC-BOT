@@ -305,10 +305,13 @@ function ready(){
 				yt.addParam('regionCode', 'US');
 				yt.addParam('relevanceLanguage', 'en');
 				yt.search(argStr, 1, function(error, result) {
-					if (error || typeof result.items === 'undefined' || typeof result.items[0] === 'undefined' || typeof result.items[0].id.videoId === 'undefined'){
+					if (error || typeof result.items === 'undefined'){
 						console.log(error, result.items);
 						return respond(channelID, replyTo(userID, 'YouTube search failed. '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
 					}
+
+					if (typeof result.items[0] === 'undefined' || typeof result.items[0].id.videoId === 'undefined')
+						return respond(channelID, replyTo(userID, 'Search returned no results.'));
 
 					respond(channelID, replyTo(userID, 'https://youtube.com/watch?v='+result.items[0].id.videoId));
 				});
