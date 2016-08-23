@@ -311,9 +311,40 @@ function ready(){
 					}
 
 					if (typeof result.items[0] === 'undefined' || typeof result.items[0].id.videoId === 'undefined')
-						return respond(channelID, replyTo(userID, 'Search returned no results.'));
+						return respond(channelID, replyTo(userID, 'YouTube search returned no results.'));
 
 					respond(channelID, replyTo(userID, 'https://youtube.com/watch?v='+result.items[0].id.videoId));
+				});
+			break;
+			case "derpi":
+				if (!args.length)
+					return respond(channelID, replyTo(userID, 'This command can be used to return the first result of a Derpibooru search.\n**Note:** Any rooms aside from #nsfw will only show results with the `safe` tag'));
+
+				bot.simulateTyping(channelID);
+				var query = argStr;
+				if (channelID !== OurChannelIDs.nsfw)
+					query = '('+query+') && safe';
+				request.get('https://derpibooru.org/search.json?q='+encodeURIComponent(query), function(error, res, body){
+					if (error || typeof body !== 'string'){
+						console.log(error, body);
+						return respond(channelID, replyTo(userID, 'Derpibooru search failed (HTTP '+res.statusCode+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+					}
+
+					var data = JSON.parse(body);
+					if (typeof data.search === 'undefined' || typeof data.search[0] === 'undefined')
+						return respond(channelID, replyTo(userID, 'Derpibooru search returned no results.'));
+
+					var image = data.search[0];
+					if (!image.is_rendered){
+						var tries = typeof this.tries === 'undefined' ? 1 : this.tries;
+						if (tries > 2)
+							return respond(channelID, replyTo(userID, 'The requested image is not yet processed by Derpibooru, please try again in a bit'));
+						return setTimeout(function(){
+							CallCommand.call({ tries: tries+1}, userID, channelID, message, event, userIdent, command, argStr, args);
+						}, 1000);
+					}
+
+					respond(channelID, replyTo(userID, 'http://derpibooru.org/'+image.id+'\nhttps:'+image.image));
 				});
 			break;
 			case "nsfw":
