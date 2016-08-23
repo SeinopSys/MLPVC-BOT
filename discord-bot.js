@@ -129,7 +129,7 @@ function ready(){
 		},
 		hasOwner = typeof config.OWNER_ID === 'string' && config.OWNER_ID.length,
 		myIDran = false,
-		limitedFunc = ', functionality is limited.\nUse the !myid command to get your ID';
+		limitedFunc = ', functionality is limited.\nUse the /myid command to get your ID';
 
 	if (!hasOwner)
 		console.log('Bot has no owner'+limitedFunc);
@@ -317,7 +317,7 @@ function ready(){
 				if (typeof OurServer.channels[channelID] !== 'undefined' && OurServer.channels[channelID].name === 'nsfw' && args[0] !== 'leave')
 					return;
 				if (!args.length)
-					return wipeMessage(channelID, event.d.id, ('Please avoid discussing anything NSFW in <#'+channelID+'>. We have a dedicated invite-only NSFW channel, send `!nsfw join` to join. http://i.imgur.com/jaNBZ09.gif').trim());
+					return wipeMessage(channelID, event.d.id, ('Please avoid discussing anything NSFW in <#'+channelID+'>. We have a dedicated invite-only NSFW channel, send `/nsfw join` to join. http://i.imgur.com/jaNBZ09.gif').trim());
 
 				switch (args[0]){
 					case "join":
@@ -325,7 +325,7 @@ function ready(){
 							if (OurServer.members[userID].roles.indexOf(staffRoleID) !== -1)
 								return respond(userID, 'Because you have the Staff role you will see the <#'+OurChannelIDs.nsfw+'> channel no matter what.\nIf you don\'t wand to be notified of new messages, right-click the channel and click `Mute #nsfw`');
 							else if (OurServer.members[userID].roles.indexOf(OurRoleIDs['Pony Sauce']) !== -1)
-								return respond(userID, 'You are already a member of the #nsfw channel. To leave, send `!nsfw leave` in any channel.\n(**Notice:** Messages sent in PMs are ignored!)');
+								return respond(userID, 'You are already a member of the #nsfw channel. To leave, send `/nsfw leave` in any channel.\n(**Notice:** Messages sent in PMs are ignored!)');
 
 							bot.addToRole({
 								serverID: OurServer.id,
@@ -344,7 +344,7 @@ function ready(){
 
 								OurServer.members[userID].roles.push(OurRoleIDs['Pony Sauce']);
 
-								respond(OurChannelIDs.nsfw, replyTo(userID, 'Welcome aboard. If at any point you wish to leave the channel, use `!nsfw leave`'));
+								respond(OurChannelIDs.nsfw, replyTo(userID, 'Welcome aboard. If at any point you wish to leave the channel, use `/nsfw leave`'));
 							});
 						});
 					break;
@@ -353,7 +353,7 @@ function ready(){
 							if (OurServer.members[userID].roles.indexOf(staffRoleID) !== -1)
 								return respond(userID, 'Because you have the Staff role you will see the <#'+OurChannelIDs.nsfw+'> channel no matter what.\nIf you don\'t wand to be notified of new messages, right-click the channel and click `Mute #nsfw`');
 							else if (OurServer.members[userID].roles.indexOf(OurRoleIDs['Pony Sauce']) === -1)
-								return respond(userID, 'You are not a member of the #nsfw channel. To join, send `!nsfw join` in any channel.\n(**Notice:** Messages sent in PMs are ignored!)');
+								return respond(userID, 'You are not a member of the #nsfw channel. To join, send `/nsfw join` in any channel.\n(**Notice:** Messages sent in PMs are ignored!)');
 
 							bot.removeFromRole({
 								serverID: OurServer.id,
@@ -379,7 +379,7 @@ function ready(){
 			default:
 				var isProfanity = ProfanityFilter(userID, channelID, message, event);
 				if (!isProfanity){
-					var notfound = 'Command !'+command+' not found';
+					var notfound = 'Command /'+command+' not found';
 					console.log(notfound);
 					bot.sendMessage({
 						to: channelID,
@@ -390,14 +390,14 @@ function ready(){
 	}
 
 	function ProcessCommand(userID, channelID, message, event){
-		var commandRegex = /^!(\w+)(?:\s+([ -~]+)?)?$/,
+		var commandRegex = /^[!/](\w+)(?:\s+([ -~]+)?)?$/,
 			user = bot.users[userID],
 			userIdent = user.username+'#'+user.discriminator;
 		console.log(userIdent+' ran '+message);
 		if (!commandRegex.test(message))
 			bot.sendMessage({
 				to: channelID,
-				message: replyTo(userID, 'Invalid command: '+(message.replace(/^(!\S+).*/,''))),
+				message: replyTo(userID, 'Invalid command: '+(message.replace(/^([!/]\S+).*/,''))),
 			});
 		var commandMatch = message.match(commandRegex),
 			command = commandMatch[1],
@@ -439,7 +439,7 @@ function ready(){
 			return;
 
 		var args = [].slice.call(arguments,1);
-		if (/^!/.test(message))
+		if (/^[!/]/.test(message))
 			return ProcessCommand.apply(this, args);
 
 		ProfanityFilter.apply(this, args);
