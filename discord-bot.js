@@ -240,11 +240,24 @@ function ready(){
 
 			break;
 			case "casual":
-				var url = config.OFFTOCASUAL_URL;
-				if (!isNaN(args[0]))
-					url += '/'+parseInt(args[0], 10)+'.png';
-				else url += '?'+(Date.now().toString(36));
-				wipeMessage(channelID, event.d.id, 'Please continue this discussion in <#'+OurChannelIDs.casual+'>\n'+url);
+				var possible_images = [
+						'http://i.imgur.com/C7T0npq.png', // Original by DJDavid98
+						'http://i.imgur.com/RwnT8EX.png', // Coco & Rarity by Pirill
+						'http://i.imgur.com/qg9Y1LN.png', // Applebloom's new CM by Drakizora
+						'http://i.imgur.com/cxCzsB8.png', // Applebloom falling by Drakizora
+						'http://i.imgur.com/iUZe3O2.png', // CMs floating around Applebloom by Drakizora
+					],
+					image_count = possible_images.length,
+					data = args[0],
+					k;
+
+				if (!isNaN(data))
+					k = Math.max(0,Math.min(image_count-1,parseInt(data, 10)-1));
+				else {
+					k = moment().minutes() % image_count;
+				}
+
+				wipeMessage(channelID, event.d.id, 'Please continue this discussion in <#'+OurChannelIDs.casual+'>\n'+possible_images[k]);
 			break;
 			case "cg":
 				if (!args.length)
@@ -268,7 +281,7 @@ function ready(){
 				if (typeof OurServer.channels[channelID] !== 'undefined' && OurServer.channels[channelID].name === 'nsfw' && args[0] !== 'leave')
 					return;
 				if (!args.length)
-					return wipeMessage(channelID, event.d.id, ('Please avoid discussing anything NSFW in <#'+channelID+'>. We have a dedicated invite-only NSFW channel, send `!nsfw join` to join. '+config.SAUCY_URL).trim());
+					return wipeMessage(channelID, event.d.id, ('Please avoid discussing anything NSFW in <#'+channelID+'>. We have a dedicated invite-only NSFW channel, send `!nsfw join` to join. http://i.imgur.com/jaNBZ09.gif').trim());
 
 				switch (args[0]){
 					case "join":
