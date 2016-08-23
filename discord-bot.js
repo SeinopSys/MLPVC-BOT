@@ -158,6 +158,8 @@ function ready(){
 			messageID: messageID,
 		},function(err){
 			var callback = function(msg){
+				if (!msg)
+					return;
 				respond(channelID, userID ? replyTo(userID, msg) : msg);
 			};
 			if (typeof response === 'function'){
@@ -169,35 +171,88 @@ function ready(){
 		});
 	}
 
+	var everyone = function(){ return true },
+		commands = [
+			{
+				name: 'channels',
+				desc: 'Returns available channels on Our server (used for initial script setup)',
+				perm: isOwner,
+			},
+			{
+				name: 'myid',
+				desc: 'Returns your user ID (used for initial script setup)',
+				perm: isOwner,
+			},
+			{
+				name: 'ver',
+				desc: 'Returns the bot\'s version number & when that version was created',
+				perm: everyone,
+			},
+			{
+				name: 'casual',
+				desc: 'Politely asks everyone in the room to move to the <#'+OurChannelIDs.casual+'> channel (does nothing in #casual)',
+				perm: everyone,
+			},
+			{
+				name: 'cg',
+				desc: 'Can be used to search the Vector Club\'s official Color Guide',
+				perm: everyone,
+			},
+			{
+				name: 'google',
+				desc: 'Perform an "I\'m feeling lucky" google search and return the result',
+				perm: everyone,
+			},
+			{
+				name: 'kym',
+				desc: 'Search entries of Know Your Meme, a popular wiki of Internet memes',
+				perm: everyone,
+			},
+			{
+				name: 'youtube',
+				desc: 'Search entries of Know Your Meme, a popular wiki of Internet memes',
+				perm: everyone,
+				aliases: ['yt'],
+			},
+			{
+				name: 'derpi',
+				desc: 'Returns the first result of a Derpibooru search',
+				perm: everyone,
+			},
+			{
+				name: 'nsfw',
+				desc: 'Lets everyone know to keep saucy mesages out of regular rooms (does nothing in #nsfw)\n\tThe optional parameter allows any user to join/leave the NSFW channel at will',
+				perm: everyone,
+			},
+		];
+
 	function CallCommand(userID, channelID, message, event, userIdent, command, argStr, args){
+		var i,l;
 		switch (command){
-			case "channels":
+			case "help": (function(){
+				var msg = 'Here\'s a list of commands __you__ can run:\n\n';
+				for (i=0,l=commands.length; i<l; i++){
+					var cmd = commands[i];
+					if (cmd.perm(userID))
+						msg += ' ● `'+cmd.name+'`'+(cmd.desc?' - '+cmd.desc:'')+(cmd.aliases?' (Aliases: `'+(cmd.aliases.join('`, `'))+'`)':'')+'\n';
+				}
+				wipeMessage(channelID, event.d.id);
+				respond(userID, msg.trim()+'\nMost commands have an explanation which you can access by sending the command without any arguments.');
+			})(); break;
+			case "channels": (function(){
 				if (!isOwner(userID))
 					respond(channelID, replyTo(userID, 'You must be owner to use this command'));
 
 				var ids = [];
-				for (var i in OurServer.channels){
+				for (i in OurServer.channels){
 					if (OurServer.channels.hasOwnProperty(i)){
 						var channel = OurServer.channels[i];
 						ids.push(channel.id+' ('+(channel.type==='text'?'#':'')+channel.name+')');
 					}
 				}
 				respond(channelID, replyTo(userID, "Channels on this server:\n```"+ids.join('\n')+'```'));
-			break;
-			case "editme":
-				bot.editMessage({
-					channelID: channelID,
-					messageID: event.d.id,
-					message: 'This message was edited by the chat bot.',
-				},function(err){
-					var response = 'Edit attempt';
-
-					response = addErrorMessageToResponse(err, response);
-
-					respond(channelID, replyTo(userID, response));
-				});
-			break;
-			case "myid":
+			})(); break;
+			case "myid": (function(){
 				if (!hasOwner){
 					if (myIDran)
 						return respond(channelID, replyTo(userID, 'This command can only be executed once per server start-up until the owner\'s ID is set'));
@@ -208,8 +263,8 @@ function ready(){
 
 				respond(channelID, replyTo(userID, 'Your user ID was sent to you in a private message'));
 				respond(userID, 'Your user ID is `'+userID+'`');
-			break;
-			case "ver":
+			})(); break;
+			case "ver": (function(){
 				bot.simulateTyping(channelID);
 
 				var exec = require('child_process').exec;
@@ -228,9 +283,11 @@ function ready(){
 						respond(channelID, replyTo(userID, 'Bot is running version `'+ver+'` created '+(moment(ts).fromNow())+'\nView commit on GitHub: http://github.com/ponydevs/MLPVC-BOT/commit/'+ver));
 					});
 				});
+			})(); break;
+			case "casual": (function(){
+				if (channelID === OurChannelIDs.casual)
+					return wipeMessage(channelID, event.d.id);
 
-			break;
-			case "casual":
 				var possible_images = [
 						'http://i.imgur.com/C7T0npq.png', // Original by DJDavid98
 						'http://i.imgur.com/RwnT8EX.png', // Coco & Rarity by Pirill
@@ -249,8 +306,8 @@ function ready(){
 				}
 
 				wipeMessage(channelID, event.d.id, 'Please continue this discussion in <#'+OurChannelIDs.casual+'>\n'+possible_images[k]);
-			break;
-			case "cg":
+			})(); break;
+			case "cg": (function(){
 				if (!args.length)
 					return respond(channelID, replyTo(userID, 'This command can be used to quickly link to an appearance using the site\'s  "I\'m feeling lucky" search'));
 
@@ -267,14 +324,14 @@ function ready(){
 
 					respond(channelID, replyTo(userID, 'https://mlpvc-rr.ml'+data.goto));
 				});
-			break;
+			})(); break;
 			case "kym":
 				command = 'google';
 				argStr = 'kym '+argStr;
 				args.splice(0,0,['kym']);
 
 				return CallCommand(userID, channelID, message, event, command, argStr, args);
-			case "google":
+			case "google": (function(){
 				if (!args.length)
 					return respond(channelID, replyTo(userID, 'This command can be used to perform an "I\'m feeling lucky" Google search and return the first result.'));
 				bot.simulateTyping(channelID);
@@ -295,9 +352,9 @@ function ready(){
 
 					respond(channelID, replyTo(userID, 'No obvious first result. Link to search page: '+searchUrl));
 				});
-			break;
+			})(); break;
 			case "youtube":
-			case "yt":
+			case "yt": (function(){
 				if (!args.length)
 					return respond(channelID, replyTo(userID, 'This command can be used to return the first result of a YouTube search'));
 				bot.simulateTyping(channelID);
@@ -315,8 +372,8 @@ function ready(){
 
 					respond(channelID, replyTo(userID, 'https://youtube.com/watch?v='+result.items[0].id.videoId));
 				});
-			break;
-			case "derpi":
+			})(); break;
+			case "derpi": (function(){
 				if (!args.length)
 					return respond(channelID, replyTo(userID,
 						'This command can be used to return the first result of a Derpibooru search.\n'+
@@ -373,12 +430,12 @@ function ready(){
 
 					respond(channelID, replyTo(userID, 'http://derpibooru.org/'+image.id+'\nhttps:'+(image.image.replace(/__[^.]+(.\w+)$/,'$1'))));
 				});
-			break;
-			case "nsfw":
+			})(); break;
+			case "nsfw": (function(){
 				if (typeof OurServer.channels[channelID] !== 'undefined' && OurServer.channels[channelID].name === 'nsfw' && args[0] !== 'leave')
 					return;
 				if (!args.length)
-					return wipeMessage(channelID, event.d.id, ('Please avoid discussing anything NSFW in <#'+channelID+'>. We have a dedicated invite-only NSFW channel, send `/nsfw join` to join. http://i.imgur.com/jaNBZ09.gif').trim());
+					return wipeMessage(channelID, event.d.id, channelID === OurChannelIDs.nsfw ? null : 'Please avoid discussing anything NSFW in <#'+channelID+'>. We have a dedicated invite-only NSFW channel, send `/nsfw join` to join. http://i.imgur.com/jaNBZ09.gif');
 
 				switch (args[0]){
 					case "join":
@@ -436,7 +493,7 @@ function ready(){
 						});
 					break;
 				}
-			break;
+			})(); break;
 			default:
 				var isProfanity = ProfanityFilter(userID, channelID, message, event);
 				if (!isProfanity){
@@ -454,7 +511,7 @@ function ready(){
 		var commandRegex = /^[!/](\w+)(?:\s+([ -~]+)?)?$/,
 			user = bot.users[userID],
 			userIdent = user.username+'#'+user.discriminator;
-		console.log(userIdent+' ran '+message);
+		console.log(userIdent+' ran '+message+' from '+chalk.blue('#'+bot.channels[channelID].name));
 		if (!commandRegex.test(message))
 			bot.sendMessage({
 				to: channelID,
