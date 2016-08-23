@@ -28,6 +28,13 @@ var Discord = require('discord.io'),
 	moment = require('moment'),
 	OurServer;
 
+require("console-stamp")(console, {
+	formatter: function(){
+		return moment().format('YYYY-MM-DD HH:MM:ss.SSS');
+	},
+	label: false,
+});
+
 bot.on('ready', ready);
 
 function ready(){
@@ -321,25 +328,37 @@ function ready(){
 				}
 			break;
 			default:
-				bot.sendMessage({
-					to: channelID,
-					message: replyTo(userID, 'Command !'+command+' not found'),
-				});
+				var isProfanity = ProfanityFilter(userID, channelID, message, event);
+				if (!isProfanity)
+					bot.sendMessage({
+						to: channelID,
+						message: replyTo(userID, 'Command !'+command+' not found'),
+					});
 		}
 	}
 
 	function ProfanityFilter(userID, channelID, message, event){
-		var matching = /\b(f+[u4a]+[Ссc]+k+(?:tard|[1i]ng)?|[Ссc]un[7t]|a[5$s]{2,}(?:h[0o]+l[3e]+)|(?:d[1i]+|[Ссc][0o])[Ссc]k(?:h[3e][4a]*d)?|b[1ie3a4]+t[Ссc]h|sh[1ie]+t)\b/ig,
-			user = bot.users[userID];
-
-		if (!matching.test(message))
+		if (userID === bot.id)
 			return;
 
-		console.log(user.username+'#'+user.discriminator+' triggered profanity filter with message: '+(message.replace(matching,function(str){
+		var matching = /\b(f+[u4a]+[Ссc]+k+(?:tard|[1i]ng)?|[Ссc]un[7t]|a[5$s]{2,}(?:h[0o]+l[3e]+)|(?:d[1i]+|[Ссc][0o])[Ссc]k(?:h[3e][4a]*d)?|b[1ie3a4]+t[Ссc]h)\b/ig,
+			user = bot.users[userID],
+			ident = user.username+'#'+user.discriminator;
+
+		if (!matching.test(message))
+			return false;
+
+		console.log(ident+' triggered profanity filter in channel '+chalk.blue('#'+bot.channels[channelID].name)+' with message: '+(message.replace(matching,function(str){
 			return chalk.red(str);
 		})));
 
+		if (channelID === OurChannelIDs.nsfw){
+			console.log(ident+' wasn\'t warned because they cursed in the NSFW channel');
+			return false;
+		}
+
 		wipeMessage(channelID, event.d.id, 'Please avoid using swear words.', userID);
+		return true;
 	}
 
 	function onMessage(_, userID, channelID, message, event) {
