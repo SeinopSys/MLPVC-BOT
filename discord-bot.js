@@ -218,6 +218,7 @@ function ready(){
 				name: 'derpi',
 				desc: 'Returns the first result of a Derpibooru search',
 				perm: everyone,
+				aliases: ['db'],
 			},
 			{
 				name: 'nsfw',
@@ -373,6 +374,7 @@ function ready(){
 					respond(channelID, replyTo(userID, 'https://youtube.com/watch?v='+result.items[0].id.videoId));
 				});
 			})(); break;
+			case "db":
 			case "derpi": (function(){
 				if (!args.length)
 					return respond(channelID, replyTo(userID,
