@@ -229,7 +229,7 @@ function ready(){
 
 	function CallCommand(userID, channelID, message, event, userIdent, command, argStr, args){
 		var i,l;
-		switch (command){
+		switch (command.toLowerCase()){
 			case "help": (function(){
 				var msg = 'Here\'s a list of commands __you__ can run:\n\n';
 				for (i=0,l=commands.length; i<l; i++){
