@@ -450,10 +450,12 @@ function ready(){
 
 					var data = JSON.parse(body);
 					if (typeof data.search === 'undefined' || typeof data.search[0] === 'undefined')
-						return respond(channelID, replyTo(userID, 'Derpibooru search returned no results.'+(
-							/(explicit|questionable|suggestive)/.test(query) && !inNSFW ?
-							' Searching for system tags other than `safe` is likely to produce no results outside the <#'+OurChannelIDs.nsfw+'> channel.' :''
-						)));
+						return respond(channelID, replyTo(userID, 'Derpibooru search returned no results.'+
+							(
+								/(explicit|questionable|suggestive)/.test(query) && !inNSFW ?
+								' Searching for system tags other than `safe` is likely to produce no results outside the <#'+OurChannelIDs.nsfw+'> channel.' :''
+							)+' Don\'t forget that artist and OC tags need to be prefixed with `artist:` and `oc:` respectively.'
+						));
 
 					respondWithImage(data.search[0]);
 				});
