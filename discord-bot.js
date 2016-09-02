@@ -331,7 +331,7 @@ function ready(){
 				argStr = 'kym '+argStr;
 				args.splice(0,0,['kym']);
 
-				return CallCommand(userID, channelID, message, event, command, argStr, args);
+				return CallCommand(userID, channelID, message, event, userIdent, command, argStr, args);
 			case "google": (function(){
 				if (!args.length)
 					return respond(channelID, replyTo(userID, 'This command can be used to perform an "I\'m feeling lucky" Google search and return the first result.'));
@@ -387,22 +387,57 @@ function ready(){
 					));
 
 				bot.simulateTyping(channelID);
-				var query = argStr,
+				var query = argStr.trim(),
 					extra = '',
 					inNSFW = channelID === OurChannelIDs.nsfw,
 					orderTest = /\bo:(desc|asc)\b/i,
-					sortbyTest = /\bby:(score|relevance|width|height|comments|random)\b/i;
+					sortbyTest = /\bby:(score|relevance|width|height|comments|random)\b/i,
+					respondWithImage = function(image){
+						if (!image.is_rendered){
+							var tries = typeof this.tries === 'undefined' ? 1 : this.tries;
+							if (tries > 2)
+								return respond(channelID, replyTo(userID, 'The requested image is not yet processed by Derpibooru, please try again in a bit'));
+							return setTimeout(function(){
+								CallCommand.call({ tries: tries+1}, userID, channelID, message, event, userIdent, command, argStr, args);
+							}, 1000);
+						}
+
+						respond(channelID, replyTo(userID, 'http://derpibooru.org/'+image.id+'\nhttps:'+(image.image.replace(/__[^.]+(.\w+)$/,'$1'))));
+					};
 				if (inNSFW)
 					extra += '&filter_id=56027';
-				if (orderTest.test(query)){
-					var order = query.match(orderTest);
-					query = query.replace(orderTest, '');
-					extra += '&sd='+order[1];
-				}
 				if (sortbyTest.test(query)){
 					var sortby = query.match(sortbyTest);
-					query = query.replace(sortbyTest, '');
+					query = query.replace(sortbyTest, '').trim();
 					extra += '&sf='+sortby[1];
+					if (!query.length && sortby[1] === 'random'){
+						console.log('Derpi search for random image (without tags)');
+						return request.get('https://derpibooru.org/images/random.json',function(error, res, body){
+							if (error || typeof body !== 'string'){
+								console.log(error, body);
+								return respond(channelID, replyTo(userID, 'Derpibooru random image search failed (HTTP '+res.statusCode+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+							}
+
+							var data = JSON.parse(body);
+							if (typeof data.id === 'undefined')
+								return respond(channelID, replyTo(userID, 'Failed to get random Derpibooru image ID'));
+
+							request('https://derpibooru.org/images/'+data.id+'.json',function(error, res, body){
+								if (error || typeof body !== 'string'){
+									console.log(error, body);
+									return respond(channelID, replyTo(userID, 'Derpibooru random image data retrieval failed (HTTP '+res.statusCode+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+								}
+
+								respondWithImage(JSON.parse(body));
+							});
+						});
+					}
+				}
+
+				if (orderTest.test(query)){
+					var order = query.match(orderTest);
+					query = query.replace(orderTest, '').trim();
+					extra += '&sd='+order[1];
 				}
 				query = query.replace(/,{2,}/g,',').replace(/(^,|,$)/,'');
 				var url = 'https://derpibooru.org/search.json?q='+encodeURIComponent(query)+extra;
@@ -420,17 +455,7 @@ function ready(){
 							' Searching for system tags other than `safe` is likely to produce no results outside the <#'+OurChannelIDs.nsfw+'> channel.' :''
 						)));
 
-					var image = data.search[0];
-					if (!image.is_rendered){
-						var tries = typeof this.tries === 'undefined' ? 1 : this.tries;
-						if (tries > 2)
-							return respond(channelID, replyTo(userID, 'The requested image is not yet processed by Derpibooru, please try again in a bit'));
-						return setTimeout(function(){
-							CallCommand.call({ tries: tries+1}, userID, channelID, message, event, userIdent, command, argStr, args);
-						}, 1000);
-					}
-
-					respond(channelID, replyTo(userID, 'http://derpibooru.org/'+image.id+'\nhttps:'+(image.image.replace(/__[^.]+(.\w+)$/,'$1'))));
+					respondWithImage(data.search[0]);
 				});
 			})(); break;
 			case "nsfw": (function(){
