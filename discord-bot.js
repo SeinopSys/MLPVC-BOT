@@ -559,13 +559,13 @@ function ready(){
 				respond(userID, 'Restarting bot...');
 				idle();
 				exec = exec || require('child_process').exec;
-				exec('./start.sh',function(err){
-					if (err){
-						console.log(err);
-						respond(userID, 'Bot restart failed, check logs.');
-					}
+				exec('start.sh',function (error, stdout, stderr) {
+				    console.log('stdout: ' + stdout);
+				    console.log('stderr: ' + stderr);
+				    if (error !== null)
+				      return console.log('exec error: ' + error);
 
-					process.exit();
+				    process.exit();
 				});
 			break;
 			default:
