@@ -329,6 +329,7 @@ function ready(){
 			case "kym": (function(){
 				if (!args.length)
 					return respond(channelID, replyTo(userID, 'This command can be used to find the Know Your Meme entry for a meme.'));
+				bot.simulateTyping(channelID);
 				var apiurl = 'http://rkgk.api.searchify.com/v1/indexes/kym_production/instantlinks?query='+encodeURIComponent(argStr)+'&field=name&fetch=url&function=10&len=1';
 				request.get(apiurl, function(error, res, body){
 					if (error || typeof body !== 'string' || [302, 200].indexOf(res.statusCode) === -1){
