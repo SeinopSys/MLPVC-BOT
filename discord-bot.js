@@ -326,12 +326,31 @@ function ready(){
 					respond(channelID, replyTo(userID, 'https://mlpvc-rr.ml'+data.goto));
 				});
 			})(); break;
-			case "kym":
-				command = 'google';
-				argStr = 'kym '+argStr;
-				args.splice(0,0,['kym']);
+			case "kym": (function(){
+				if (!args.length)
+					return respond(channelID, replyTo(userID, 'This command can be used to find the Know Your Meme entry for a meme.'));
+				var apiurl = 'http://rkgk.api.searchify.com/v1/indexes/kym_production/instantlinks?query='+encodeURIComponent(argStr)+'&field=name&fetch=url&function=10&len=1';
+				request.get(apiurl, function(error, res, body){
+					if (error || typeof body !== 'string' || [302, 200].indexOf(res.statusCode) === -1){
+						console.log(error, body);
+						return respond(channelID, replyTo(userID, 'Know Your Meme search failed (HTTP '+res.statusCode+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+					}
 
-				return CallCommand(userID, channelID, message, event, userIdent, command, argStr, args);
+					var data;
+					try {
+						data = JSON.parse(body);
+					}
+					catch(e){
+						console.log('JSON body: '+body);
+						return respond(channelID, replyTo(userID, 'Know Your Meme search returned invalid data. '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+					}
+
+					if (!data.results.length || typeof data.results[0].url !== 'string')
+						return respond(channelID, replyTo(userID, 'Know Your Meme search returned no results.'));
+
+					respond(channelID, replyTo(userID, 'http://knowyourmeme.com'+data.results[0].url));
+				});
+			})(); break;
 			case "google": (function(){
 				if (!args.length)
 					return respond(channelID, replyTo(userID, 'This command can be used to perform an "I\'m feeling lucky" Google search and return the first result.'));
@@ -387,7 +406,7 @@ function ready(){
 					));
 
 				bot.simulateTyping(channelID);
-				var query = argStr.trim(),
+				var query = argStr,
 					extra = '',
 					inNSFW = channelID === OurChannelIDs.nsfw,
 					orderTest = /\bo:(desc|asc)\b/i,
