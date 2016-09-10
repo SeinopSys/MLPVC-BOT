@@ -228,6 +228,27 @@ function ready(){
 			},
 		];
 
+	function getVersion(channelID, userID, callback){
+		exec = exec || require('child_process').exec;
+		exec('git rev-parse --short=4 HEAD', function(_, version){
+			var m, privateMsg = userID === channelID;
+			if (_){
+				console.log('Error getting version', _);
+				m = 'Error while getting version number' + (hasOwner ? ' (<@' + config.OWNER_ID + '> Logs may contain more info)' : '');
+				return respond(channelID, !privateMsg ? replyTo(userID, m): m);
+			}
+			exec('git log -1 --date=short --pretty=format:%ci', function(_, ts){
+				if (_){
+					console.log('Error getting creation time', _);
+					m = 'Error while getting creation time' + (!privateMsg && hasOwner ? ' (<@' + config.OWNER_ID + '> Logs may contain more info)' : '');
+					return respond(channelID,  !privateMsg ? replyTo(userID, m): m);
+				}
+
+				return callback(version.trim(), ts);
+			});
+		});
+	}
+
 	function CallCommand(userID, channelID, message, event, userIdent, command, argStr, args){
 		var i,l;
 		switch (command.toLowerCase()){
@@ -269,21 +290,8 @@ function ready(){
 			case "ver": (function(){
 				bot.simulateTyping(channelID);
 
-				exec = exec || require('child_process').exec;
-				exec('git rev-parse --short=4 HEAD', function(_, version) {
-					if (_){
-						console.log('Error getting version', _);
-						return respond(channelID, replyTo(userID, 'Error while getting version number'+(hasOwner?' (<@'+config.OWNER_ID+'> Logs may contain more info)':'')));
-					}
-					exec('git log -1 --date=short --pretty=format:%ci', function(_, ts) {
-						if (_){
-							console.log('Error getting creation time', _);
-							return respond(channelID, replyTo(userID, 'Error while getting creation time'+(hasOwner?' (<@'+config.OWNER_ID+'> Logs may contain more info)':'')));
-						}
-
-						var ver = version.trim();
-						respond(channelID, replyTo(userID, 'Bot is running version `'+ver+'` created '+(moment(ts).fromNow())+'\nView commit on GitHub: http://github.com/ponydevs/MLPVC-BOT/commit/'+ver));
-					});
+				getVersion(channelID,userID,function(ver,ts){
+					respond(channelID, replyTo(userID, 'Bot is running version `'+ver+'` created '+(moment(ts).fromNow())+'\nView commit on GitHub: http://github.com/ponydevs/MLPVC-BOT/commit/'+ver));
 				});
 			})(); break;
 			case "casual": (function(){
@@ -559,9 +567,9 @@ function ready(){
 				respond(userID, 'Restarting bot...');
 				idle();
 				exec = exec || require('child_process').exec;
-				exec(require('path').resolve(__dirname, 'start.sh'),function (error) {
+				exec(require('path').resolve(__dirname, 'start.sh --updateBy='+userID),function (error) {
 				    if (error !== null)
-				      return respond(userID, 'Update failed:\n```\n'+error+'\n```');
+						return respond(userID, 'Update failed:\n```\n'+error+'\n```');
 
 				    process.exit();
 				});
@@ -641,6 +649,11 @@ function ready(){
 			return;
 		onMessage(null, newMsg.author.id, newMsg.channel_id, newMsg.content, event);
 	});
+
+	if (hasOwner && !config.LOCAL)
+		getVersion(config.OWNER_ID,config.OWNER_ID,function(ver){
+			bot.setPresence({ game: { name: 'version '+ver } });
+		});
 
 	bot.on('disconnect', function(errMsg, code){
 		console.log('[DISCONNECT:'+code+'] '+errMsg);
