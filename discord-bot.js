@@ -523,6 +523,9 @@ function ready(){
 					break;
 				}
 			})(); break;
+			case "rekt":
+				respond(channelID, '**REKT** https://www.youtube.com/watch?v=tfyqk26MqdE');
+			break;
 			default:
 				var isProfanity = ProfanityFilter(userID, channelID, message, event);
 				if (!isProfanity){
