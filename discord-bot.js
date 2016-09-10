@@ -559,11 +559,9 @@ function ready(){
 				respond(userID, 'Restarting bot...');
 				idle();
 				exec = exec || require('child_process').exec;
-				exec('start.sh',function (error, stdout, stderr) {
-				    console.log('stdout: ' + stdout);
-				    console.log('stderr: ' + stderr);
+				exec(require('path').resolve(__dirname, 'start.sh'),function (error) {
 				    if (error !== null)
-				      return console.log('exec error: ' + error);
+				      return respond(userID, 'Update failed:\n```\n'+error+'\n```');
 
 				    process.exit();
 				});
