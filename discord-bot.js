@@ -28,7 +28,8 @@ var Discord = require('discord.io'),
 	moment = require('moment'),
 	YouTube = require('youtube-node'),
 	yt = new YouTube(),
-	OurServer;
+	OurServer,
+	exec;
 
 yt.setKey(config.YT_API_KEY);
 
@@ -268,7 +269,7 @@ function ready(){
 			case "ver": (function(){
 				bot.simulateTyping(channelID);
 
-				var exec = require('child_process').exec;
+				exec = exec || require('child_process').exec;
 				exec('git rev-parse --short=4 HEAD', function(_, version) {
 					if (_){
 						console.log('Error getting version', _);
@@ -545,6 +546,27 @@ function ready(){
 			})(); break;
 			case "rekt":
 				respond(channelID, '**REKT** https://www.youtube.com/watch?v=tfyqk26MqdE');
+			break;
+			case "update":
+				wipeMessage(channelID, event.d.id);
+
+				if (!isStaff(userID))
+					respond(userID, 'This command can only be run by the Staff');
+
+				if (config.LOCAL)
+					respond(userID, 'This command cannot be run on the local version');
+
+				respond(userID, 'Restarting bot...');
+				idle();
+				exec = exec || require('child_process').exec;
+				exec('./start.sh',function(err){
+					if (err){
+						console.log(err);
+						respond(userID, 'Bot restart failed, check logs.');
+					}
+
+					process.exit();
+				});
 			break;
 			default:
 				var isProfanity = ProfanityFilter(userID, channelID, message, event);
