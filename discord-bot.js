@@ -555,25 +555,6 @@ function ready(){
 			case "rekt":
 				respond(channelID, '**REKT** https://www.youtube.com/watch?v=tfyqk26MqdE');
 			break;
-			case "update":
-				wipeMessage(channelID, event.d.id);
-
-				if (!isStaff(userID))
-					respond(userID, 'This command can only be run by the Staff');
-
-				if (config.LOCAL)
-					respond(userID, 'This command cannot be run on the local version');
-
-				respond(userID, 'Restarting bot...');
-				idle();
-				exec = exec || require('child_process').exec;
-				exec(require('path').resolve(__dirname, 'start.sh --updateBy='+userID),function (error) {
-				    if (error !== null)
-						return respond(userID, 'Update failed:\n```\n'+error+'\n```');
-
-				    process.exit();
-				});
-			break;
 			default:
 				var isProfanity = ProfanityFilter(userID, channelID, message, event);
 				if (!isProfanity){
