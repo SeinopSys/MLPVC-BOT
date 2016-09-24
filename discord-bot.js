@@ -647,10 +647,6 @@ function ready(){
 		idle();
 		process.exit();
 	});
-	process.on('SIGKILL', function(){
-		idle();
-		process.exit();
-	});
 	process.on('exit', idle);
 	function idle(){
 		bot.setPresence({ idle_since: Date.now() });
