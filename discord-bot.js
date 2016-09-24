@@ -638,10 +638,16 @@ function ready(){
 
 	bot.on('disconnect', function(errMsg, code){
 		console.log('[DISCONNECT:'+code+'] '+errMsg);
-		process.exit();
+		setTimeout(function(){
+			process.exit();
+		}, 5000);
 	});
 
 	process.on('SIGINT', function(){
+		idle();
+		process.exit();
+	});
+	process.on('SIGKILL', function(){
 		idle();
 		process.exit();
 	});
