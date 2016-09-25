@@ -611,7 +611,7 @@ function ready(){
 								(def.examples&&def.examples.length?'\n\t\t__Examples:__ *“'+(def.examples.slice(0,2).join('”, “').replace(new RegExp('('+data.word+')','g'),'__$1__'))+'”*':'')+
 								(def.synonyms&&def.synonyms.length?'\n\t\t__Synonyms:__ '+def.synonyms.slice(0,4).join(', '):''));
 						});
-						return respond(channelID, replyTo(userID, '\n**'+data.word+'** • /'+data.pronunciation.all+'/'+(data.syllables&&data.syllables.list&&data.syllables.list.length?' • *'+data.syllables.list.join('-')+'*':'')+'\n'+(defs.join('\n\n'))));
+						return respond(channelID, replyTo(userID, '\n**'+data.word+'** • /'+data.pronunciation.all+'/'+(data.syllables&&data.syllables.list&&data.syllables.list.length>1?' • *'+data.syllables.list.join('-')+'*':'')+'\n'+(defs.join('\n\n'))));
 					});
 			})(); break;
 			default:
