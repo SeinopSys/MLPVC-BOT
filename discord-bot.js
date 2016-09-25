@@ -589,7 +589,7 @@ function ready(){
 				else defineCommandLastUsed = Date.now();
 
 				if (channelID === OurChannelIDs['bot-sandbox'] && !isStaff(userID))
-					return respond(channelID, replyTo(userID, 'This command can only be used by members of the Staff role in <#+'+channelID+'>. Please only use this command when neccessary as it\'s number of requests per day is limited.'));
+					return respond(channelID, replyTo(userID, 'This command can only be used by members of the Staff role in <#'+channelID+'>. Please only use this command when neccessary as it\'s number of requests per day is limited.'));
 
 				unirest.get("https://wordsapiv1.p.mashape.com/words/"+encodeURIComponent(argStr))
 					.header("X-Mashape-Key", config.MASHAPE_KEY)
