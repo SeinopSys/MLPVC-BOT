@@ -14,7 +14,6 @@ var Discord = require('discord.io'),
 			message: message,
 		});
 	},
-	request = require('request'),
 	readline = require('readline'),
 	rl,
 	getRl = function(){
@@ -25,11 +24,14 @@ var Discord = require('discord.io'),
 			});
 		return rl;
 	},
+	unirest = require('unirest'),
 	moment = require('moment'),
 	YouTube = require('youtube-node'),
 	yt = new YouTube(),
 	OurServer,
-	exec;
+	exec,
+	defineCommandLastUsed,
+	defineTimeLimit = 20000;
 
 yt.setKey(config.YT_API_KEY);
 
@@ -226,6 +228,17 @@ function ready(){
 				desc: 'Lets everyone know to keep saucy mesages out of regular rooms (does nothing in #nsfw)\n\tThe optional parameter allows any user to join/leave the NSFW channel at will',
 				perm: everyone,
 			},
+			{
+				name: 'define',
+				desc: 'Finds definitions, synonyms and meanings for words using the WordsAPI',
+				perm: everyone,
+				aliases: ['def'],
+			},
+			{
+				name: 'rekt',
+				desc: 'Apply cold water to the burnt area',
+				perm: everyone,
+			},
 		];
 
 	function getVersion(channelID, userID, callback){
@@ -251,7 +264,8 @@ function ready(){
 
 	function CallCommand(userID, channelID, message, event, userIdent, command, argStr, args){
 		var i,l;
-		switch (command.toLowerCase()){
+		command = command.toLowerCase();
+		switch (command){
 			case "help": (function(){
 				var msg = 'Here\'s a list of commands __you__ can run:\n\n';
 				for (i=0,l=commands.length; i<l; i++){
@@ -322,66 +336,64 @@ function ready(){
 					return respond(channelID, replyTo(userID, 'This command can be used to quickly link to an appearance using the site\'s  "I\'m feeling lucky" search'));
 
 				bot.simulateTyping(channelID);
-				request.get('https://mlpvc-rr.ml/cg/1?js=true&q='+encodeURIComponent(argStr)+'&GOFAST=true', function(error, res, body){
-					if (error || typeof body !== 'string'){
-						console.log(error, body);
-						return respond(channelID, replyTo(userID, 'Color Guide search failed (HTTP '+res.statusCode+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
-					}
+				unirest.get('https://mlpvc-rr.ml/cg/1?js=true&q='+encodeURIComponent(argStr)+'&GOFAST=true')
+					.header("Accept", "application/json")
+					.end(function (result) {
+						if (result.error || typeof result.body !== 'object'){
+							console.log(result.error, result.body);
+							return respond(channelID, replyTo(userID, 'Color Guide search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+						}
 
-					var data = JSON.parse(body);
-					if (!data.status)
-						return respond(channelID, replyTo(userID, data.message));
+						var data = result.body;
+						if (!data.status)
+							return respond(channelID, replyTo(userID, data.message));
 
-					respond(channelID, replyTo(userID, 'https://mlpvc-rr.ml'+data.goto));
-				});
+						respond(channelID, replyTo(userID, 'https://mlpvc-rr.ml'+data.goto));
+					});
 			})(); break;
 			case "kym": (function(){
 				if (!args.length)
 					return respond(channelID, replyTo(userID, 'This command can be used to find the Know Your Meme entry for a meme.'));
 				bot.simulateTyping(channelID);
 				var apiurl = 'http://rkgk.api.searchify.com/v1/indexes/kym_production/instantlinks?query='+encodeURIComponent(argStr)+'&field=name&fetch=url&function=10&len=1';
-				request.get(apiurl, function(error, res, body){
-					if (error || typeof body !== 'string' || [302, 200].indexOf(res.statusCode) === -1){
-						console.log(error, body);
-						return respond(channelID, replyTo(userID, 'Know Your Meme search failed (HTTP '+res.statusCode+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
-					}
+				unirest.get(apiurl)
+					.header("Accept", "application/json")
+					.end(function (result) {
+						if (result.error || typeof result.body !== 'object' || [302, 200].indexOf(result.status) === -1){
+							console.log(result.error, result.body);
+							return respond(channelID, replyTo(userID, 'Know Your Meme search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+						}
 
-					var data;
-					try {
-						data = JSON.parse(body);
-					}
-					catch(e){
-						console.log('JSON body: '+body);
-						return respond(channelID, replyTo(userID, 'Know Your Meme search returned invalid data. '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
-					}
+						var data = result.body;
+						if (!data.results.length || typeof data.results[0].url !== 'string')
+							return respond(channelID, replyTo(userID, 'Know Your Meme search returned no results.'));
 
-					if (!data.results.length || typeof data.results[0].url !== 'string')
-						return respond(channelID, replyTo(userID, 'Know Your Meme search returned no results.'));
-
-					respond(channelID, replyTo(userID, 'http://knowyourmeme.com'+data.results[0].url));
-				});
+						respond(channelID, replyTo(userID, 'http://knowyourmeme.com'+data.results[0].url));
+					});
 			})(); break;
 			case "google": (function(){
 				if (!args.length)
 					return respond(channelID, replyTo(userID, 'This command can be used to perform an "I\'m feeling lucky" Google search and return the first result.'));
 				bot.simulateTyping(channelID);
 				var searchUrl = 'https://google.com/search?q='+encodeURIComponent(argStr);
-				request.head(searchUrl+'&btnI', {followRedirect:function(res){
-					if (typeof res.headers.location !== 'string')
-						return true;
+				unirest.get(searchUrl+'&btnI')
+					.followRedirect(function(res){
+						if (typeof res.headers.location !== 'string')
+							return true;
 
-					return /(www\.)google\.((co\.)?[a-z]+)/.test(require('url').parse(res.headers.location).host);
-				}}, function(error, res, body){
-					if (error || typeof body !== 'string' || [302, 200].indexOf(res.statusCode) === -1){
-						console.log(error, body);
-						return respond(channelID, replyTo(userID, 'Google search failed (HTTP '+res.statusCode+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
-					}
+						return /(www\.)google\.((co\.)?[a-z]+)/.test(require('url').parse(res.headers.location).host);
+					})
+					.end(function(result){
+						if (result.error || [302, 200].indexOf(result.status) === -1){
+							console.log(result.error, result.body, result.headers);
+							return respond(channelID, replyTo(userID, 'Google search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+						}
 
-					if (typeof res.headers.location === 'string')
-						return respond(channelID, replyTo(userID, res.headers.location));
+						if (typeof result.headers.location !== 'string')
+							return respond(channelID, replyTo(userID, 'No obvious first result. Link to search page: '+searchUrl));
 
-					respond(channelID, replyTo(userID, 'No obvious first result. Link to search page: '+searchUrl));
-				});
+						return respond(channelID, replyTo(userID, result.headers.location));
+					});
 			})(); break;
 			case "youtube":
 			case "yt": (function(){
@@ -441,25 +453,29 @@ function ready(){
 					extra += '&sf='+sortby[1];
 					if (!query.length && sortby[1] === 'random'){
 						console.log('Derpi search for random image (without tags)');
-						return request.get('https://derpibooru.org/images/random.json',function(error, res, body){
-							if (error || typeof body !== 'string'){
-								console.log(error, body);
-								return respond(channelID, replyTo(userID, 'Derpibooru random image search failed (HTTP '+res.statusCode+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
-							}
-
-							var data = JSON.parse(body);
-							if (typeof data.id === 'undefined')
-								return respond(channelID, replyTo(userID, 'Failed to get random Derpibooru image ID'));
-
-							request('https://derpibooru.org/images/'+data.id+'.json',function(error, res, body){
-								if (error || typeof body !== 'string'){
-									console.log(error, body);
-									return respond(channelID, replyTo(userID, 'Derpibooru random image data retrieval failed (HTTP '+res.statusCode+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+						return unirest.get('https://derpibooru.org/images/random.json')
+							.header("Accept", "application/json")
+							.end(function(result){
+								if (result.error || typeof result.body !== 'object'){
+									console.log(result.error, result.body);
+									return respond(channelID, replyTo(userID, 'Derpibooru random image search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
 								}
 
-								respondWithImage(JSON.parse(body));
+								var data = result.body;
+								if (typeof data.id === 'undefined')
+									return respond(channelID, replyTo(userID, 'Failed to get random Derpibooru image ID'));
+
+								unirest.get('https://derpibooru.org/images/'+data.id+'.json')
+									.header("Accept", "application/json")
+									.end(function(result){
+									if (result.error || typeof result.body !== 'object'){
+										console.log(result.error, result.body);
+										return respond(channelID, replyTo(userID, 'Derpibooru random image data retrieval failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+									}
+
+									respondWithImage(result.body);
+								});
 							});
-						});
 					}
 				}
 
@@ -471,13 +487,15 @@ function ready(){
 				query = query.replace(/,{2,}/g,',').replace(/(^,|,$)/,'');
 				var url = 'https://derpibooru.org/search.json?q='+encodeURIComponent(query)+extra;
 				console.log('Derpi search for '+chalk.blue(url));
-				request.get(url, function(error, res, body){
-					if (error || typeof body !== 'string'){
-						console.log(error, body);
-						return respond(channelID, replyTo(userID, 'Derpibooru search failed (HTTP '+res.statusCode+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
-					}
+				unirest.get(url)
+					.header("Accept", "application/json")
+					.end(function(result){
+						if (result.error || typeof result.body !== 'object'){
+							console.log(result.error, result.body);
+							return respond(channelID, replyTo(userID, 'Derpibooru search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+						}
 
-					var data = JSON.parse(body);
+					var data = result.body;
 					if (typeof data.search === 'undefined' || typeof data.search[0] === 'undefined')
 						return respond(channelID, replyTo(userID, 'Derpibooru search returned no results.'+
 							(
@@ -555,6 +573,47 @@ function ready(){
 			case "rekt":
 				respond(channelID, '**REKT** https://www.youtube.com/watch?v=tfyqk26MqdE');
 			break;
+			case "def":
+			case "define": (function(){
+				if (!args.length)
+					return respond(channelID, replyTo(userID, 'This command can be used to get definitions, synonyms and example usages of English words, powered by WordsAPI (https://www.wordsapi.com/). \n**Note:** The API is free to use for up to 2500 requests per day. If exceeded, it has additional costst on a per-request basis, and as such it is rate limited to one use every 20 seconds. Only use this command when approperiate.'));
+
+				var delta;
+				if (typeof defineCommandLastUsed === 'undefined')
+					defineCommandLastUsed = Date.now();
+				else if ((delta = Date.now() - defineCommandLastUsed) < defineTimeLimit && !isOwner(userID)){
+					return wipeMessage(channelID, event.d.id, function(){
+						respond(userID, 'The `define` command is limited to one use every '+(defineTimeLimit/1000)+' seconds due to monthly API request limits (which, after exceeded, cost money per each request). Try again in '+(Math.round((delta/100))/10)+'s');
+					});
+				}
+				else defineCommandLastUsed = Date.now();
+
+				if (channelID === OurChannelIDs['bot-sandbox'] && !isStaff(userID))
+					return respond(channelID, replyTo(userID, 'This command can only be used by members of the Staff role in <#+'+channelID+'>. Please only use this command when neccessary as it\'s number of requests per day is limited.'));
+
+				unirest.get("https://wordsapiv1.p.mashape.com/words/"+encodeURIComponent(argStr))
+					.header("X-Mashape-Key", config.MASHAPE_KEY)
+					.header("Accept", "application/json")
+					.end(function (result) {
+						if ((result.error || typeof result.body !== 'object') && result.status !== 404){
+							console.log(result.error, result.body);
+							return respond(channelID, replyTo(userID, 'WordsAPI search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+						}
+
+						var data = result.body;
+						if (result.status === 404 || !data.results || data.results.length === 0)
+							return respond(channelID, replyTo(userID, 'WordsAPI search returned no results.'+(/s$/.test(argStr)?' Plural words can cause this issue. If you used a plural word, please use the singluar form instead.':'')));
+
+						var defs = [];
+						data.results.slice(0,4).forEach(function(def){
+							defs.push(
+								(data.results.length>1?(defs.length+1)+'. ':'')+def.partOfSpeech+' — '+def.definition+
+								(def.examples&&def.examples.length?'\n\t\t__Examples:__ *“'+(def.examples.slice(0,2).join('”, “').replace(new RegExp('('+data.word+')','g'),'__$1__'))+'”*':'')+
+								(def.synonyms&&def.synonyms.length?'\n\t\t__Synonyms:__ '+def.synonyms.slice(0,4).join(', '):''));
+						});
+						return respond(channelID, replyTo(userID, '\n**'+data.word+'** • /'+data.pronunciation.all+'/'+(data.syllables&&data.syllables.list&&data.syllables.list.length?' • *'+data.syllables.list.join('-')+'*':'')+'\n'+(defs.join('\n\n'))));
+					});
+			})(); break;
 			default:
 				var isProfanity = ProfanityFilter(userID, channelID, message, event);
 				if (!isProfanity){
