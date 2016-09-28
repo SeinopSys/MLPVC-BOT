@@ -130,6 +130,9 @@ function ready(){
 		isStaff = function(userID){
 			return OurServer.members[userID].roles.indexOf(staffRoleID) !== -1;
 		},
+		isMember = function(userID){
+			return OurServer.members[userID].roles.indexOf(OurRoleIDs['Club Members']) !== -1;
+		},
 		hasOwner = typeof config.OWNER_ID === 'string' && config.OWNER_ID.length,
 		myIDran = false,
 		limitedFunc = ', functionality is limited.\nUse the /myid command to get your ID';
@@ -184,6 +187,11 @@ function ready(){
 			{
 				name: 'myid',
 				desc: 'Returns your user ID (used for initial script setup)',
+				perm: isOwner,
+			},
+			{
+				name: 'roleids',
+				desc: 'Returns a list of rel IDs on the server',
 				perm: isOwner,
 			},
 			{
@@ -300,6 +308,16 @@ function ready(){
 
 				respond(channelID, replyTo(userID, 'Your user ID was sent to you in a private message'));
 				respond(userID, 'Your user ID is `'+userID+'`');
+			})(); break;
+			case "roleid": (function(){
+				if (!isOwner(userID))
+					respond(channelID, replyTo(userID, 'You must be owner to use this command'));
+
+				var message = [];
+				OurRoleIDs.forEach(function(value,key){
+					message.push(value+' ('+key+')');
+				});
+				respond(channelID, replyTo(userID, 'List of available roles:\n```\n'+message.join('\n')+'\n```'));
 			})(); break;
 			case "ver": (function(){
 				bot.simulateTyping(channelID);
@@ -646,7 +664,7 @@ function ready(){
 	}
 
 	function ProfanityFilter(userID, channelID, message, event){
-		if (userID === bot.id || isStaff(userID))
+		if (userID === bot.id || isStaff(userID) || isMember(userID))
 			return;
 
 		var matching = /\b(f+[u4a]+[Ссc]+k+(?:tard|[1i]ng)?|[Ссc]un[7t]|a[5$s]{2,}(?:h[0o]+l[3e]+)|(?:d[1i]+|[Ссc][0o])[Ссc]k(?:h[3e][4a]*d)?|b[1ie3a4]+t[Ссc]h)\b/ig,
