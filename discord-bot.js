@@ -309,13 +309,14 @@ function ready(){
 				respond(channelID, replyTo(userID, 'Your user ID was sent to you in a private message'));
 				respond(userID, 'Your user ID is `'+userID+'`');
 			})(); break;
-			case "roleid": (function(){
+			case "roleids": (function(){
 				if (!isOwner(userID))
 					respond(channelID, replyTo(userID, 'You must be owner to use this command'));
 
-				var message = [];
-				OurRoleIDs.forEach(function(value,key){
-					message.push(value+' ('+key+')');
+				var message = [],
+					keys = Object.keys(OurRoleIDs);
+				keys.forEach(function(key){
+					message.push(OurRoleIDs[key]+' ('+key+')');
 				});
 				respond(channelID, replyTo(userID, 'List of available roles:\n```\n'+message.join('\n')+'\n```'));
 			})(); break;
