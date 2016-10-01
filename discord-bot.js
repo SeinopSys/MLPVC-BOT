@@ -331,7 +331,7 @@ function ready(){
 				if (channelID === OurChannelIDs.casual)
 					return wipeMessage(channelID, event.d.id);
 
-				var possible_images = [
+				/*var possible_images = [
 						'http://i.imgur.com/C7T0npq.png', // Original by DJDavid98
 						'http://i.imgur.com/RwnT8EX.png', // Coco & Rarity by Pirill
 						'http://i.imgur.com/qg9Y1LN.png', // Applebloom's new CM by Drakizora
@@ -346,9 +346,10 @@ function ready(){
 					k = Math.max(0,Math.min(image_count-1,parseInt(data, 10)-1));
 				else {
 					k = moment().minutes() % image_count;
-				}
+				}*/
 
-				wipeMessage(channelID, event.d.id, 'Please continue this discussion in <#'+OurChannelIDs.casual+'>\n'+possible_images[k]);
+				// '\n'+possible_images[k];
+				wipeMessage(channelID, event.d.id, 'Please continue this discussion in <#'+OurChannelIDs.casual+'>');
 			})(); break;
 			case "cg": (function(){
 				if (!args.length)
