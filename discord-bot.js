@@ -8,6 +8,10 @@ var Discord = require('discord.io'),
 	replyTo = function(userID, message){
 		return "<@"+userID+"> "+message;
 	},
+	replyToIfNotPM = function(isPM, userID, message){
+		if (isPM) return message;
+		return replyTo(userID, message);
+	},
 	respond = function(channelID, message){
 		return bot.sendMessage({
 			to: channelID,
@@ -271,18 +275,19 @@ function ready(){
 	}
 
 	function CallCommand(userID, channelID, message, event, userIdent, command, argStr, args){
-		var i,l;
+		var i,l, isPM = typeof bot.channels[channelID] === 'undefined';
 		command = command.toLowerCase();
 		switch (command){
 			case "help": (function(){
-				var msg = 'Here\'s a list of commands __you__ can run:\n\n';
+				var msg = 'Commands must be prefixed with `!` or `/`. Here\'s a list of commands __you__ can run:\n\n';
 				for (i=0,l=commands.length; i<l; i++){
 					var cmd = commands[i];
 					if (cmd.perm(userID))
 						msg += ' ● `'+cmd.name+'`'+(cmd.desc?' - '+cmd.desc:'')+(cmd.aliases?' (Aliases: `'+(cmd.aliases.join('`, `'))+'`)':'')+'\n';
 				}
-				wipeMessage(channelID, event.d.id);
-				respond(userID, msg.trim()+'\nMost commands have an explanation which you can access by sending the command without any arguments.');
+				if (!isPM)
+					wipeMessage(channelID, event.d.id);
+				respond(userID, msg.trim()+'\n\nMost commands have an explanation which you can access by sending the command in any channel or as a PM to the bot __without any arguments__.');
 			})(); break;
 			case "channels": (function(){
 				if (!isOwner(userID))
@@ -331,6 +336,9 @@ function ready(){
 				if (channelID === OurChannelIDs.casual)
 					return wipeMessage(channelID, event.d.id);
 
+				if (isPM)
+					return respond(channelID, 'This command must be used on the server');
+
 				var possible_images = [
 						'mountain', // Original by DJDavid98
 									// RIP IN PEPPERONI (Coco & Rarity by Pirill) ;_;7
@@ -352,7 +360,10 @@ function ready(){
 			})(); break;
 			case "cg": (function(){
 				if (!args.length)
-					return respond(channelID, replyTo(userID, 'This command can be used to quickly link to an appearance using the site\'s  "I\'m feeling lucky" search'));
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'This command can be used to quickly link to an appearance using the site\'s  "I\'m feeling lucky" search'));
+
+				if (isPM)
+					return respond(channelID, 'This command must be used on the server');
 
 				bot.simulateTyping(channelID);
 				unirest.get('https://mlpvc-rr.ml/cg/1?js=true&q='+encodeURIComponent(argStr)+'&GOFAST=true')
@@ -372,7 +383,11 @@ function ready(){
 			})(); break;
 			case "kym": (function(){
 				if (!args.length)
-					return respond(channelID, replyTo(userID, 'This command can be used to find the Know Your Meme entry for a meme.'));
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'This command can be used to find the Know Your Meme entry for a meme.'));
+
+				if (isPM)
+					return respond(channelID, 'This command must be used on the server');
+
 				bot.simulateTyping(channelID);
 				var apiurl = 'http://rkgk.api.searchify.com/v1/indexes/kym_production/instantlinks?query='+encodeURIComponent(argStr)+'&field=name&fetch=url&function=10&len=1';
 				unirest.get(apiurl)
@@ -392,7 +407,11 @@ function ready(){
 			})(); break;
 			case "google": (function(){
 				if (!args.length)
-					return respond(channelID, replyTo(userID, 'This command can be used to perform an "I\'m feeling lucky" Google search and return the first result.'));
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'This command can be used to perform an "I\'m feeling lucky" Google search and return the first result.'));
+
+				if (isPM)
+					return respond(channelID, 'This command must be used on the server');
+
 				bot.simulateTyping(channelID);
 				var searchUrl = 'https://google.com/search?q='+encodeURIComponent(argStr);
 				unirest.get(searchUrl+'&btnI')
@@ -417,7 +436,11 @@ function ready(){
 			case "youtube":
 			case "yt": (function(){
 				if (!args.length)
-					return respond(channelID, replyTo(userID, 'This command can be used to return the first result of a YouTube search'));
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'This command can be used to return the first result of a YouTube search'));
+
+				if (isPM)
+					return respond(channelID, 'This command must be used on the server');
+
 				bot.simulateTyping(channelID);
 				yt.addParam('type', 'video');
 				yt.addParam('regionCode', 'US');
@@ -437,7 +460,7 @@ function ready(){
 			case "db":
 			case "derpi": (function(){
 				if (!args.length)
-					return respond(channelID, replyTo(userID,
+					return respond(channelID, replyToIfNotPM(isPM, userID,
 						'This command can be used to return the first result of a Derpibooru search.\n'+
 						'**Note:** Any rooms aside from <#'+OurChannelIDs.nsfw+'> will only show results accessible by the site\'s default filter\n\n'+
 						'__**Bot-secific search keywords:**__\n\n'+
@@ -445,6 +468,9 @@ function ready(){
 						' ● `by:<score|relevance|width|height|comments|random>` - Same as "Sort by" on the actual site\n\n'+
 						'*Examples:* `/derpi safe,o:asc`, `/derpi safe,rd o:asc`, `/derpi ts by:random`'
 					));
+
+				if (isPM)
+					return respond(channelID, 'This command must be used on the server');
 
 				bot.simulateTyping(channelID);
 				var query = argStr,
@@ -532,6 +558,9 @@ function ready(){
 				if (!args.length)
 					return wipeMessage(channelID, event.d.id, channelID === OurChannelIDs.nsfw ? null : 'Please avoid discussing anything NSFW in <#'+channelID+'>. We have a dedicated invite-only NSFW channel, send `/nsfw join` to join. http://i.imgur.com/jaNBZ09.gif');
 
+				if (isPM)
+					return respond(channelID, 'This command must be used on the server');
+
 				switch (args[0]){
 					case "join":
 						wipeMessage(channelID, event.d.id,function(msg, error){
@@ -590,12 +619,18 @@ function ready(){
 				}
 			})(); break;
 			case "rekt":
+				if (isPM)
+					return respond(channelID, 'This command must be used on the server');
+
 				respond(channelID, '**REKT** https://www.youtube.com/watch?v=tfyqk26MqdE');
 			break;
 			case "def":
 			case "define": (function(){
 				if (!args.length)
-					return respond(channelID, replyTo(userID, 'This command can be used to get definitions, synonyms and example usages of English words, powered by WordsAPI (https://www.wordsapi.com/). \n**Note:** The API is free to use for up to 2500 requests per day. If exceeded, it has additional costst on a per-request basis, and as such it is rate limited to one use every 20 seconds. Only use this command when approperiate.'));
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'This command can be used to get definitions, synonyms and example usages of English words, powered by WordsAPI (https://www.wordsapi.com/). \n**Note:** The API is free to use for up to 2500 requests per day. If exceeded, it has additional costst on a per-request basis, and as such it is rate limited to one use every 20 seconds. Only use this command when approperiate.'));
+
+				if (isPM)
+					return respond(channelID, 'This command must be used on the server');
 
 				var delta;
 				if (typeof defineCommandLastUsed === 'undefined')
@@ -634,7 +669,7 @@ function ready(){
 					});
 			})(); break;
 			default:
-				var isProfanity = ProfanityFilter(userID, channelID, message, event);
+				var isProfanity = !isPM && ProfanityFilter(userID, channelID, message, event);
 				if (!isProfanity){
 					var notfound = 'Command /'+command+' not found';
 					console.log(notfound);
@@ -649,8 +684,9 @@ function ready(){
 	function ProcessCommand(userID, channelID, message, event){
 		var commandRegex = /^[!/](\w+)(?:\s+([ -~]+)?)?$/,
 			user = bot.users[userID],
-			userIdent = user.username+'#'+user.discriminator;
-		console.log(userIdent+' ran '+message+' from '+chalk.blue('#'+bot.channels[channelID].name));
+			userIdent = user.username+'#'+user.discriminator,
+			isPM = typeof bot.channels[channelID] === 'undefined';
+		console.log(userIdent+' ran '+message+' from '+(isPM?'a PM':chalk.blue('#'+bot.channels[channelID].name)));
 		if (!commandRegex.test(message))
 			bot.sendMessage({
 				to: channelID,
@@ -692,14 +728,30 @@ function ready(){
 	}
 
 	function onMessage(_, userID, channelID, message, event) {
-		if (typeof OurServer.channels[event.d.channel_id] === 'undefined')
-			return;
+		var args = [].slice.call(arguments,1),
+			callHandler = function(isPM){
+				if (/^[!/]/.test(message))
+					return ProcessCommand.apply(this, args);
 
-		var args = [].slice.call(arguments,1);
-		if (/^[!/]/.test(message))
-			return ProcessCommand.apply(this, args);
+				if (isPM !== true)
+					ProfanityFilter.apply(this, args);
+			};
 
-		ProfanityFilter.apply(this, args);
+		if (typeof OurServer.channels[channelID] === 'undefined'){
+			bot.createDMChannel(userID, function(err, resp){
+				if (err)
+					return;
+
+				if (typeof OurServer.members[resp.recipient.id] === 'undefined')
+					return;
+
+				console.log('Received PM from @'+resp.recipient.username+'#'+resp.recipient.discriminator+', contents: '+message);
+
+				args = [resp.recipient.id, resp.id, message, event];
+				callHandler(true);
+			});
+		}
+		else callHandler();
 	}
 	bot.on('message', onMessage);
 
