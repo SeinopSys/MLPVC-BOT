@@ -144,7 +144,7 @@ function ready(){
 	if (!hasOwner)
 		console.log('Bot has no owner'+limitedFunc);
 	else {
-		if (typeof bot.users[config.OWNER_ID] === 'undefined'){
+		if (!(config.OWNER_ID in bot.users)){
 			hasOwner = false;
 			console.log('The configured owner is not among the channel members'+limitedFunc);
 		}
@@ -275,7 +275,7 @@ function ready(){
 	}
 
 	function CallCommand(userID, channelID, message, event, userIdent, command, argStr, args){
-		var i,l, isPM = typeof bot.channels[channelID] === 'undefined';
+		var i,l, isPM = !(channelID in bot.channels);
 		command = command.toLowerCase();
 		switch (command){
 			case "help": (function(){
@@ -553,7 +553,7 @@ function ready(){
 				});
 			})(); break;
 			case "nsfw": (function(){
-				if (typeof OurServer.channels[channelID] !== 'undefined' && OurServer.channels[channelID].name === 'nsfw' && args[0] !== 'leave')
+				if (channelID in OurServer.channels && OurServer.channels[channelID].name === 'nsfw' && args[0] !== 'leave')
 					return;
 				if (!args.length)
 					return wipeMessage(channelID, event.d.id, channelID === OurChannelIDs.nsfw ? null : 'Please avoid discussing anything NSFW in <#'+channelID+'>. We have a dedicated invite-only NSFW channel, send `/nsfw join` to join. http://i.imgur.com/jaNBZ09.gif');
@@ -685,15 +685,17 @@ function ready(){
 		var commandRegex = /^[!/](\w+)(?:\s+([ -~]+)?)?$/,
 			user = bot.users[userID],
 			userIdent = user.username+'#'+user.discriminator,
-			isPM = typeof bot.channels[channelID] === 'undefined';
+			isPM = !(channelID in bot.channels);
 		console.log(userIdent+' ran '+message+' from '+(isPM?'a PM':chalk.blue('#'+bot.channels[channelID].name)));
 		if (!commandRegex.test(message))
 			bot.sendMessage({
 				to: channelID,
 				message: replyTo(userID, 'Invalid command: '+(message.replace(/^([!/]\S+).*/,''))),
 			});
-		var commandMatch = message.match(commandRegex),
-			command = commandMatch[1],
+		var commandMatch = message.match(commandRegex);
+		if (!commandMatch)
+			return;
+		var command = commandMatch[1],
 			argStr = commandMatch[2] ? commandMatch[2].trim() : '',
 			args = argStr ? argStr.split(/\s+/) : [];
 
@@ -701,7 +703,7 @@ function ready(){
 	}
 
 	function ProfanityFilter(userID, channelID, message, event){
-		if (userID === bot.id || isStaff(userID) || isMember(userID))
+		if (isStaff(userID) || isMember(userID))
 			return;
 
 		var matching = /\b(f+[u4a]+[Ссc]+k+(?:tard|[1i]ng)?|[Ссc]un[7t]|a[5$s]{2,}(?:h[0o]+l[3e]+)|(?:d[1i]+|[Ссc][0o])[Ссc]k(?:h[3e][4a]*d)?|b[1ie3a4]+t[Ссc]h)\b/ig,
@@ -727,7 +729,10 @@ function ready(){
 		return true;
 	}
 
-	function onMessage(_, userID, channelID, message, event) {
+	function onMessage(username, userID, channelID, message, event) {
+		if (userID === bot.id)
+			return;
+
 		var args = [].slice.call(arguments,1),
 			callHandler = function(isPM){
 				if (/^[!/]/.test(message))
@@ -737,21 +742,16 @@ function ready(){
 					ProfanityFilter.apply(this, args);
 			};
 
-		if (typeof OurServer.channels[channelID] === 'undefined'){
-			bot.createDMChannel(userID, function(err, resp){
-				if (err)
-					return;
+		if (channelID in OurServer.channels)
+			callHandler();
+		else if (channelID in bot.directMessages){
+			if (!(userID in OurServer.members))
+				return respond(channelID, 'You must be a member of the '+OurServer.name+' Discord server to use this bot!');
 
-				if (typeof OurServer.members[resp.recipient.id] === 'undefined')
-					return;
+			console.log('Received PM from #'+userID+' (@'+username+'), contents: '+message);
 
-				console.log('Received PM from @'+resp.recipient.username+'#'+resp.recipient.discriminator+', contents: '+message);
-
-				args = [resp.recipient.id, resp.id, message, event];
-				callHandler(true);
-			});
+			callHandler(true);
 		}
-		else callHandler();
 	}
 	bot.on('message', onMessage);
 
