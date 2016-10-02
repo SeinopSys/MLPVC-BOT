@@ -1,3 +1,4 @@
+// jshint -W014
 var Discord = require('discord.io'),
 	config = require('./config'),
 	bot = new Discord.Client({
@@ -555,8 +556,22 @@ function ready(){
 			case "nsfw": (function(){
 				if (channelID in OurServer.channels && OurServer.channels[channelID].name === 'nsfw' && args[0] !== 'leave')
 					return;
-				if (!args.length)
-					return wipeMessage(channelID, event.d.id, channelID === OurChannelIDs.nsfw ? null : 'Please avoid discussing anything NSFW in <#'+channelID+'>. We have a dedicated invite-only NSFW channel, send `/nsfw join` to join. http://i.imgur.com/jaNBZ09.gif');
+				if (!args.length){
+					var message = (
+						channelID === OurChannelIDs.nsfw
+						? null
+						: (
+							isStaff(userID)
+							? 'Please avoid discussing anything NSFW '+(
+								!isPM
+								? 'in <#'+channelID+'>'
+								:'outside <#'+OurChannelIDs.nsfw+'>'
+							)+'.'
+							:''
+						)
+					)+' We have a dedicated invite-only NSFW channel, send `/nsfw join` to join.';
+					return isPM ? respond(channelID, message) : wipeMessage(channelID, event.d.id, message);
+				}
 
 				if (isPM)
 					return respond(channelID, 'This command must be used on the server');
