@@ -6,6 +6,7 @@ var Discord = require('discord.io'),
 		token: config.TOKEN,
 	}),
 	chalk = require('chalk'),
+	hasOwner = typeof config.OWNER_ID === 'string' && config.OWNER_ID.length,
 	replyTo = function(userID, message){
 		return "<@"+userID+"> "+message;
 	},
@@ -17,6 +18,14 @@ var Discord = require('discord.io'),
 		return bot.sendMessage({
 			to: channelID,
 			message: message,
+		},function(err, resp){
+			if (err){
+				console.log(err);
+				bot.sendMessage({
+					to: channelID,
+					message: 'Amessage to this channel failed to send. ('+err+')'+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.',
+				});
+			}
 		});
 	},
 	readline = require('readline'),
@@ -129,18 +138,28 @@ function ready(){
 		OurChannelIDs[channel.name] = channel.id;
 	}
 
-	var isOwner = function(userID){
+
+	function Permission(name, checker){
+		return {
+			name: name,
+			check: function(userID){
+				return checker(userID);
+			}
+		};
+	}
+
+	var isOwner = new Permission('Bot Developer',function(userID){
 			return userID === config.OWNER_ID;
-		},
-		isStaff = function(userID){
+		}),
+		isStaff = new Permission('Staff',function(userID){
 			return OurServer.members[userID].roles.indexOf(staffRoleID) !== -1;
-		},
-		isMember = function(userID){
+		}),
+		isMember = new Permission('Club Members',function(userID){
 			return OurServer.members[userID].roles.indexOf(OurRoleIDs['Club Members']) !== -1;
-		},
-		hasOwner = typeof config.OWNER_ID === 'string' && config.OWNER_ID.length,
+		}),
+		everyone = new Permission('Everyone',function(){ return true }),
 		myIDran = false,
-		limitedFunc = ', functionality is limited.\nUse the /myid command to get your ID';
+		limitedFunc = ', functionality is limited.\nUse the /myid command to get your user ID';
 
 	if (!hasOwner)
 		console.log('Bot has no owner'+limitedFunc);
@@ -182,77 +201,117 @@ function ready(){
 		});
 	}
 
-	var everyone = function(){ return true },
-		commands = [
+	var commandsArray = [
+			{
+				name: 'help',
+				help: 'Displays a list of available commands. Takes a command name as an additional parameter to provide detailed information on that specific command.',
+				perm: everyone,
+				usage: [true,'google','cg','ver'],
+			},
 			{
 				name: 'channels',
-				desc: 'Returns available channels on Our server (used for initial script setup)',
+				help: 'Returns available channels on our server (used for initial script setup)',
 				perm: isOwner,
+				usage: [true],
 			},
 			{
 				name: 'myid',
-				desc: 'Returns your user ID (used for initial script setup)',
+				help: 'Returns your user ID (used for initial script setup)',
 				perm: isOwner,
+				usage: [true],
 			},
 			{
 				name: 'roleids',
-				desc: 'Returns a list of rel IDs on the server',
+				help: 'Returns a list of role IDs on the server',
 				perm: isOwner,
+				usage: [true],
 			},
 			{
-				name: 'ver',
-				desc: 'Returns the bot\'s version number & when that version was created',
+				name: 'version',
+				help: 'Returns the bot\'s version number & when that version was created',
 				perm: everyone,
+				aliases: ['ver'],
+				usage: [true],
 			},
 			{
 				name: 'casual',
-				desc: 'Politely asks everyone in the room to move to the <#'+OurChannelIDs.casual+'> channel (does nothing in #casual)',
+				help: 'Politely asks everyone in the room to move to the <#'+OurChannelIDs.casual+'> channel (does nothing in said channel)',
 				perm: everyone,
+				usage: [true],
 			},
 			{
 				name: 'cg',
-				desc: 'Can be used to search the Vector Club\'s official Color Guide',
+				help: 'This command can be used to quickly link to an appearance using the site\'s  "I\'m feeling lucky" search. The query is sent to the website as-is and the first result\'s link is returned, if any.\nYou can enter tag names separated by commas, or use the `*` and `?` characters to force a token to search in the appearance name instead. **Currently limited to the Pony guide.**\n**Note:** When the site switches to using ElasticSearch these methods to search will likely change.',
+				usage: ['twilight sparkle','*pommel*','princess*'],
 				perm: everyone,
+				aliases: ['guide'],
 			},
 			{
 				name: 'google',
-				desc: 'Perform an "I\'m feeling lucky" google search and return the result',
+				help: 'Performs an "I\'m feeling lucky" Google search. If the search returned no obvious result, then the link to the search page is sent instead.',
+				usage: ['meaning of life','procractination','vinyl scratch mlp wikia'],
 				perm: everyone,
 			},
 			{
 				name: 'kym',
-				desc: 'Search entries of Know Your Meme, a popular wiki of Internet memes',
+				help: 'Find the first matching entry of Know Your Meme, a popular wiki of Internet memes',
+				usage: ['here come dat boi','lenny face','pepe the frog'],
 				perm: everyone,
 			},
 			{
 				name: 'youtube',
-				desc: 'Search for YouTube videos - results are based on US region & English language',
+				help: 'Returns the first result of a YouTube sarch. Results are based on US region & English language preferences.',
+				usage: ['hillary clinton meme queen 2016','harambe','darude sandstorm'],
 				perm: everyone,
 				aliases: ['yt'],
 			},
 			{
 				name: 'derpi',
-				desc: 'Returns the first result of a Derpibooru search',
+				help:
+					'This command can be used to return the first result of a Derpibooru search.\n'+
+					'**Note:** Any rooms aside from <#'+OurChannelIDs.nsfw+'> will only show results accessible by the site\'s default filter\n\n'+
+					'__**Bot-secific search keywords:**__\n\n'+
+					' ● `o:<desc|asc>` - Order of the results (if ommited, defaults to `desc`)\n'+
+					' ● `by:<score|relevance|width|height|comments|random>` - Same as "Sort by" on the actual site',
+				usage: ['safe,o:asc','safe,rd o:asc','ts by:random'],
 				perm: everyone,
 				aliases: ['db'],
 			},
 			{
 				name: 'nsfw',
-				desc: 'Lets everyone know to keep saucy mesages out of regular rooms (does nothing in #nsfw)\n\tThe optional parameter allows any user to join/leave the NSFW channel at will',
+				help:
+					'When ran without any arguments: sends a message to the current conversation warning participants to avoid discussing NSFW content in the current channel, and informs them about the existence of the <#'+OurChannelIDs.nsfw+'> channel\'s existance and how they can join it.\n'+
+					'There\'s an __optional__ argument which can be one of the following:\n'+
+					' ● `join` - Allows the user running this command to join the <#'+OurChannelIDs.nsfw+'> channel at will\n'+
+					' ● `leave` - Allows the user running this command to leave the <#'+OurChannelIDs.nsfw+'> channel at will',
+				usage: [true,'join','leave'],
 				perm: everyone,
 			},
 			{
 				name: 'define',
-				desc: 'Finds definitions, synonyms and meanings for words using the WordsAPI',
+				help: 'FThis command can be used to get definitions, synonyms and example usages of English words, powered by WordsAPI.\n**Note:** The API is free to use for up to 2500 requests per day. If exceeded, it has additional costst on a per-request basis, and as such it is rate limited to one use every 20 seconds. Only use this command when approperiate.',
+				usage: ['sleep','apple pie','horse'],
 				perm: everyone,
 				aliases: ['def'],
 			},
 			{
 				name: 'rekt',
-				desc: 'Apply cold water to the burnt area',
+				help: 'Apply cold water to the burned area',
 				perm: everyone,
+				usage: [true],
 			},
 		];
+	var commands = (function(){
+			var obj = {}, i;
+			for (i=0; i<commandsArray.length; i++)
+				obj[commandsArray[i].name] = commandsArray[i];
+			return obj;
+		})(),
+		commandPermCheck = function(command, userID){
+			return commands[command].perm(userID);
+		},
+		reqparams = 'This command requires additional parameters. Use `/help` for more information.',
+		onserver = 'This command nust be run from within a channel on our server.';
 
 	function getVersion(channelID, userID, callback){
 		exec = exec || require('child_process').exec;
@@ -276,19 +335,74 @@ function ready(){
 	}
 
 	function CallCommand(userID, channelID, message, event, userIdent, command, argStr, args){
-		var i,l, isPM = !(channelID in bot.channels);
+		var isPM = !(channelID in bot.channels);
 		command = command.toLowerCase();
+
+		if (command === 'join' && argStr.trim().toLowerCase() === 'nsfw'){
+			command = 'nsfw';
+			argStr = 'join';
+			args = [argStr];
+		}
+
 		switch (command){
-			case "help": (function(){
-				var msg = 'Commands must be prefixed with `!` or `/`. Here\'s a list of commands __you__ can run:\n\n';
-				for (i=0,l=commands.length; i<l; i++){
-					var cmd = commands[i];
-					if (cmd.perm(userID))
-						msg += ' ● `'+cmd.name+'`'+(cmd.desc?' - '+cmd.desc:'')+(cmd.aliases?' (Aliases: `'+(cmd.aliases.join('`, `'))+'`)':'')+'\n';
+			case "help": (function helpCommandHandler(){
+				var cmd;
+				if (typeof args[0] === 'string'){
+					if (!isPM)
+						wipeMessage(channelID, event.d.id);
+					var tcmd = args[0];
+					if (!(tcmd in commands) || !commands[tcmd].perm.check(userID)){
+						for (var i=0; i<commandsArray.length; i++){
+							if (!commandsArray[i].aliases)
+								continue;
+
+							if (commandsArray[i].aliases.indexOf(tcmd) !== -1){
+								args[0] = commandsArray[i].name;
+								helpCommandHandler();
+								return;
+							}
+						}
+						return respond(userID, 'The specified command does not exist or you don\'t have permission to use it.');
+					}
+
+					cmd = commands[tcmd];
+					if (typeof cmd.help !== 'string'){
+						if (!isPM)
+							wipeMessage(channelID, event.d.id);
+						respond(userID, 'The specified command ('+cmd.name+') has no associated help text.');
+					}
+
+					var usage = [];
+					if (cmd.usage){
+						for (var j=0; j<cmd.usage.length; j++){
+							usage.push('/'+cmd.name+(cmd.usage[j]===true?'':' '+cmd.usage[j]));
+						}
+					}
+					return respond(userID,
+						'Showing help for command `'+cmd.name+'`'+
+						'\n__Usable by:__ '+cmd.perm.name+'\n'+
+						'__Description:__\n'+(cmd.help.replace(/^(.)/gm,'\t\t$1'))+
+						(cmd.aliases?'\n__Aliases:__ `'+(cmd.aliases.join('`, `'))+'`':'')+
+						(usage.length?'\n__Usage, examples:__\n```\n'+(usage.join('\n'))+'\n```':'')
+					);
 				}
+				var msg = 'Commands must be prefixed with `!` or `/`, and all commands are case-insensitive (meaning `/google` is the same as `/Google` or `/GOOGLE`). Here\'s a list of all commands __you__ can run:\n\n',
+					canrun = [];
+				for (var x=0,l=commandsArray.length; x<l; x++){
+					cmd = commandsArray[x];
+					if (cmd.perm.check(userID))
+						canrun.push(cmd.name);
+				}
+				canrun = canrun.sort(function(a,b){
+					return a.localeCompare(b);
+				});
+				for (var ix=0; ix<canrun.length; ix++){
+					msg += ' ● **'+canrun[ix]+'**\n';
+				}
+
 				if (!isPM)
 					wipeMessage(channelID, event.d.id);
-				respond(userID, msg.trim()+'\n\nMost commands have an explanation which you can access by sending the command in any channel or as a PM to the bot __without any arguments__.');
+				respond(userID, msg.trim()+'\n\nIf you want to learn what a specific command does, simply run `/help commandname` (e.g. `/help casual`)');
 			})(); break;
 			case "channels": (function(){
 				if (!isOwner(userID))
@@ -301,22 +415,22 @@ function ready(){
 						ids.push(channel.id+' ('+(channel.type==='text'?'#':'')+channel.name+')');
 					}
 				}
-				respond(channelID, replyTo(userID, "Channels on this server:\n```"+ids.join('\n')+'```'));
+				respond(channelID, replyTo(userID, "Channels on server "+OurServer.name+":\n```"+ids.join('\n')+'```'));
 			})(); break;
 			case "myid": (function(){
 				if (!hasOwner){
 					if (myIDran)
-						return respond(channelID, replyTo(userID, 'This command can only be executed once per server start-up until the owner\'s ID is set'));
+						return respond(channelID, replyToIfNotPM(isPM, userID, 'This command can only be executed once per server start-up until the owner\'s ID is set'));
 					else myIDran = true;
 				}
-				else if (!isOwner(userID))
-					return respond(channelID, replyTo(userID, 'You must be owner to use this command'));
+				else if (!commandPermCheck(command, userID))
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'You must be owner to use this command'));
 
 				respond(channelID, replyTo(userID, 'Your user ID was sent to you in a private message'));
 				respond(userID, 'Your user ID is `'+userID+'`');
 			})(); break;
 			case "roleids": (function(){
-				if (!isOwner(userID))
+				if (!commandPermCheck(command, userID))
 					respond(channelID, replyTo(userID, 'You must be owner to use this command'));
 
 				var message = [],
@@ -324,7 +438,7 @@ function ready(){
 				keys.forEach(function(key){
 					message.push(OurRoleIDs[key]+' ('+key+')');
 				});
-				respond(channelID, replyTo(userID, 'List of available roles:\n```\n'+message.join('\n')+'\n```'));
+				respond(channelID, replyTo(userID, 'List of available roles for server '+OurServer.name+':\n```\n'+message.join('\n')+'\n```'));
 			})(); break;
 			case "ver": (function(){
 				bot.simulateTyping(channelID);
@@ -334,11 +448,11 @@ function ready(){
 				});
 			})(); break;
 			case "casual": (function(){
+				if (isPM)
+					return respond(channelID, onserver);
+
 				if (channelID === OurChannelIDs.casual)
 					return wipeMessage(channelID, event.d.id);
-
-				if (isPM)
-					return respond(channelID, 'This command must be used on the server');
 
 				var possible_images = [
 						'mountain', // Original by DJDavid98
@@ -360,11 +474,11 @@ function ready(){
 				wipeMessage(channelID, event.d.id, 'Please continue this discussion in <#'+OurChannelIDs.casual+'>\nhttps://mlpvc-rr.ml/img/casual/'+possible_images[k]+'.png');
 			})(); break;
 			case "cg": (function(){
-				if (!args.length)
-					return respond(channelID, replyToIfNotPM(isPM, userID, 'This command can be used to quickly link to an appearance using the site\'s  "I\'m feeling lucky" search'));
-
 				if (isPM)
-					return respond(channelID, 'This command must be used on the server');
+					return respond(channelID, onserver);
+
+				if (!args.length)
+					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams));
 
 				bot.simulateTyping(channelID);
 				unirest.get('https://mlpvc-rr.ml/cg/1?js=true&q='+encodeURIComponent(argStr)+'&GOFAST=true')
@@ -383,11 +497,11 @@ function ready(){
 					});
 			})(); break;
 			case "kym": (function(){
-				if (!args.length)
-					return respond(channelID, replyToIfNotPM(isPM, userID, 'This command can be used to find the Know Your Meme entry for a meme.'));
-
 				if (isPM)
-					return respond(channelID, 'This command must be used on the server');
+					return respond(channelID, onserver);
+
+				if (!args.length)
+					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams));
 
 				bot.simulateTyping(channelID);
 				var apiurl = 'http://rkgk.api.searchify.com/v1/indexes/kym_production/instantlinks?query='+encodeURIComponent(argStr)+'&field=name&fetch=url&function=10&len=1';
@@ -407,11 +521,11 @@ function ready(){
 					});
 			})(); break;
 			case "google": (function(){
-				if (!args.length)
-					return respond(channelID, replyToIfNotPM(isPM, userID, 'This command can be used to perform an "I\'m feeling lucky" Google search and return the first result.'));
-
 				if (isPM)
-					return respond(channelID, 'This command must be used on the server');
+					return respond(channelID, onserver);
+
+				if (!args.length)
+					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams));
 
 				bot.simulateTyping(channelID);
 				var searchUrl = 'https://google.com/search?q='+encodeURIComponent(argStr);
@@ -436,11 +550,11 @@ function ready(){
 			})(); break;
 			case "youtube":
 			case "yt": (function(){
-				if (!args.length)
-					return respond(channelID, replyToIfNotPM(isPM, userID, 'This command can be used to return the first result of a YouTube search'));
-
 				if (isPM)
-					return respond(channelID, 'This command must be used on the server');
+					return respond(channelID, onserver);
+
+				if (!args.length)
+					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams));
 
 				bot.simulateTyping(channelID);
 				yt.addParam('type', 'video');
@@ -460,18 +574,11 @@ function ready(){
 			})(); break;
 			case "db":
 			case "derpi": (function(){
-				if (!args.length)
-					return respond(channelID, replyToIfNotPM(isPM, userID,
-						'This command can be used to return the first result of a Derpibooru search.\n'+
-						'**Note:** Any rooms aside from <#'+OurChannelIDs.nsfw+'> will only show results accessible by the site\'s default filter\n\n'+
-						'__**Bot-secific search keywords:**__\n\n'+
-						' ● `o:<desc|asc>` - Order of the results (if ommited, defaults to `desc`)\n'+
-						' ● `by:<score|relevance|width|height|comments|random>` - Same as "Sort by" on the actual site\n\n'+
-						'*Examples:* `/derpi safe,o:asc`, `/derpi safe,rd o:asc`, `/derpi ts by:random`'
-					));
-
 				if (isPM)
-					return respond(channelID, 'This command must be used on the server');
+					return respond(channelID, onserver);
+
+				if (!args.length)
+					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams));
 
 				bot.simulateTyping(channelID);
 				var query = argStr,
@@ -554,6 +661,9 @@ function ready(){
 				});
 			})(); break;
 			case "nsfw": (function(){
+				if (isPM)
+					return respond(channelID, onserver);
+
 				if (channelID in OurServer.channels && OurServer.channels[channelID].name === 'nsfw' && args[0] !== 'leave')
 					return;
 				if (!args.length){
@@ -572,9 +682,6 @@ function ready(){
 					)+' We have a dedicated invite-only NSFW channel, send `/nsfw join` to join.';
 					return isPM ? respond(channelID, message) : wipeMessage(channelID, event.d.id, message);
 				}
-
-				if (isPM)
-					return respond(channelID, 'This command must be used on the server');
 
 				switch (args[0]){
 					case "join":
@@ -635,17 +742,17 @@ function ready(){
 			})(); break;
 			case "rekt":
 				if (isPM)
-					return respond(channelID, 'This command must be used on the server');
+					return respond(channelID, onserver);
 
 				respond(channelID, '**REKT** https://www.youtube.com/watch?v=tfyqk26MqdE');
 			break;
 			case "def":
 			case "define": (function(){
-				if (!args.length)
-					return respond(channelID, replyToIfNotPM(isPM, userID, 'This command can be used to get definitions, synonyms and example usages of English words, powered by WordsAPI (https://www.wordsapi.com/). \n**Note:** The API is free to use for up to 2500 requests per day. If exceeded, it has additional costst on a per-request basis, and as such it is rate limited to one use every 20 seconds. Only use this command when approperiate.'));
-
 				if (isPM)
-					return respond(channelID, 'This command must be used on the server');
+					return respond(channelID, onserver);
+
+				if (!args.length)
+					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams));
 
 				var delta;
 				if (typeof defineCommandLastUsed === 'undefined')
