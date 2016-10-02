@@ -679,7 +679,7 @@ function ready(){
 							)+'.'
 							:''
 						)
-					)+' We have a dedicated invite-only NSFW channel, send `/nsfw join` to join. https://mlpvc-rr.ml/img/discord/nsfw.gif';
+					)+' We have a dedicated invite-only NSFW channel, send `/nsfw join` to join.\nhttps://mlpvc-rr.ml/img/discord/nsfw.gif';
 					return isPM ? respond(channelID, message) : wipeMessage(channelID, event.d.id, message);
 				}
 
