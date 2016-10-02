@@ -671,7 +671,7 @@ function ready(){
 						channelID === OurChannelIDs.nsfw
 						? null
 						: (
-							isStaff(userID)
+							isStaff.check(userID)
 							? 'Please avoid discussing anything NSFW '+(
 								!isPM
 								? 'in <#'+channelID+'>'
@@ -764,7 +764,7 @@ function ready(){
 				}
 				else defineCommandLastUsed = Date.now();
 
-				if (channelID === OurChannelIDs['bot-sandbox'] && !isStaff(userID))
+				if (channelID === OurChannelIDs['bot-sandbox'] && !isStaff.check(userID))
 					return respond(channelID, replyTo(userID, 'This command can only be used by members of the Staff role in <#'+channelID+'>. Please only use this command when neccessary as it\'s number of requests per day is limited.'));
 
 				unirest.get("https://wordsapiv1.p.mashape.com/words/"+encodeURIComponent(argStr))
@@ -825,7 +825,7 @@ function ready(){
 	}
 
 	function ProfanityFilter(userID, channelID, message, event){
-		if (isStaff(userID) || isMember(userID))
+		if (isStaff.check(userID) || isMember.check(userID))
 			return;
 
 		var matching = /\b(f+[u4a]+[Ссc]+k+(?:tard|[1i]ng)?|[Ссc]un[7t]|a[5$s]{2,}(?:h[0o]+l[3e]+)|(?:d[1i]+|[Ссc][0o])[Ссc]k(?:h[3e][4a]*d)?|b[1ie3a4]+t[Ссc]h)\b/ig,
