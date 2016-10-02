@@ -331,12 +331,12 @@ function ready(){
 				if (channelID === OurChannelIDs.casual)
 					return wipeMessage(channelID, event.d.id);
 
-				/*var possible_images = [
-						'http://i.imgur.com/C7T0npq.png', // Original by DJDavid98
-						'http://i.imgur.com/RwnT8EX.png', // Coco & Rarity by Pirill
-						'http://i.imgur.com/qg9Y1LN.png', // Applebloom's new CM by Drakizora
-						'http://i.imgur.com/cxCzsB8.png', // Applebloom falling by Drakizora
-						'http://i.imgur.com/iUZe3O2.png', // CMs floating around Applebloom by Drakizora
+				var possible_images = [
+						'mountain', // Original by DJDavid98
+									// RIP IN PEPPERONI (Coco & Rarity by Pirill) ;_;7
+						'abcm',     // Applebloom's new CM by Drakizora
+						'abfall',   // Applebloom falling by Drakizora
+						'abfloat',  // CMs floating around Applebloom by Drakizora
 					],
 					image_count = possible_images.length,
 					data = args[0],
@@ -346,10 +346,9 @@ function ready(){
 					k = Math.max(0,Math.min(image_count-1,parseInt(data, 10)-1));
 				else {
 					k = moment().minutes() % image_count;
-				}*/
+				}
 
-				// '\n'+possible_images[k];
-				wipeMessage(channelID, event.d.id, 'Please continue this discussion in <#'+OurChannelIDs.casual+'>');
+				wipeMessage(channelID, event.d.id, 'Please continue this discussion in <#'+OurChannelIDs.casual+'>\nhttps://mlpvc-rr.ml/img/casual/'+possible_images[k]+'.png');
 			})(); break;
 			case "cg": (function(){
 				if (!args.length)
