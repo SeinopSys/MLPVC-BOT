@@ -471,7 +471,7 @@ function ready(){
 					k = moment().minutes() % image_count;
 				}
 
-				wipeMessage(channelID, event.d.id, 'Please continue this discussion in <#'+OurChannelIDs.casual+'>\nhttps://mlpvc-rr.ml/img/casual/'+possible_images[k]+'.png');
+				wipeMessage(channelID, event.d.id, 'Please continue this discussion in <#'+OurChannelIDs.casual+'>\nhttps://mlpvc-rr.ml/img/discord/casual/'+possible_images[k]+'.png');
 			})(); break;
 			case "cg": (function(){
 				if (isPM)
@@ -679,7 +679,7 @@ function ready(){
 							)+'.'
 							:''
 						)
-					)+' We have a dedicated invite-only NSFW channel, send `/nsfw join` to join.';
+					)+' We have a dedicated invite-only NSFW channel, send `/nsfw join` to join. https://mlpvc-rr.ml/img/discord/nsfw.gif';
 					return isPM ? respond(channelID, message) : wipeMessage(channelID, event.d.id, message);
 				}
 
