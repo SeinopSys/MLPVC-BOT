@@ -761,9 +761,9 @@ function ready(){
 		onMessage(null, newMsg.author.id, newMsg.channel_id, newMsg.content, event);
 	});
 
-	if (hasOwner && !config.LOCAL)
+	if (hasOwner)
 		getVersion(config.OWNER_ID,config.OWNER_ID,function(ver){
-			bot.setPresence({ game: { name: 'version '+ver } });
+			bot.setPresence({ game: { name: (config.LOCAL?'a local ':'')+'version'+(config.LOCAL?'':' '+ver) } });
 		});
 
 	bot.on('disconnect', function(errMsg, code){
