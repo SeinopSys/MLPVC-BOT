@@ -18,12 +18,12 @@ var Discord = require('discord.io'),
 		return bot.sendMessage({
 			to: channelID,
 			message: message,
-		},function(err, resp){
+		},function(err){
 			if (err){
 				console.log(err);
 				bot.sendMessage({
 					to: channelID,
-					message: 'Amessage to this channel failed to send. ('+err+')'+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.',
+					message: 'A message to this channel failed to send. (HTTP '+err.statusCode+')\n'+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.',
 				});
 			}
 		});
@@ -310,7 +310,9 @@ function ready(){
 		commandPermCheck = function(command, userID){
 			return commands[command].perm(userID);
 		},
-		reqparams = 'This command requires additional parameters. Use `/help` for more information.',
+		reqparams = function(cmd){
+			return 'This command requires additional parameters. Use `/help  '+cmd+'` for  more information.';
+		},
 		onserver = 'This command nust be run from within a channel on our server.';
 
 	function getVersion(channelID, userID, callback){
@@ -478,7 +480,7 @@ function ready(){
 					return respond(channelID, onserver);
 
 				if (!args.length)
-					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams));
+					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 
 				bot.simulateTyping(channelID);
 				unirest.get('https://mlpvc-rr.ml/cg/1?js=true&q='+encodeURIComponent(argStr)+'&GOFAST=true')
@@ -501,7 +503,7 @@ function ready(){
 					return respond(channelID, onserver);
 
 				if (!args.length)
-					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams));
+					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 
 				bot.simulateTyping(channelID);
 				var apiurl = 'http://rkgk.api.searchify.com/v1/indexes/kym_production/instantlinks?query='+encodeURIComponent(argStr)+'&field=name&fetch=url&function=10&len=1';
@@ -525,7 +527,7 @@ function ready(){
 					return respond(channelID, onserver);
 
 				if (!args.length)
-					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams));
+					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 
 				bot.simulateTyping(channelID);
 				var searchUrl = 'https://google.com/search?q='+encodeURIComponent(argStr);
@@ -554,7 +556,7 @@ function ready(){
 					return respond(channelID, onserver);
 
 				if (!args.length)
-					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams));
+					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 
 				bot.simulateTyping(channelID);
 				yt.addParam('type', 'video');
@@ -578,7 +580,7 @@ function ready(){
 					return respond(channelID, onserver);
 
 				if (!args.length)
-					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams));
+					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 
 				bot.simulateTyping(channelID);
 				var query = argStr,
@@ -752,7 +754,7 @@ function ready(){
 					return respond(channelID, onserver);
 
 				if (!args.length)
-					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams));
+					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 
 				var delta;
 				if (typeof defineCommandLastUsed === 'undefined')
@@ -793,7 +795,7 @@ function ready(){
 			default:
 				var isProfanity = !isPM && ProfanityFilter(userID, channelID, message, event);
 				if (!isProfanity){
-					var notfound = 'Command /'+command+' not found';
+					var notfound = 'Command `/'+command+'` not found. Use `/help` to see a list of all available commands';
 					console.log(notfound);
 					bot.sendMessage({
 						to: channelID,
@@ -804,7 +806,7 @@ function ready(){
 	}
 
 	function ProcessCommand(userID, channelID, message, event){
-		var commandRegex = /^[!/](\w+)(?:\s+([ -~]+)?)?$/,
+		var commandRegex = /^(?:\s*<[@#]\d+>)?\s*[!/](\w+)(?:\s+([ -~]+)?)?$/,
 			user = bot.users[userID],
 			userIdent = user.username+'#'+user.discriminator,
 			isPM = !(channelID in bot.channels);
@@ -857,7 +859,7 @@ function ready(){
 
 		var args = [].slice.call(arguments,1),
 			callHandler = function(isPM){
-				if (/^[!/]/.test(message))
+				if (/^(?:\s*<[@#]\d+>)?\s*[!/]/.test(message))
 					return ProcessCommand.apply(this, args);
 
 				if (isPM !== true)
