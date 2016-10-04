@@ -241,7 +241,7 @@ function ready(){
 			},
 			{
 				name: 'cg',
-				help: 'This command can be used to quickly link to an appearance using the site\'s  "I\'m feeling lucky" search. The query is sent to the website as-is and the first result\'s link is returned, if any.\nYou can enter tag names separated by commas, or use the `*` and `?` characters to force a token to search in the appearance name instead. **Currently limited to the Pony guide.**\n**Note:** When the site switches to using ElasticSearch these methods to search will likely change.',
+				help: 'This command can be used to quickly link to an appearance using the site\'s "I\'m feeling lucky" search. The query is sent to the website as-is and the first result\'s link is returned, if any.\nYou can enter tag names separated by commas, or use the `*` and `?` characters to force a token to search in the appearance name instead. **Currently limited to the Pony guide.**\n**Note:** When the site switches to using ElasticSearch these methods to search will likely change.',
 				usage: ['twilight sparkle','*pommel*','princess*'],
 				perm: everyone,
 				aliases: ['guide'],
@@ -311,7 +311,7 @@ function ready(){
 			return commands[command].perm(userID);
 		},
 		reqparams = function(cmd){
-			return 'This command requires additional parameters. Use `/help  '+cmd+'` for  more information.';
+			return 'This command requires additional parameters. Use `/help '+cmd+'` for more information.';
 		},
 		onserver = 'This command nust be run from within a channel on our server.';
 
@@ -328,7 +328,7 @@ function ready(){
 				if (_){
 					console.log('Error getting creation time', _);
 					m = 'Error while getting creation time' + (!privateMsg && hasOwner ? ' (<@' + config.OWNER_ID + '> Logs may contain more info)' : '');
-					return respond(channelID,  !privateMsg ? replyTo(userID, m): m);
+					return respond(channelID, !privateMsg ? replyTo(userID, m): m);
 				}
 
 				return callback(version.trim(), ts);
