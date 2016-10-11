@@ -300,6 +300,12 @@ function ready(){
 				perm: everyone,
 				usage: [true],
 			},
+			{
+				name: 'say',
+				help: 'This command is a placeholder, it has no function other than giving you the ability to execute it without any error message about an unknown command if your message begins with a slash. Added for IRC "compatibility".',
+				perm: everyone,
+				usage: [true, '/r/mylittlepony'],
+			},
 		];
 	var commands = (function(){
 			var obj = {}, i;
@@ -792,6 +798,7 @@ function ready(){
 						return respond(channelID, replyTo(userID, '\n**'+data.word+'** • /'+data.pronunciation.all+'/'+(data.syllables&&data.syllables.list&&data.syllables.list.length>1?' • *'+data.syllables.list.join('-')+'*':'')+'\n'+(defs.join('\n\n'))));
 					});
 			})(); break;
+			case "say": break;
 			default:
 				var isProfanity = !isPM && ProfanityFilter(userID, channelID, message, event);
 				if (!isProfanity){
