@@ -8,6 +8,7 @@
     "discord.io": "^2.2.4",
     "moment": "^2.15.1",
     "opener": "^1.4.2",
+    "text-table": "^0.2.0",
     "unirest": "^0.5.1",
     "youtube-node": "^1.3.0"
   },

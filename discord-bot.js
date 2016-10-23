@@ -43,6 +43,7 @@ var Discord = require('discord.io'),
 	YouTube = require('youtube-node'),
 	yt = new YouTube(),
 	fs = require('fs'),
+	table = require('text-table'),
 	OurServer,
 	exec,
 	defineCommandLastUsed,
@@ -401,8 +402,8 @@ function ready(){
 						(usage.length?'\n__Usage, examples:__\n```\n'+(usage.join('\n'))+'\n```':'')
 					);
 				}
-				var canrun = [];
-				for (var x=0,l=commandsArray.length; x<l; x++){
+				var canrun = [], x, l=commandsArray.length;
+				for (x=0; x<l; x++){
 					cmd = commandsArray[x];
 					if (cmd.perm.check(userID))
 						canrun.push(cmd.name);
@@ -414,14 +415,19 @@ function ready(){
 					msg = 'Commands must be prefixed with `!` or `/` when sent in one of the channels, and all commands are case-insensitive (meaning `/'+exampleCommand
 						+'` is the same as `/'+(exampleCommand.replace(/^(.)/,function(a){
 							return a.toUpperCase();
-						}))+'` or `/'+(exampleCommand.toUpperCase())+'`). If you PM the bot, the prefix is not needed; every PM is considered a command. Here\'s a list of all commands __you__ can run:\n\n';
-				for (var ix=0; ix<canrun.length; ix++){
-					msg += ' ● **'+canrun[ix]+'**\n';
-				}
+						}))+'` or `/'+(exampleCommand.toUpperCase())+'`).\n'+
+						'_If you PM the bot, the prefix is not needed; every PM is considered a command._\n'+
+						'Here\'s a list of all commands __you__ can run:\n```\n',
+					commandsTable = [],
+					columns = 3;
+				for (var ix=0; ix<canrun.length; ix+=columns)
+					commandsTable.push(canrun.slice(ix,ix+columns));
+
+				msg += table(commandsTable,{ hsep: '  ' });
 
 				if (!isPM)
 					wipeMessage(channelID, event.d.id);
-				respond(userID, msg.trim()+'\n\nIf you want to learn what a specific command does, simply run `/help commandname` (e.g. `/help '+exampleCommand+'`)');
+				respond(userID, msg.trim()+'\n```\nIf you want to learn what a specific command does, simply run `/help commandname` (e.g. `/help '+exampleCommand+'`)');
 			})(); break;
 			case "channels": (function(){
 				if (!isOwner(userID))
