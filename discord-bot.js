@@ -42,6 +42,7 @@ var Discord = require('discord.io'),
 	moment = require('moment'),
 	YouTube = require('youtube-node'),
 	yt = new YouTube(),
+	fs = require('fs'),
 	OurServer,
 	exec,
 	defineCommandLastUsed,
@@ -305,6 +306,12 @@ function ready(){
 				help: 'This command is a placeholder, it has no function other than giving you the ability to execute it without any error message about an unknown command if your message begins with a slash. Added for IRC "compatibility".',
 				perm: everyone,
 				usage: [true, '/r/mylittlepony'],
+			},
+			{
+				name: 'avatar',
+				help: 'This command can be used to change the bot\'s avatar by passing an image URL, or set it back to the default by passing `reset`.',
+				perm: isStaff,
+				usage: ['http://placehold.it/300x300/000000/ffffff.png?text=MLPVC-BOT', 'reset'],
 			},
 		];
 	var commands = (function(){
@@ -799,6 +806,53 @@ function ready(){
 					});
 			})(); break;
 			case "say": break;
+			case "avatar": (function(){
+				if (!isStaff.check(userID))
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'You do not have permission to use this command.'));
+
+				var url = argStr.trim(),
+					reset = url === 'reset',
+					actioned = reset?'reset':'updated',
+					setAvatar = function(avatarBase64){
+						bot.editUserInfo({
+							avatar: avatarBase64,
+						}, function(err, response){
+							if (err){
+								console.log(err);
+								return respond(channelID, replyToIfNotPM(isPM, userID, 'Setting avatar failed. ' + (hasOwner ? '<@' + config.OWNER_ID + '>' : 'The bot owner') + ' should see what caused the issue in the logs.'));
+							}
+
+							var outputChannel = OurChannelIDs.staffchat,
+								staffChatExists = typeof OurChannelIDs.staffchat === 'string';
+							if (!staffChatExists){
+								if (isPM)
+									console.log(chalk.blue('#staffchat')+' channel does not exist, could not send avatar update message');
+								else outputChannel = channelID;
+							}
+							if (isPM)
+								respond(channelID, 'The bot\'s avatar has been '+actioned+(staffChatExists?', and a notice was sent to the other staff members':'')+'.');
+							else wipeMessage(channelID, event.d.id);
+							respond(outputChannel, 'The bot\'s avatar has been '+actioned+' by <@' + userID + '>' + (isPM ? ' (via PM)':'')+(!reset?' to the following image: ' + url:''));
+						});
+					};
+				if (reset)
+					return setAvatar(fs.readFileSync('default_avatar.png', 'base64'));
+				if (!/^https?:\/\/.*$/.test(url))
+					respond(channelID, replyToIfNotPM(isPM, userID, 'The parameter must be a valid URL'));
+
+				var Request = unirest.get(url)
+					.encoding(null)
+					.end(function(result){
+						if ((result.error || !(result.body instanceof Buffer))){
+							console.log(result.error, result.body);
+							return respond(channelID, replyTo(userID, 'Could not download image (HTTP ' + result.status + '). ' + (hasOwner ? '<@' + config.OWNER_ID + '>' : 'The bot owner') + ' should see what caused the issue in the logs.'));
+						}
+
+						var avatarBase64 = new Buffer(result.body).toString('base64');
+
+						setAvatar(avatarBase64, reset);
+					});
+			})(); break;
 			default:
 				var isProfanity = !isPM && ProfanityFilter(userID, channelID, message, event);
 				if (!isProfanity){
