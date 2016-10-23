@@ -401,8 +401,7 @@ function ready(){
 						(usage.length?'\n__Usage, examples:__\n```\n'+(usage.join('\n'))+'\n```':'')
 					);
 				}
-				var msg = 'Commands must be prefixed with `!` or `/`, and all commands are case-insensitive (meaning `/google` is the same as `/Google` or `/GOOGLE`). Here\'s a list of all commands __you__ can run:\n\n',
-					canrun = [];
+				var canrun = [];
 				for (var x=0,l=commandsArray.length; x<l; x++){
 					cmd = commandsArray[x];
 					if (cmd.perm.check(userID))
@@ -411,13 +410,18 @@ function ready(){
 				canrun = canrun.sort(function(a,b){
 					return a.localeCompare(b);
 				});
+				var exampleCommand = canrun[Math.floor(Math.random()*canrun.length)],
+					msg = 'Commands must be prefixed with `!` or `/` when sent in one of the channels, and all commands are case-insensitive (meaning `/'+exampleCommand
+						+'` is the same as `/'+(exampleCommand.replace(/^(.)/,function(a){
+							return a.toUpperCase();
+						}))+'` or `/'+(exampleCommand.toUpperCase())+'`). If you PM the bot, the prefix is not needed; every PM is considered a command. Here\'s a list of all commands __you__ can run:\n\n';
 				for (var ix=0; ix<canrun.length; ix++){
 					msg += ' ● **'+canrun[ix]+'**\n';
 				}
 
 				if (!isPM)
 					wipeMessage(channelID, event.d.id);
-				respond(userID, msg.trim()+'\n\nIf you want to learn what a specific command does, simply run `/help commandname` (e.g. `/help '+(canrun[Math.floor(Math.random()*canrun.length)])+'`)');
+				respond(userID, msg.trim()+'\n\nIf you want to learn what a specific command does, simply run `/help commandname` (e.g. `/help '+exampleCommand+'`)');
 			})(); break;
 			case "channels": (function(){
 				if (!isOwner(userID))
@@ -867,10 +871,10 @@ function ready(){
 	}
 
 	function ProcessCommand(userID, channelID, message, event){
-		var commandRegex = /^(?:\s*<[@#]\d+>)?\s*[!/](\w+)(?:\s+([ -~]+)?)?$/,
+		var isPM = !(channelID in bot.channels),
+			commandRegex = new RegExp('^'+(!isPM?'(?:\\s*<[@#]\\d+>)?\\s*[!/]':'\\s*[!/]?')+'(\\w+)(?:\\s+([ -~]+)?)?$'),
 			user = bot.users[userID],
-			userIdent = user.username+'#'+user.discriminator,
-			isPM = !(channelID in bot.channels);
+			userIdent = user.username+'#'+user.discriminator;
 		console.log(userIdent+' ran '+message+' from '+(isPM?'a PM':chalk.blue('#'+bot.channels[channelID].name)));
 		if (!commandRegex.test(message))
 			bot.sendMessage({
@@ -920,11 +924,10 @@ function ready(){
 
 		var args = [].slice.call(arguments,1),
 			callHandler = function(isPM){
-				if (/^(?:\s*<[@#]\d+>)?\s*[!/]/.test(message))
+				if (isPM || /^(?:\s*<[@#]\d+>)?\s*[!/]/.test(message))
 					return ProcessCommand.apply(this, args);
 
-				if (isPM !== true)
-					ProfanityFilter.apply(this, args);
+				ProfanityFilter.apply(this, args);
 			};
 
 		if (channelID in OurServer.channels)
