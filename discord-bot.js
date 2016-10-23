@@ -417,7 +417,7 @@ function ready(){
 
 				if (!isPM)
 					wipeMessage(channelID, event.d.id);
-				respond(userID, msg.trim()+'\n\nIf you want to learn what a specific command does, simply run `/help commandname` (e.g. `/help casual`)');
+				respond(userID, msg.trim()+'\n\nIf you want to learn what a specific command does, simply run `/help commandname` (e.g. `/help '+(canrun[Math.floor(Math.random()*canrun.length)])+'`)');
 			})(); break;
 			case "channels": (function(){
 				if (!isOwner(userID))
