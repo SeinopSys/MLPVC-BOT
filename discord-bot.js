@@ -327,7 +327,7 @@ function ready(){
 		reqparams = function(cmd){
 			return 'This command requires additional parameters. Use `/help '+cmd+'` for more information.';
 		},
-		onserver = 'This command nust be run from within a channel on our server.';
+		onserver = 'This command must be run from within a channel on our server.';
 
 	function getVersion(channelID, userID, callback){
 		exec = exec || require('child_process').exec;
