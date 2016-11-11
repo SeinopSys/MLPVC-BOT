@@ -127,7 +127,7 @@ function ready(){
 
 		var role = OurServer.roles[i];
 		OurRoleIDs[role.name] = role.id;
-		if (typeof staffRoleID === 'undefined' && role.name === config.STAFFROLE_NAME)
+		if (typeof staffRoleID === 'undefined' && role.name === 'Staff')
 			staffRoleID = role.id;
 	}
 	if (typeof staffRoleID === 'undefined')
@@ -314,6 +314,18 @@ function ready(){
 				perm: isStaff,
 				usage: ['http://placehold.it/300x300/000000/ffffff.png?text=MLPVC-BOT', 'reset'],
 			},
+			{
+				name: 'about',
+				help: 'Retrieves information about a user',
+				perm: isOwner,
+				usage: ['me', 'MLPVC-RR'],
+			},
+			{
+				name: 'fixnick',
+				help: 'Chnages your nickname to show your Discord name in front and your DeviantArt name in brackets after it. <&'+OurRoleIDs.Staff+'> can use a user\'s name as the first argument to fix a sepcific user\'s nick. Does not work on Staff members due to API limitations.',
+				perms: everyone,
+				usage: [true,'me','<nick>','@mention'],
+			},
 		];
 	var commands = (function(){
 			var obj = {}, i;
@@ -348,6 +360,57 @@ function ready(){
 				return callback(version.trim(), ts);
 			});
 		});
+	}
+
+	function getUserData(targetUser, channelID, userID, isPM){
+		var member,
+			i,
+			userIDregex = /^<@(\d+)>$/;
+		if (typeof targetUser !== 'string' || targetUser.trim().length === 0)
+			return respond(channelID, replyToIfNotPM(isPM, userID, 'The user identifier is missing'));
+		if (targetUser === 'me')
+			member = bot.users[userID];
+		else {
+			if (typeof targetUser !== 'string' || !userIDregex.test(targetUser)){
+				for (i in bot.users){
+					if (!bot.users.hasOwnProperty(i))
+						continue;
+
+					if (bot.users[i].username.toLowerCase() === targetUser.toLowerCase()){
+						member = bot.users[i];
+						break;
+					}
+				}
+				if (typeof member === 'undefined')
+					for (i in OurServer.members){
+						if (!OurServer.members.hasOwnProperty(i))
+							continue;
+
+						if (OurServer.members[i].nick.toLowerCase().indexOf(targetUser.toLowerCase()) === 0){
+							member = OurServer.members[i];
+							break;
+						}
+					}
+				if (typeof member === 'undefined')
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'The user identifier is missing or invalid (`'+targetUser+'`)'));
+			}
+			else member = bot.users[targetUser.replace(userIDregex,'$1')];
+		}
+		var data = {},
+			membership = OurServer.members[member.id];
+		data.id = member.id;
+		data.username = member.username;
+		data.discriminator = member.discriminator;
+		data.nick = membership.nick;
+		data.roles = [];
+		for (i in membership.roles){
+			if (!membership.roles.hasOwnProperty(i))
+				continue;
+
+			data.roles.push(OurServer.roles[membership.roles[i]].name);
+		}
+
+		return data;
 	}
 
 	function CallCommand(userID, channelID, message, event, userIdent, command, argStr, args){
@@ -430,7 +493,7 @@ function ready(){
 				respond(userID, msg.trim()+'\n```\nIf you want to learn what a specific command does, simply run `/help commandname` (e.g. `/help '+exampleCommand+'`)');
 			})(); break;
 			case "channels": (function(){
-				if (!isOwner(userID))
+				if (!isOwner.check(userID))
 					respond(channelID, replyTo(userID, 'You must be owner to use this command'));
 
 				var ids = [];
@@ -782,7 +845,7 @@ function ready(){
 				var delta;
 				if (typeof defineCommandLastUsed === 'undefined')
 					defineCommandLastUsed = Date.now();
-				else if ((delta = Date.now() - defineCommandLastUsed) < defineTimeLimit && !isOwner(userID)){
+				else if ((delta = Date.now() - defineCommandLastUsed) < defineTimeLimit && !isOwner.check(userID)){
 					return wipeMessage(channelID, event.d.id, function(){
 						respond(userID, 'The `define` command is limited to one use every '+(defineTimeLimit/1000)+' seconds due to monthly API request limits (which, after exceeded, cost money per each request). Try again in '+(Math.round((delta/100))/10)+'s');
 					});
@@ -862,6 +925,38 @@ function ready(){
 
 						setAvatar(avatarBase64, reset);
 					});
+			})(); break;
+			case "about": (function(){
+				if (!isOwner.check(userID))
+					respond(channelID, replyToIfNotPM(isPM, userID, 'You must be owner to use this command'));
+
+				var data = getUserData(args[0], channelID, userID, isPM);
+
+				respond(channelID, replyToIfNotPM(isPM, userID, 'User details:\n```json\n'+JSON.stringify(data,null,'\t')+'\n```'));
+			})(); break;
+			case "fixnick": (function(){
+				var data = getUserData(isStaff.check(userID) ? (args[0]||'me') : 'me', channelID, userID, isPM);
+				if (typeof data !== 'object')
+					return;
+				if (typeof data.nick !== 'string')
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'You do not have a nickname on our server.'));
+
+				var originalNick = data.nick.replace(/^.*\(([a-zA-Z\d-]{1,20})\)$/,'$1'),
+					nick = data.username+' ('+originalNick+')';
+				bot.editNickname({
+					serverID: OurServer.id,
+					userID: data.id,
+					nick: nick,
+				},function(err, response){
+					if (err){
+						if (err.response && err.response.message === 'Privilege is too low...')
+							return respond(channelID, replyToIfNotPM(isPM, userID, 'Changing nick failed: Due to Discord API limitations the bot can only set the nicks of users whose roles are under the bot\'s in the hierarchy.'));
+						console.log(err);
+						return respond(channelID, replyToIfNotPM(isPM, userID, 'Changing nick failed.'+(err.response && err.response.message ? ' ('+err.response.message+')' : '')+'\n'+(hasOwner ? '<@' + config.OWNER_ID + '>' : 'The bot owner') + ' should see what caused the issue in the logs.'));
+					}
+
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'The nickname of <@'+data.id+'> has been updated to `'+nick+'`'));
+				});
 			})(); break;
 			default:
 				var isProfanity = !isPM && ProfanityFilter(userID, channelID, message, event);
