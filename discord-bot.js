@@ -494,7 +494,7 @@ function ready(){
 			})(); break;
 			case "channels": (function(){
 				if (!isOwner.check(userID))
-					respond(channelID, replyTo(userID, 'You must be owner to use this command'));
+					return respond(channelID, replyTo(userID, 'You must be owner to use this command'));
 
 				var ids = [];
 				for (i in OurServer.channels){
@@ -928,7 +928,7 @@ function ready(){
 			})(); break;
 			case "about": (function(){
 				if (!isOwner.check(userID))
-					respond(channelID, replyToIfNotPM(isPM, userID, 'You must be owner to use this command'));
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'You must be owner to use this command'));
 
 				var data = getUserData(args[0], channelID, userID, isPM);
 
