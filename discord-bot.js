@@ -323,7 +323,7 @@ function ready(){
 			{
 				name: 'fixnick',
 				help: 'Chnages your nickname to show your Discord name in front and your DeviantArt name in brackets after it. <&'+OurRoleIDs.Staff+'> can use a user\'s name as the first argument to fix a sepcific user\'s nick. Does not work on Staff members due to API limitations.',
-				perms: everyone,
+				perm: everyone,
 				usage: [true,'me','<nick>','@mention'],
 			},
 		];
