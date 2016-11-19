@@ -5,5 +5,6 @@ module.exports = {
 	OWNER_ID: '',
 	YT_API_KEY: '',
 	MASHAPE_KEY: '',
+	SITE_ABSPATH: 'http://localhost/',
 	LOCAL: true,
 };

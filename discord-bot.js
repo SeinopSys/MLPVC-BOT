@@ -49,6 +49,9 @@ var Discord = require('discord.io'),
 	defineCommandLastUsed,
 	defineTimeLimit = 20000;
 
+if (config.LOCAL === true && /^https:/.test(config.SITE_ABSPATH))
+	process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 yt.setKey(config.YT_API_KEY);
 
 require("console-stamp")(console, {
@@ -160,6 +163,9 @@ function ready(){
 			return OurServer.members[userID].roles.indexOf(OurRoleIDs['Club Members']) !== -1;
 		}),
 		everyone = new Permission('Everyone',function(){ return true }),
+		nonmembers = new Permission('Non-members',function(userID){
+			return !isStaff.check(userID) && !isMember.check(userID);
+		}),
 		myIDran = false,
 		limitedFunc = ', functionality is limited.\nUse the /myid command to get your user ID';
 
@@ -206,9 +212,11 @@ function ready(){
 	var commandsArray = [
 			{
 				name: 'help',
-				help: 'Displays a list of available commands. Takes a command name as an additional parameter to provide detailed information on that specific command.',
+				help:
+					'Displays a list of available commands. Takes a command name as an additional parameter to provide detailed information on that specific command.\n'+
+					'If a command is specified as the first parameter and the second parameter is `here` the help text will be output inside the current channel instead of being sent via a PM (the parameter does nothing when the command is called via PM).',
 				perm: everyone,
-				usage: [true,'google','cg','ver'],
+				usage: [true,'google','cg','ver here'],
 			},
 			{
 				name: 'channels',
@@ -326,6 +334,12 @@ function ready(){
 				perm: everyone,
 				usage: [true,'me','<nick>','@mention'],
 			},
+			{
+				name: 'verify',
+				help: 'Verifies the club membership of the user running the command. If you want to verify your identity, you can get a token here: '+config.SITE_ABSPATH+'u#verify-discord-identity',
+				perm: nonmembers,
+				usage: ['<token>'],
+			},
 		];
 	var commands = (function(){
 			var obj = {}, i;
@@ -334,7 +348,7 @@ function ready(){
 			return obj;
 		})(),
 		commandPermCheck = function(command, userID){
-			return commands[command].perm(userID);
+			return commands[command] ? commands[command].perm.check(userID) : false;
 		},
 		reqparams = function(cmd){
 			return 'This command requires additional parameters. Use `/help '+cmd+'` for more information.';
@@ -427,10 +441,12 @@ function ready(){
 			case "help": (function helpCommandHandler(){
 				var cmd;
 				if (typeof args[0] === 'string'){
-					if (!isPM)
+					var tcmd = args[0],
+						here = args[1] === 'here' && !isPM,
+						targetChannel = here ? channelID : userID;
+					if (!isPM && !here)
 						wipeMessage(channelID, event.d.id);
-					var tcmd = args[0];
-					if (!(tcmd in commands) || !commands[tcmd].perm.check(userID)){
+					if (!(tcmd in commands) || (!commandPermCheck(tcmd, userID) && !isStaff.check(userID))){
 						for (var i=0; i<commandsArray.length; i++){
 							if (!commandsArray[i].aliases)
 								continue;
@@ -441,14 +457,14 @@ function ready(){
 								return;
 							}
 						}
-						return respond(userID, 'The specified command does not exist or you don\'t have permission to use it.');
+						return respond(targetChannel, 'The specified command (`'+tcmd+'`) does not exist'+(!isStaff.check(userID)?' or you don\'t have permission to use it':'')+'.');
 					}
 
 					cmd = commands[tcmd];
 					if (typeof cmd.help !== 'string'){
-						if (!isPM)
+						if (!isPM && !here)
 							wipeMessage(channelID, event.d.id);
-						respond(userID, 'The specified command ('+cmd.name+') has no associated help text.');
+						respond(targetChannel, 'The specified command ('+cmd.name+') has no associated help text.');
 					}
 
 					var usage = [];
@@ -457,8 +473,8 @@ function ready(){
 							usage.push('/'+cmd.name+(cmd.usage[j]===true?'':' '+cmd.usage[j]));
 						}
 					}
-					return respond(userID,
-						'Showing help for command `'+cmd.name+'`'+
+					return respond(targetChannel,
+						'Showing help for command `'+cmd.name+'`'+(here?' (force-displayed)':'')+
 						'\n__Usable by:__ '+cmd.perm.name+'\n'+
 						'__Description:__\n'+(cmd.help.replace(/^(.)/gm,'\t\t$1'))+
 						(cmd.aliases?'\n__Aliases:__ `'+(cmd.aliases.join('`, `'))+'`':'')+
@@ -493,7 +509,7 @@ function ready(){
 				respond(userID, msg.trim()+'\n```\nIf you want to learn what a specific command does, simply run `/help commandname` (e.g. `/help '+exampleCommand+'`)');
 			})(); break;
 			case "channels": (function(){
-				if (!isOwner.check(userID))
+				if (!commandPermCheck(command, userID))
 					return respond(channelID, replyTo(userID, 'You must be owner to use this command'));
 
 				var ids = [];
@@ -559,7 +575,7 @@ function ready(){
 					k = moment().minutes() % image_count;
 				}
 
-				wipeMessage(channelID, event.d.id, 'Please continue this discussion in <#'+OurChannelIDs.casual+'>\nhttps://mlpvc-rr.ml/img/discord/casual/'+possible_images[k]+'.png');
+				wipeMessage(channelID, event.d.id, 'Please continue this discussion in <#'+OurChannelIDs.casual+'>\n'+config.SITE_ABSPATH+'img/discord/casual/'+possible_images[k]+'.png');
 			})(); break;
 			case "cg": (function(){
 				if (isPM)
@@ -569,7 +585,7 @@ function ready(){
 					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 
 				bot.simulateTyping(channelID);
-				unirest.get('https://mlpvc-rr.ml/cg/1?js=true&q='+encodeURIComponent(argStr)+'&GOFAST=true')
+				unirest.get(config.SITE_ABSPATH+'cg/1?js=true&q='+encodeURIComponent(argStr)+'&GOFAST=true')
 					.header("Accept", "application/json")
 					.end(function (result) {
 						if (result.error || typeof result.body !== 'object'){
@@ -581,7 +597,7 @@ function ready(){
 						if (!data.status)
 							return respond(channelID, replyTo(userID, data.message));
 
-						respond(channelID, replyTo(userID, 'https://mlpvc-rr.ml'+data.goto));
+						respond(channelID, replyTo(userID, config.SITE_ABSPATH+(data.goto.substring(1))));
 					});
 			})(); break;
 			case "kym": (function(){
@@ -767,7 +783,7 @@ function ready(){
 							)+'.'
 							:''
 						)
-					)+' We have a dedicated invite-only NSFW channel, send `/nsfw join` to join.\nhttps://mlpvc-rr.ml/img/discord/nsfw.gif';
+					)+' We have a dedicated invite-only NSFW channel, send `/nsfw join` to join.\n'+config.SITE_ABSPATH+'img/discord/nsfw.gif';
 					return isPM ? respond(channelID, message) : wipeMessage(channelID, event.d.id, message);
 				}
 
@@ -880,7 +896,7 @@ function ready(){
 			})(); break;
 			case "say": break;
 			case "avatar": (function(){
-				if (!isStaff.check(userID))
+				if (!commandPermCheck(command, userID))
 					return respond(channelID, replyToIfNotPM(isPM, userID, 'You do not have permission to use this command.'));
 
 				var url = argStr.trim(),
@@ -927,7 +943,7 @@ function ready(){
 					});
 			})(); break;
 			case "about": (function(){
-				if (!isOwner.check(userID))
+				if (!commandPermCheck(command, userID))
 					return respond(channelID, replyToIfNotPM(isPM, userID, 'You must be owner to use this command'));
 
 				var data = getUserData(args[0], channelID, userID, isPM);
@@ -957,6 +973,52 @@ function ready(){
 
 					return respond(channelID, replyToIfNotPM(isPM, userID, 'The nickname of <@'+data.id+'> has been updated to `'+nick+'`'));
 				});
+			})(); break;
+			case "verify": (function(){
+				if (typeof OurRoleIDs['Club Members'] === 'undefined')
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'The Club Members role does not exist on this server'));
+				if (!commandPermCheck(command, userID))
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'You mustn\'t be part of Club Members or Staff to use this command'));
+
+				var token = args[0];
+				if (typeof token === 'undefined' || token.length === 0)
+					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
+				if (/^[a-z\d]{10,}$/.test(token))
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'Invalid token'));
+
+				bot.simulateTyping(channelID);
+
+				unirest.post(config.SITE_ABSPATH+'u/discord-verify?token='+token)
+					.header("Accept", "application/json")
+					.end(function(result){
+						if (result.error || typeof result.body !== 'object'){
+							console.log(result.error, result.body);
+							return respond(channelID, replyTo(userID, 'Verifyiing account failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+						}
+
+						var data = result.body;
+						if (!data.status)
+							return respond(channelID, replyToIfNotPM(isPM, userID, 'Error: '+data.message));
+
+						if (data.role !== 'member')
+							return respond(channelID, replyToIfNotPM(isPM, userID, 'You are not a club member.'));
+
+						bot.addToRole({
+							serverID: OurServer.id,
+							userID: userID,
+							roleID: OurRoleIDs['Club Members'],
+						},function(err){
+							if (err){
+								console.log(err);
+								return respond(channelID, replyToIfNotPM(isPM, userID, 'Adding the Club Members role failed. ' + (hasOwner ? '<@' + config.OWNER_ID + '>' : 'The bot owner') + ' should see what caused the issue in the logs.'));
+							}
+
+							OurServer.members[userID].roles.push(OurRoleIDs['Club Members']);
+
+							respond(channelID, replyToIfNotPM(isPM, userID, "You've been added to Club Members. Welcome to the Discord server!"));
+							respond(OurChannelIDs.staffchat, '<@'+userID+'> was added to <@&'+OurRoleIDs['Club Members']+'> after verifying their identity.');
+						});
+					});
 			})(); break;
 			default:
 				var isProfanity = !isPM && ProfanityFilter(userID, channelID, message, event);
