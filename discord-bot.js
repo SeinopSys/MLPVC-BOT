@@ -1087,7 +1087,7 @@ function ready(){
 
 		var args = [].slice.call(arguments,1),
 			callHandler = function(isPM){
-				if (isPM || /^(?:\s*<[@#]\d+>)?\s*[!/]/.test(message))
+				if (isPM || /^(?:\s*<[@#]\d+>)?\s*[!/]\w+/.test(message))
 					return ProcessCommand.apply(this, args);
 
 				ProfanityFilter.apply(this, args);
