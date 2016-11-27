@@ -251,8 +251,8 @@ function ready(){
 			},
 			{
 				name: 'cg',
-				help: 'This command can be used to quickly link to an appearance using the site\'s "I\'m feeling lucky" search. The query is sent to the website as-is and the first result\'s link is returned, if any.\nYou can enter tag names separated by commas, or use the `*` and `?` characters to force a token to search in the appearance name instead. **Currently limited to the Pony guide.**\n**Note:** When the site switches to using ElasticSearch these methods to search will likely change.',
-				usage: ['twilight sparkle','*pommel*','princess*'],
+				help: 'This command can be used to quickly link to an appearance using the site\'s "I\'m feeling lucky" search. The query is sent to the website as-is and the first result\'s link is returned, if any.\nUse names/tags separated by spaces, or include `*` and `?` characters to perform a wildcard search. Include the term `human` to search the EQG guide.',
+				usage: ['twilight sparkle','*pommel*','human twilight'],
 				perm: everyone,
 				aliases: ['guide'],
 			},
@@ -585,7 +585,12 @@ function ready(){
 					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 
 				bot.simulateTyping(channelID);
-				unirest.get(config.SITE_ABSPATH+'cg/1?js=true&q='+encodeURIComponent(argStr)+'&GOFAST=true')
+				var query = argStr,
+					humanRegex = /\bhuman\b/g,
+					eqg = humanRegex.test(query);
+				if (eqg)
+					query = query.replace(humanRegex,'');
+				unirest.get(config.SITE_ABSPATH+'cg'+(eqg?'/eqg':'')+'/1?js=true&q='+encodeURIComponent(query)+'&GOFAST=true')
 					.header("Accept", "application/json")
 					.end(function (result) {
 						if (result.error || typeof result.body !== 'object'){
