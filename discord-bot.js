@@ -340,6 +340,12 @@ function ready(){
 				perm: nonmembers,
 				usage: ['<token>'],
 			},
+			{
+				name: 'lewder',
+				help: 'Signal that the conversation is not lewd enough.',
+				parm: everyone,
+				usage: [true],
+			},
 		];
 	var commands = (function(){
 			var obj = {}, i;
@@ -428,7 +434,19 @@ function ready(){
 	}
 
 	function CallCommand(userID, channelID, message, event, userIdent, command, argStr, args){
-		var isPM = !(channelID in bot.channels);
+		var isPM = !(channelID in bot.channels),
+			respondWithDerpibooruImage = function(image){
+				if (!image.is_rendered){
+					var tries = typeof this.tries === 'undefined' ? 1 : this.tries;
+					if (tries > 2)
+						return respond(channelID, replyTo(userID, 'The requested image is not yet processed by Derpibooru, please try again in a bit'));
+					return setTimeout(function(){
+						CallCommand.call({tries: tries + 1}, userID, channelID, message, event, userIdent, command, argStr, args);
+					}, 1000);
+				}
+
+				respond(channelID, replyTo(userID, 'http://derpibooru.org/' + image.id + '\nhttps:' + (image.image.replace(/__[^.]+(.\w+)$/, '$1'))));
+			};
 		command = command.toLowerCase();
 
 		if (command === 'join' && argStr.trim().toLowerCase() === 'nsfw'){
@@ -694,19 +712,7 @@ function ready(){
 					extra = '',
 					inNSFW = channelID === OurChannelIDs.nsfw,
 					orderTest = /\bo:(desc|asc)\b/i,
-					sortbyTest = /\bby:(score|relevance|width|height|comments|random)\b/i,
-					respondWithImage = function(image){
-						if (!image.is_rendered){
-							var tries = typeof this.tries === 'undefined' ? 1 : this.tries;
-							if (tries > 2)
-								return respond(channelID, replyTo(userID, 'The requested image is not yet processed by Derpibooru, please try again in a bit'));
-							return setTimeout(function(){
-								CallCommand.call({ tries: tries+1}, userID, channelID, message, event, userIdent, command, argStr, args);
-							}, 1000);
-						}
-
-						respond(channelID, replyTo(userID, 'http://derpibooru.org/'+image.id+'\nhttps:'+(image.image.replace(/__[^.]+(.\w+)$/,'$1'))));
-					};
+					sortbyTest = /\bby:(score|relevance|width|height|comments|random)\b/i;
 				if (inNSFW)
 					extra += '&filter_id=56027';
 				if (sortbyTest.test(query)){
@@ -735,7 +741,7 @@ function ready(){
 										return respond(channelID, replyTo(userID, 'Derpibooru random image data retrieval failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
 									}
 
-									respondWithImage(result.body);
+									respondWithDerpibooruImage(result.body);
 								});
 							});
 					}
@@ -766,7 +772,7 @@ function ready(){
 							)+' Don\'t forget that artist and OC tags need to be prefixed with `artist:` and `oc:` respectively.'
 						));
 
-					respondWithImage(data.search[0]);
+					respondWithDerpibooruImage(data.search[0]);
 				});
 			})(); break;
 			case "nsfw": (function(){
@@ -1023,6 +1029,18 @@ function ready(){
 							respond(channelID, replyToIfNotPM(isPM, userID, "You've been added to Club Members. Welcome to the Discord server!"));
 							respond(OurChannelIDs.staffchat, '<@'+userID+'> was added to <@&'+OurRoleIDs['Club Members']+'> after verifying their identity.');
 						});
+					});
+			})(); break;
+			case "lewder": (function(){
+				unirest.get('https://derpibooru.org/images/1308747.json')
+					.header("Accept", "application/json")
+					.end(function(result){
+						if (result.error || typeof result.body !== 'object'){
+							console.log(result.error, result.body);
+							return respond(channelID, replyTo(userID, 'Derpibooru image data retrieval failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+						}
+
+						respondWithDerpibooruImage(result.body);
 					});
 			})(); break;
 			default:
