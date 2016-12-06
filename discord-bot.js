@@ -701,9 +701,6 @@ function ready(){
 			})(); break;
 			case "db":
 			case "derpi": (function(){
-				if (isPM)
-					return respond(channelID, onserver);
-
 				if (!args.length)
 					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 
