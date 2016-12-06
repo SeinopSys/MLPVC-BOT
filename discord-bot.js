@@ -343,7 +343,7 @@ function ready(){
 			{
 				name: 'lewder',
 				help: 'Signal that the conversation is not lewd enough.',
-				parm: everyone,
+				perm: everyone,
 				usage: [true],
 			},
 		];
