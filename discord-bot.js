@@ -292,8 +292,8 @@ function ready(){
 				help:
 					'When ran without any arguments: sends a message to the current conversation warning participants to avoid discussing NSFW content in the current channel, and informs them about the existence of the <#'+OurChannelIDs.nsfw+'> channel\'s existance and how they can join it.\n'+
 					'There\'s an __optional__ argument which can be one of the following:\n'+
-					' ● `join` - Allows the user running this command to join the <#'+OurChannelIDs.nsfw+'> channel at will\n'+
-					' ● `leave` - Allows the user running this command to leave the <#'+OurChannelIDs.nsfw+'> channel at will',
+					'\t● `join` - Allows the user running this command to join the <#'+OurChannelIDs.nsfw+'> channel at will\n'+
+					'\t● `leave` - Allows the user running this command to leave the <#'+OurChannelIDs.nsfw+'> channel at will',
 				usage: [true,'join','leave'],
 				perm: everyone,
 			},
@@ -348,9 +348,13 @@ function ready(){
 			},
 			{
 				name: 'tutorials',
-				help: 'Sends a link to the club\'s Tutorials folder to the channel.',
+				help: 'Sends a link to the club\'s Tutorials folder to the channel.\nAn optional argument allows linking to a subfolder:\n\n'+
+					'\t● `anim`/`animation`: Tutorials - Animation\n'+
+					'\t● `ai`/`illustrator` : Tutorials - Illustrator\n'+
+					'\t● `is`/`inkscape`: Tutorials - Inkscape\n'+
+					'\t● `ps`/`photoshop`: Tutorials - Photoshop',
 				perm: everyone,
-				usage: [true],
+				usage: [true,'ps','illustrator'],
 				aliases: ['tut'],
 			},
 		];
@@ -1049,7 +1053,28 @@ function ready(){
 			})(); break;
 			case "tut":
 			case "tutorials":
-				respond(channelID, replyToIfNotPM(isPM, userID, 'http://mlp-vectorclub.deviantart.com/gallery/34905690/Tutorials'));
+				var url = 'http://mlp-vectorclub.deviantart.com/gallery/34905690/Tutorials';
+				if (typeof args[0] === 'string'){
+					switch (args[0]){
+						case "ai":
+						case "illustrator":
+							url = 'http://mlp-vectorclub.deviantart.com/gallery/36301008/Tutorials-Illustrator';
+						break;
+						case "anim":
+						case "animation":
+							url = 'http://mlp-vectorclub.deviantart.com/gallery/40236819/Tutorials-Animation';
+						break;
+						case "is":
+						case "inkscape":
+							url = 'http://mlp-vectorclub.deviantart.com/gallery/36301003/Tutorials-Inkscape';
+						break;
+						case "ps":
+						case "photoshop":
+							url = 'http://mlp-vectorclub.deviantart.com/gallery/36301006/Tutorials-Photoshop';
+						break;
+					}
+				}
+				respond(channelID, replyToIfNotPM(isPM, userID, url));
 			break;
 			default:
 				var isProfanity = !isPM && ProfanityFilter(userID, channelID, message, event);
