@@ -346,6 +346,13 @@ function ready(){
 				perm: everyone,
 				usage: [true],
 			},
+			{
+				name: 'tutorials',
+				help: 'Sends a link to the club\'s Tutorials folder to the channel.',
+				perm: everyone,
+				usage: [true],
+				aliases: ['tut'],
+			},
 		];
 	var commands = (function(){
 			var obj = {}, i;
@@ -1040,6 +1047,10 @@ function ready(){
 						respondWithDerpibooruImage(result.body);
 					});
 			})(); break;
+			case "tut":
+			case "tutorials":
+				respond(channelID, replyToIfNotPM(isPM, userID, 'http://mlp-vectorclub.deviantart.com/gallery/34905690/Tutorials'));
+			break;
 			default:
 				var isProfanity = !isPM && ProfanityFilter(userID, channelID, message, event);
 				if (!isProfanity){
@@ -1060,7 +1071,7 @@ function ready(){
 			userIdent = user.username+'#'+user.discriminator;
 		console.log(userIdent+' ran '+message+' from '+(isPM?'a PM':chalk.blue('#'+bot.channels[channelID].name)));
 		if (!commandRegex.test(message))
-			bot.sendMessage({
+			return bot.sendMessage({
 				to: channelID,
 				message: replyTo(userID, 'Invalid command: '+(message.replace(/^([!/]\S+).*/,''))),
 			});
