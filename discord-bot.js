@@ -40,8 +40,11 @@ var Discord = require('discord.io'),
 	},
 	unirest = require('unirest'),
 	moment = require('moment'),
-	YouTube = require('youtube-node'),
-	yt = new YouTube(),
+	Youtube = require('youtube-api'),
+	yt = Youtube.authenticate({
+		type: "key",
+		key: config.YT_API_KEY,
+	}),
 	fs = require('fs'),
 	table = require('text-table'),
 	OurServer,
@@ -51,8 +54,6 @@ var Discord = require('discord.io'),
 
 if (config.LOCAL === true && /^https:/.test(config.SITE_ABSPATH))
 	process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
-yt.setKey(config.YT_API_KEY);
 
 require("console-stamp")(console, {
 	formatter: function(){
@@ -695,10 +696,16 @@ function ready(){
 					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 
 				bot.simulateTyping(channelID);
-				yt.addParam('type', 'video');
-				yt.addParam('regionCode', 'US');
-				yt.addParam('relevanceLanguage', 'en');
-				yt.search(argStr, 1, function(error, result) {
+
+				Youtube.search.list({
+					part: 'snippet',
+					q: argStr,
+					type: 'video',
+					maxResults: 1,
+					regionCode: 'US',
+					relevanceLanguage: 'en',
+					safeSearch: channelID === OurChannelIDs.nsfw ? 'none' : 'moderate',
+				}, function(error, result) {
 					if (error || typeof result.items === 'undefined'){
 						console.log(error, result.items);
 						return respond(channelID, replyTo(userID, 'YouTube search failed. '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
@@ -1052,7 +1059,7 @@ function ready(){
 					});
 			})(); break;
 			case "tut":
-			case "tutorials":
+			case "tutorials": (function(){
 				var url = 'http://mlp-vectorclub.deviantart.com/gallery/34905690/Tutorials';
 				if (typeof args[0] === 'string'){
 					switch (args[0]){
@@ -1075,7 +1082,7 @@ function ready(){
 					}
 				}
 				respond(channelID, replyToIfNotPM(isPM, userID, url));
-			break;
+			})(); break;
 			default:
 				var isProfanity = !isPM && ProfanityFilter(userID, channelID, message, event);
 				if (!isProfanity){
