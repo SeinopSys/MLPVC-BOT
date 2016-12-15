@@ -300,7 +300,7 @@ function ready(){
 			},
 			{
 				name: 'define',
-				help: 'FThis command can be used to get definitions, synonyms and example usages of English words, powered by WordsAPI.\n**Note:** The API is free to use for up to 2500 requests per day. If exceeded, it has additional costst on a per-request basis, and as such it is rate limited to one use every 20 seconds. Only use this command when approperiate.',
+				help: 'This command can be used to get definitions, synonyms and example usages of English words, powered by WordsAPI.\n**Note:** The API is free to use for up to 2500 requests per day. If exceeded, it has additional costst on a per-request basis, and as such it is rate limited to one use every 20 seconds. Only use this command when approperiate.',
 				usage: ['sleep','apple pie','horse'],
 				perm: everyone,
 				aliases: ['def'],
