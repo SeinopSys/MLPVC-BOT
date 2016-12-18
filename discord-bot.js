@@ -1141,8 +1141,7 @@ function ready(){
 					output = vm.run(code);
 					if (output instanceof PrintImage)
 						output = PrintImage.url;
-					else if (typeof output !== 'string')
-						output = JSON.stringify(output);
+					else output = JSON.stringify(output,null,4);
 				}
 				catch(e){
 					output = ''+e;
