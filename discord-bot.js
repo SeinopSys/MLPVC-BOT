@@ -40,7 +40,40 @@ var Discord = require('discord.io'),
 	},
 	unirest = require('unirest'),
 	moment = require('moment'),
-	safeEval = require('safe-eval'),
+	{VM} = require('vm2'),
+	PrintImage = function(url){
+		this.url = url;
+	},
+	vmSandbox = {
+		process: {
+			arch: process.arch,
+			argv: 'forever ' + __filename + ' --prevent-leethax --Kappa',
+			argv0: 'forever',
+			chdir: function(){ },
+			cpuUsage: function(){ return PrintImage('https://i.imgflip.com/1g76d6.jpg') },
+			cwd: function(){ return '/var/public/private/garbage/securityholes' },
+			env: function(){ return {
+				TERM: 'mid',
+				VULERABLE: true,
+				USER: 'maciej',
+				PATH: '/etc/../var/public/.././../home/.bin/.././.git/../../etc',
+				EDITOR: 'nano',
+				SHLVL: '1337',
+				HOME: '~',
+				_: '/usr/local/bin/node'
+			} },
+			exit: function(){ return 'Nice try'	},
+			kill: function(){ return '**The bot pretends to be dead**' },
+			pid: 1337,
+			platform: 'not-windows',
+			release: process.release,
+			send: function(){ throw new Error('Sending failed due to severe weather conditions') },
+			title: 'Totally Not Malware',
+			uptime: function(){ return process.uptime() },
+			version: process.version,
+			versions: process.versions,
+		},
+	},
 	Youtube = require('youtube-api'),
 	yt = Youtube.authenticate({
 		type: "key",
@@ -1097,10 +1130,14 @@ function ready(){
 					return respond(channelID, onserver);
 
 				var code = argStr.replace(/^`(?:``(?:js)?\n)?/, '').replace(/`+$/,''),
-					output;
+					output,
+					vm = new VM({ sandbox: vmSandbox });
 				try {
-					output = safeEval(code, { process: { exit: function(){ return 'Nice try' } } }, { filename: 'input'});
-					JSON.stringify(output);
+					output = vm.run(code);
+					if (output instanceof PrintImage)
+						output = PrintImage.url;
+					else if (typeof output !== 'string')
+						output = JSON.stringify(output);
 				}
 				catch(e){
 					output = ''+e;
