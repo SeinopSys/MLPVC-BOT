@@ -591,10 +591,11 @@ function ready(){
 				for (i in OurServer.channels){
 					if (OurServer.channels.hasOwnProperty(i)){
 						var channel = OurServer.channels[i];
-						ids.push(channel.id+' ('+(channel.type==='text'?'#':'')+channel.name+')');
+						ids.push('├ '+(channel.type==='text'?'#':'')+channel.name+' ('+channel.id+')');
 					}
 				}
-				respond(channelID, replyTo(userID, "Channels on server "+OurServer.name+":\n```"+ids.join('\n')+'```'));
+				ids.push(ids.pop().replace('├','└'));
+				respond(channelID, replyTo(userID, "```"+OurServer.name+" ("+OurServer.id+")\n"+ids.join('\n')+'```'));
 			})(); break;
 			case "myid": (function(){
 				if (!hasOwner){
@@ -1167,11 +1168,13 @@ function ready(){
 			user = bot.users[userID],
 			userIdent = user.username+'#'+user.discriminator;
 		console.log(userIdent+' ran '+message+' from '+(isPM?'a PM':chalk.blue('#'+bot.channels[channelID].name)));
-		if (!commandRegex.test(message))
+		if (!commandRegex.test(message)){
+			var matchingCommand = message.match(/^([!/]?\S+)/);
 			return bot.sendMessage({
 				to: channelID,
-				message: replyTo(userID, 'Invalid command: '+(message.replace(/^([!/]\S+).*/,''))),
+				message: replyTo(userID, 'Invalid command'+(matchingCommand ? ': '+matchingCommand[1] : '')),
 			});
+		}
 		var commandMatch = message.match(commandRegex);
 		if (!commandMatch)
 			return;
