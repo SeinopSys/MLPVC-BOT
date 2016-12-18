@@ -73,6 +73,10 @@ var Discord = require('discord.io'),
 			version: process.version,
 			versions: process.versions,
 		},
+		choice: function(){
+			var items = [].slice.apply(arguments);
+			return items[Math.floor(Math.random()*items.length)];
+		},
 	},
 	Youtube = require('youtube-api'),
 	yt = Youtube.authenticate({
@@ -395,7 +399,7 @@ function ready(){
 			{
 				name: 'eval',
 				help: 'Evaluates an arbitrary JavaScript expression using `safe-eval` (https://www.npmjs.com/package/safe-eval)',
-				parm: everyone,
+				perm: everyone,
 				usage: ['2+2','Math.random()','"Te" + "xt"'],
 				aliases: ['e'],
 			}
