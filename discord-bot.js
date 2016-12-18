@@ -1,4 +1,5 @@
 // jshint -W014
+const util = require('util');
 var Discord = require('discord.io'),
 	config = require('./config'),
 	bot = new Discord.Client({
@@ -41,38 +42,11 @@ var Discord = require('discord.io'),
 	unirest = require('unirest'),
 	moment = require('moment'),
 	{VM} = require('vm2'),
-	RawOut = function(text){
-		this.text = text;
-	},
 	wrapOutput = (output) => '```js\n'+output+'\n```',
 	vmSandbox = {
 		process: {
-			arch: process.arch,
-			argv: 'forever ' + __filename + ' --prevent-leethax --Kappa',
-			argv0: 'forever',
-			chdir: function(){ },
-			cpuUsage: function(){ return RawOut('https://i.imgflip.com/1g76d6.jpg') },
-			cwd: function(){ return '/var/public/private/garbage/securityholes' },
-			env: function(){ return {
-				TERM: 'mid',
-				VULERABLE: true,
-				USER: 'maciej',
-				PATH: '/etc/../var/public/.././../home/.bin/.././.git/../../etc',
-				EDITOR: 'nano',
-				SHLVL: '1337',
-				HOME: '~',
-				_: '/usr/local/bin/node'
-			} },
-			exit: function(){ return RawOut('Nice try') },
-			kill: function(){ return RawOut( '**The bot pretends to be dead**') },
-			pid: 1337,
-			platform: 'not-windows',
-			release: process.release,
-			send: function(){ throw new Error('Sending failed due to severe weather conditions') },
-			title: 'Totally Not Malware',
-			uptime: function(){ return process.uptime() },
-			version: process.version,
-			versions: process.versions,
+			exit: function(){ return { rawOutput: 'Nice try' } },
+			kill: function(){ return { rawOutput: '*The bot pretends to be dead*' } },
 		},
 		choice: function(){
 			var items = [].slice.apply(arguments);
@@ -1140,12 +1114,13 @@ function ready(){
 					vm = new VM({ sandbox: vmSandbox });
 				try {
 					output = vm.run(code);
-					if (output instanceof RawOut)
-						output = RawOut.text;
-					else output = wrapOutput(JSON.stringify(output,null,4));
+					if (typeof output.rawOutput !== 'undefined')
+						output = output.rawOutput;
+					else output = wrapOutput(util.inspect(output,{breakLength:1}));
 				}
 				catch(e){
 					output = wrapOutput(''+e);
+					console.log(e+'\n'+e.stack);
 				}
 				respond(channelID, replyToIfNotPM(isPM,userID,output));
 			})(); break;
