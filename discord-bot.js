@@ -41,8 +41,8 @@ var Discord = require('discord.io'),
 	unirest = require('unirest'),
 	moment = require('moment'),
 	{VM} = require('vm2'),
-	PrintImage = function(url){
-		this.url = url;
+	RawOut = function(text){
+		this.text = text;
 	},
 	vmSandbox = {
 		process: {
@@ -50,7 +50,7 @@ var Discord = require('discord.io'),
 			argv: 'forever ' + __filename + ' --prevent-leethax --Kappa',
 			argv0: 'forever',
 			chdir: function(){ },
-			cpuUsage: function(){ return PrintImage('https://i.imgflip.com/1g76d6.jpg') },
+			cpuUsage: function(){ return RawOut('https://i.imgflip.com/1g76d6.jpg') },
 			cwd: function(){ return '/var/public/private/garbage/securityholes' },
 			env: function(){ return {
 				TERM: 'mid',
@@ -62,8 +62,8 @@ var Discord = require('discord.io'),
 				HOME: '~',
 				_: '/usr/local/bin/node'
 			} },
-			exit: function(){ return 'Nice try'	},
-			kill: function(){ return '**The bot pretends to be dead**' },
+			exit: function(){ return RawOut('Nice try') },
+			kill: function(){ return RawOut( '**The bot pretends to be dead**') },
 			pid: 1337,
 			platform: 'not-windows',
 			release: process.release,
@@ -699,10 +699,10 @@ function ready(){
 						}
 
 						var data = result.body;
-						if (!data.results.length || typeof data.results[0].url !== 'string')
+						if (!data.results.length || typeof data.results[0].text !== 'string')
 							return respond(channelID, replyTo(userID, 'Know Your Meme search returned no results.'));
 
-						respond(channelID, replyTo(userID, 'http://knowyourmeme.com'+data.results[0].url));
+						respond(channelID, replyTo(userID, 'http://knowyourmeme.com'+data.results[0].text));
 					});
 			})(); break;
 			case "google": (function(){
@@ -1139,8 +1139,8 @@ function ready(){
 					vm = new VM({ sandbox: vmSandbox });
 				try {
 					output = vm.run(code);
-					if (output instanceof PrintImage)
-						output = PrintImage.url;
+					if (output instanceof RawOut)
+						output = RawOut.text;
 					else output = JSON.stringify(output,null,4);
 				}
 				catch(e){
