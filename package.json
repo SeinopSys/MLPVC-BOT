@@ -6,8 +6,9 @@
     "chalk": "^1.1.3",
     "console-stamp": "^0.2.4",
     "discord.io": "^2.3.0",
-    "moment": "^2.17.0",
+    "moment": "^2.17.1",
     "opener": "^1.4.2",
+    "safe-eval": "^0.3.0",
     "text-table": "^0.2.0",
     "unirest": "^0.5.1",
     "youtube-api": "^2.0.4"

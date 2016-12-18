@@ -40,6 +40,7 @@ var Discord = require('discord.io'),
 	},
 	unirest = require('unirest'),
 	moment = require('moment'),
+	safeEval = require('safe-eval'),
 	Youtube = require('youtube-api'),
 	yt = Youtube.authenticate({
 		type: "key",
@@ -358,6 +359,13 @@ function ready(){
 				usage: [true,'ps','illustrator'],
 				aliases: ['tut'],
 			},
+			{
+				name: 'eval',
+				help: 'Evaluates an arbitrary JavaScript expression using `safe-eval` (https://www.npmjs.com/package/safe-eval)',
+				parm: everyone,
+				usage: ['2+2','Math.random()','"Te" + "xt"'],
+				aliases: ['e'],
+			}
 		];
 	var commands = (function(){
 			var obj = {}, i;
@@ -1083,6 +1091,22 @@ function ready(){
 				}
 				respond(channelID, replyToIfNotPM(isPM, userID, url));
 			})(); break;
+			case "e":
+			case "eval": (function(){
+				if (isPM)
+					return respond(channelID, onserver);
+
+				var code = argStr.replace(/^`(?:``(?:js)?\n)?/, '').replace(/`+$/,''),
+					output;
+				try {
+					output = safeEval(code, { process: { exit: function(){ return 'Nice try' } } }, { filename: 'input'});
+					JSON.stringify(output);
+				}
+				catch(e){
+					output = ''+e;
+				}
+				respond(channelID, replyToIfNotPM(isPM,userID,'```js\n'+output+'\n```'));
+			})(); break;
 			default:
 				var isProfanity = !isPM && ProfanityFilter(userID, channelID, message, event);
 				if (!isProfanity){
@@ -1098,7 +1122,7 @@ function ready(){
 
 	function ProcessCommand(userID, channelID, message, event){
 		var isPM = !(channelID in bot.channels),
-			commandRegex = new RegExp('^'+(!isPM?'(?:\\s*<[@#]\\d+>)?\\s*[!/]':'\\s*[!/]?')+'(\\w+)(?:\\s+([ -~]+)?)?$'),
+			commandRegex = new RegExp('^'+(!isPM?'(?:\\s*<[@#]\\d+>)?\\s*[!/]':'\\s*[!/]?')+'(\\w+)(?:\\s+([ -~]+|`(?:``(?:js)\\n)?[\\S\\s]+`(?:``)?)?)?$'),
 			user = bot.users[userID],
 			userIdent = user.username+'#'+user.discriminator;
 		console.log(userIdent+' ran '+message+' from '+(isPM?'a PM':chalk.blue('#'+bot.channels[channelID].name)));
