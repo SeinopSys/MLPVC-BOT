@@ -44,6 +44,7 @@ var Discord = require('discord.io'),
 	RawOut = function(text){
 		this.text = text;
 	},
+	wrapOutput = (output) => '```js\n'+output+'\n```',
 	vmSandbox = {
 		process: {
 			arch: process.arch,
@@ -1141,12 +1142,12 @@ function ready(){
 					output = vm.run(code);
 					if (output instanceof RawOut)
 						output = RawOut.text;
-					else output = JSON.stringify(output,null,4);
+					else output = wrapOutput(JSON.stringify(output,null,4));
 				}
 				catch(e){
-					output = ''+e;
+					output = wrapOutput(''+e);
 				}
-				respond(channelID, replyToIfNotPM(isPM,userID,'```js\n'+output+'\n```'));
+				respond(channelID, replyToIfNotPM(isPM,userID,output));
 			})(); break;
 			default:
 				var isProfanity = !isPM && ProfanityFilter(userID, channelID, message, event);
