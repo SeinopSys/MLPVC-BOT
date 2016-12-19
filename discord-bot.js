@@ -53,6 +53,8 @@ var Discord = require('discord.io'),
 			return items[Math.floor(Math.random()*items.length)];
 		},
 	},
+	vmTimeout = 20000,
+	evalTimedOut = {},
 	Youtube = require('youtube-api'),
 	yt = Youtube.authenticate({
 		type: "key",
@@ -463,6 +465,11 @@ function ready(){
 		}
 
 		return data;
+	}
+
+	function getIdent(userID){
+		let user = bot.users[userID];
+		return user.username+'#'+user.discriminator;
 	}
 
 	function CallCommand(userID, channelID, message, event, userIdent, command, argStr, args){
@@ -1109,9 +1116,17 @@ function ready(){
 				if (isPM)
 					return respond(channelID, onserver);
 
+				if (typeof evalTimedOut[userID] !== 'undefined'){
+					let now = moment();
+					if (now.diff(evalTimedOut[userID]) < 1000*60*5){
+						let usein = evalTimedOut[userID].add(5, 'minutes').from(now);
+						return respond(channelID, replyToIfNotPM(isPM,userID,'You will be allowed to use `/eval` again '+usein));
+					}
+				}
+
 				var code = argStr.replace(/^`(?:``(?:js)?\n)?/, '').replace(/`+$/,''),
 					output,
-					vm = new VM({ sandbox: vmSandbox });
+					vm = new VM({ sandbox: vmSandbox, timeout: vmTimeout });
 				try {
 					output = vm.run(code);
 					if (typeof output.rawOutput !== 'undefined')
@@ -1119,8 +1134,14 @@ function ready(){
 					else output = wrapOutput(util.inspect(output,{breakLength:1}));
 				}
 				catch(e){
-					output = wrapOutput(''+e);
-					console.log(e+'\n'+e.stack);
+					let estr = ''+e;
+					output = wrapOutput(estr);
+					console.log('Exception while evaling code:\n\n'+code+'\n\n'+e.stack+'\n===============');
+					if (estr === 'Error: Script execution timed out.'){
+						evalTimedOut[userID] = moment();
+						output = 'Your script took longer than '+(vmTimeout/1000)+' seconds to execute. Please refrain from running heavy operations _(e.g. infinite loops)_. You\'ll be able to use the `/eval` command again in 5 minutes.';
+						console.log(getIdent(userID)+' has been timed out for 5 minutes due to ptential eval misuse');
+					}
 				}
 				respond(channelID, replyToIfNotPM(isPM,userID,output));
 			})(); break;
@@ -1140,8 +1161,7 @@ function ready(){
 	function ProcessCommand(userID, channelID, message, event){
 		var isPM = !(channelID in bot.channels),
 			commandRegex = new RegExp('^'+(!isPM?'(?:\\s*<[@#]\\d+>)?\\s*[!/]':'\\s*[!/]?')+'(\\w+)(?:\\s+([ -~]+|`(?:``(?:js)\\n)?[\\S\\s]+`(?:``)?)?)?$'),
-			user = bot.users[userID],
-			userIdent = user.username+'#'+user.discriminator;
+			userIdent = getIdent(userID);
 		console.log(userIdent+' ran '+message+' from '+(isPM?'a PM':chalk.blue('#'+bot.channels[channelID].name)));
 		if (!commandRegex.test(message)){
 			var matchingCommand = message.match(/^([!/]?\S+)/);
@@ -1165,18 +1185,17 @@ function ready(){
 			return;
 
 		var matching = /\b(f+[u4a]+[Ссc]+k+(?:tard|[1i]ng)?|[Ссc]un[7t]|a[5$s]{2,}(?:h[0o]+l[3e]+)|(?:d[1i]+|[Ссc][0o])[Ссc]k(?:h[3e][4a]*d)?|b[1ie3a4]+t[Ссc]h)\b/ig,
-			user = bot.users[userID],
-			ident = user.username+'#'+user.discriminator;
+			userident = getIdent(userID);
 
 		if (!matching.test(message))
 			return false;
 
-		console.log(ident+' triggered profanity filter in channel '+chalk.blue('#'+bot.channels[channelID].name)+' with message: '+(message.replace(matching,function(str){
+		console.log(userident+' triggered profanity filter in channel '+chalk.blue('#'+bot.channels[channelID].name)+' with message: '+(message.replace(matching,function(str){
 			return chalk.red(str);
 		})));
 
 		if (channelID === OurChannelIDs.nsfw){
-			console.log(ident+' wasn\'t warned because they cursed in the NSFW channel');
+			console.log(userident+' wasn\'t warned because they cursed in the NSFW channel');
 			return false;
 		}
 
@@ -1205,7 +1224,7 @@ function ready(){
 			if (!(userID in OurServer.members))
 				return respond(channelID, 'You must be a member of the '+OurServer.name+' Discord server to use this bot!');
 
-			console.log('Received PM from #'+userID+' (@'+username+'), contents: '+message);
+			console.log('Received PM from #'+userID+' (@'+getIdent(userID)+'), contents: '+message);
 
 			callHandler(true);
 		}
