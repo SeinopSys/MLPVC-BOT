@@ -53,7 +53,7 @@ var Discord = require('discord.io'),
 			return items[Math.floor(Math.random()*items.length)];
 		},
 	},
-	vmTimeout = 20000,
+	vmTimeout = 5000,
 	evalTimedOut = {},
 	Youtube = require('youtube-api'),
 	yt = Youtube.authenticate({
