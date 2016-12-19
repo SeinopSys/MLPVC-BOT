@@ -1118,9 +1118,9 @@ function ready(){
 
 				if (typeof evalTimedOut[userID] !== 'undefined'){
 					let now = moment();
-					if (now.diff(evalTimedOut[userID]) < 1000*60*5){
-						let usein = evalTimedOut[userID].add(5, 'minutes').from(now);
-						return respond(channelID, replyToIfNotPM(isPM,userID,'You will be allowed to use `/eval` again '+usein));
+					if (now.diff(evalTimedOut[userID]) < 0){
+						let usein = evalTimedOut[userID].add(2, 'minutes').from(now);
+						return respond(channelID, replyToIfNotPM(isPM,userID,'You will be allowed to use the `/eval` command again '+usein+' (contains a 2-minute penalty for attempting to use it again before the timeout ends).'));
 					}
 				}
 
@@ -1138,7 +1138,7 @@ function ready(){
 					output = wrapOutput(estr);
 					console.log('Exception while evaling code:\n\n'+code+'\n\n'+e.stack+'\n===============');
 					if (estr === 'Error: Script execution timed out.'){
-						evalTimedOut[userID] = moment();
+						evalTimedOut[userID] = moment().add(5, 'minutes');
 						output = 'Your script took longer than '+(vmTimeout/1000)+' seconds to execute. Please refrain from running heavy operations _(e.g. infinite loops)_. You\'ll be able to use the `/eval` command again in 5 minutes.';
 						console.log(getIdent(userID)+' has been timed out for 5 minutes due to ptential eval misuse');
 					}
