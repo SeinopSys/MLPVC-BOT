@@ -1129,7 +1129,7 @@ function ready(){
 					vm = new VM({ sandbox: vmSandbox, timeout: vmTimeout });
 				try {
 					output = vm.run(code);
-					if (typeof output.rawOutput !== 'undefined')
+					if (typeof output !== 'undefined' && typeof output.rawOutput !== 'undefined')
 						output = output.rawOutput;
 					else output = wrapOutput(util.inspect(output,{breakLength:1}));
 				}
