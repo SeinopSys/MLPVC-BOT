@@ -384,12 +384,6 @@ function ready(){
 				usage: ['2+2','Math.random()','"Te" + "xt"'],
 				aliases: ['e'],
 			},
-			{
-				name: 'announceswap',
-				help: 'Announce the swapping of #casual and #support in both channels instantenously. **Does not rename the channels, just sends out anannouncement!** Can only be run once, after which it is disabled.',
-				perm: isStaff,
-				usage: [true],
-			},
 		];
 	var commands = (function(){
 			var obj = {}, i;
@@ -1155,33 +1149,6 @@ function ready(){
 				}
 				respond(channelID, replyToIfNotPM(isPM,userID,output));
 			})(); break;
-			case "announceswap":
-				if (isPM)
-					return respond(channelID, onserver);
-
-				if (!isStaff.check(userID))
-					return respond(channelID, replyTo(userID, 'This command can only be run by staff members.'));
-
-				if (fs.existsSync('swap-done'))
-					return respond(channelID, replyTo(userID, 'The swapping of the 2 channels has already been done, this command has now been disabled.'));
-
-				let changeReason = "This change was made due to Discord opening the server to **#support** for most users, so we decided it's best if we swap the two. Please continue your discussion in",
-					responses = 0,
-					ondone = function(err){
-						if (err){
-							console.log(err);
-							return respond(channelID, replyTo(userID, 'Announcing change failed, the bot logs may contain additional details.'));
-						}
-						responses++;
-						if (responses === 2){
-							// Kill bot for a forever restart and ID updates
-							fs.writeFileSync('swap-done','yep');
-							process.exit();
-						}
-					};
-				respond(OurChannelIDs.casual, '**THIS CHANNEL IS NOW #support.** '+changeReason+' <#'+OurChannelIDs.support+'>',ondone);
-				respond(OurChannelIDs.support, '**THIS CHANNEL IS NOW #casual.** '+changeReason+' <#'+OurChannelIDs.casual+'>',ondone);
-			break;
 			default:
 				var isProfanity = !isPM && ProfanityFilter(userID, channelID, message, event);
 				if (!isProfanity){
