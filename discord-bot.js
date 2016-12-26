@@ -302,7 +302,8 @@ function ready(){
 					'**Note:** Any rooms aside from <#'+OurChannelIDs.nsfw+'> will only show results accessible by the site\'s default filter\n\n'+
 					'__**Bot-secific search keywords:**__\n\n'+
 					' ● `o:<desc|asc>` - Order of the results (if ommited, defaults to `desc`)\n'+
-					' ● `by:<score|relevance|width|height|comments|random>` - Same as "Sort by" on the actual site',
+					' ● `by:<score|relevance|width|height|comments|random>` - Same as "Sort by" on the actual site\n'+
+					' ● `as:link` - Returns the link of the search with the specified parameters instead of the first matching result',
 				usage: ['safe,o:asc','safe,rd o:asc','ts by:random'],
 				perm: everyone,
 				aliases: ['db'],
@@ -754,16 +755,16 @@ function ready(){
 				if (!args.length)
 					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 
-				bot.simulateTyping(channelID);
-				var query = argStr,
+				let query = argStr,
 					extra = '',
 					inNSFW = channelID === OurChannelIDs.nsfw,
 					orderTest = /\bo:(desc|asc)\b/i,
-					sortbyTest = /\bby:(score|relevance|width|height|comments|random)\b/i;
+					sortbyTest = /\bby:(score|relevance|width|height|comments|random)\b/i,
+					asLinkTest = /\bas:link\b/i, returnAsLink = false;
 				if (inNSFW)
 					extra += '&filter_id=56027';
 				if (sortbyTest.test(query)){
-					var sortby = query.match(sortbyTest);
+					let sortby = query.match(sortbyTest);
 					query = query.replace(sortbyTest, '').trim();
 					extra += '&sf='+sortby[1];
 					if (!query.length && sortby[1] === 'random'){
@@ -793,14 +794,21 @@ function ready(){
 							});
 					}
 				}
+				if (asLinkTest.test(query)){
+					returnAsLink = true;
+					query = query.replace(asLinkTest, '').trim();
+				}
 
 				if (orderTest.test(query)){
-					var order = query.match(orderTest);
+					let order = query.match(orderTest);
 					query = query.replace(orderTest, '').trim();
 					extra += '&sd='+order[1];
 				}
 				query = query.replace(/,{2,}/g,',').replace(/(^,|,$)/,'');
 				var url = 'https://derpibooru.org/search.json?q='+encodeURIComponent(query)+extra;
+				if (returnAsLink)
+					return respond(channelID, replyTo(userID, url.replace('/search.json','/search')));
+				bot.simulateTyping(channelID);
 				console.log('Derpi search for '+chalk.blue(url));
 				unirest.get(url)
 					.header("Accept", "application/json")
