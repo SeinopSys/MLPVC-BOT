@@ -489,7 +489,7 @@ function ready(){
 					}, 1000);
 				}
 
-				respond(channelID, replyTo(userID, 'http://derpibooru.org/' + image.id + '\nhttps:' + (image.image.replace(/__[^.]+(.\w+)$/, '$1'))));
+				respond(channelID, replyTo(userID, 'http://derpibooru.org/' + image.id));
 			};
 		command = command.toLowerCase();
 
