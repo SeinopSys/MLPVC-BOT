@@ -960,7 +960,6 @@ function ready(){
 						return respond(channelID, replyTo(userID, '\n**'+data.word+'** • /'+data.pronunciation.all+'/'+(data.syllables&&data.syllables.list&&data.syllables.list.length>1?' • *'+data.syllables.list.join('-')+'*':'')+'\n'+(defs.join('\n\n'))));
 					});
 			})(); break;
-			case "say": break;
 			case "avatar": (function(){
 				if (!commandPermCheck(command, userID))
 					return respond(channelID, replyToIfNotPM(isPM, userID, 'You do not have permission to use this command.'));
@@ -1157,6 +1156,17 @@ function ready(){
 				}
 				respond(channelID, replyToIfNotPM(isPM,userID,output));
 			})(); break;
+			// Ignore Discord's own commands
+			case "gamerscape":
+			case "xvidb":
+			case "giphy":
+			case "tenor":
+			case "me":
+			case "tableflip":
+			case "unflip":
+			case "shrug":
+			case "nick":
+			case "say": break;
 			default:
 				var isProfanity = !isPM && ProfanityFilter(userID, channelID, message, event);
 				if (!isProfanity){
