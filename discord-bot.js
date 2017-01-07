@@ -607,7 +607,8 @@ function ready(){
 				});
 				respond(channelID, replyTo(userID, 'List of available roles for server '+OurServer.name+':\n```\n'+message.join('\n')+'\n```'));
 			})(); break;
-			case "ver": (function(){
+			case "ver":
+			case "version": (function(){
 				bot.simulateTyping(channelID);
 
 				getVersion(channelID,userID,function(ver,ts){
