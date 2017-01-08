@@ -183,6 +183,7 @@ function ready(){
 			return OurServer.members[userID].roles.indexOf(OurRoleIDs['Club Members']) !== -1;
 		}),
 		everyone = new Permission('Everyone',function(){ return true }),
+		nicePerm = new Permission('Nice',function(){ return true }),
 		nonmembers = new Permission('Non-members',function(userID){
 			return !isStaff.check(userID) && !isMember.check(userID);
 		}),
@@ -384,6 +385,13 @@ function ready(){
 				perm: everyone,
 				usage: ['2+2','Math.random()','"Te" + "xt"'],
 				aliases: ['e'],
+			},
+			{
+				name: 'nice',
+				help: 'Nice',
+				perm: nicePerm,
+				usage: [true],
+				aliases: ['nice'],
 			},
 		];
 	var commands = (function(){
@@ -1157,6 +1165,12 @@ function ready(){
 				}
 				respond(channelID, replyToIfNotPM(isPM,userID,output));
 			})(); break;
+			case "nice":
+				if (isPM)
+					return respond(channelID, onserver);
+
+				respond(channelID, replyTo(userID,'https://youtube.com/watch?v=ffQmb-cNFuk'));
+			break;
 			// Ignore Discord's own commands
 			case "gamerscape":
 			case "xvidb":
