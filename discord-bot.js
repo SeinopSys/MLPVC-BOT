@@ -352,9 +352,9 @@ function ready(){
 			},
 			{
 				name: 'fixnick',
-				help: 'Chnages your nickname to show your Discord name in front and your DeviantArt name in brackets after it. <&'+OurRoleIDs.Staff+'> can use a user\'s name as the first argument to fix a sepcific user\'s nick. Does not work on Staff members due to API limitations.',
+				help: 'Toggles the nickname of the user running the command between the `DiscordName (DAName)` and `DAName` formats. Staff can use a user\'s name as the first argument to fix a specific user\'s nick. Does not work on Staff members due to API limitations.',
 				perm: everyone,
-				usage: [true,'me','<nick>','@mention'],
+				usage: [true,'<nick>','@Mention#1234'],
 			},
 			{
 				name: 'verify',
@@ -432,7 +432,7 @@ function ready(){
 	function getUserData(targetUser, channelID, userID, isPM){
 		var member,
 			i,
-			userIDregex = /^<@(\d+)>$/;
+			userIDregex = /^<@!?(\d+)>$/;
 		if (typeof targetUser !== 'string' || targetUser.trim().length === 0)
 			return respond(channelID, replyToIfNotPM(isPM, userID, 'The user identifier is missing'));
 		if (targetUser === 'me')
@@ -450,7 +450,7 @@ function ready(){
 				}
 				if (typeof member === 'undefined')
 					for (i in OurServer.members){
-						if (!OurServer.members.hasOwnProperty(i))
+						if (!OurServer.members.hasOwnProperty(i) || typeof OurServer.members[i].nick === 'undefined')
 							continue;
 
 						if (OurServer.members[i].nick.toLowerCase().indexOf(targetUser.toLowerCase()) === 0){
@@ -1032,7 +1032,7 @@ function ready(){
 					return respond(channelID, replyToIfNotPM(isPM, userID, 'You do not have a nickname on our server.'));
 
 				var originalNick = data.nick.replace(/^.*\(([a-zA-Z\d-]{1,20})\)$/,'$1'),
-					nick = data.username+' ('+originalNick+')';
+					nick = originalNick === data.nick ? data.username+' ('+originalNick+')' : originalNick;
 				bot.editNickname({
 					serverID: OurServer.id,
 					userID: data.id,
