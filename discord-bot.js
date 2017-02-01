@@ -42,6 +42,7 @@ const
 		});
 	},
 	exec = require('child_process').exec;
+//noinspection ES6ConvertVarToLetConst
 var bot = new Discord.Client({
 		autorun: true,
 		token: config.TOKEN,
@@ -74,7 +75,7 @@ function ready(){
 	let i;
 
 	bot.setPresence({ idle_since: null });
-	console.log('Logged in as '+bot.username);
+	console.log('Logged in as '+bot.username+' ('+bot.id+')');
 
 	let serverIDs = Object.keys(bot.servers),
 		getClientID = function(){
@@ -1221,6 +1222,7 @@ function ready(){
 		if (this.lax){
 			let depth = 0,
 				whois = () => {
+					console.log(normalizedParts[depth]);
 					switch(normalizedParts[depth++]){
 						case "best":
 							switch(normalizedParts[depth++]){
@@ -1237,6 +1239,7 @@ function ready(){
 					}
 				},
 				youare = () => {
+					console.log(normalizedParts[depth]);
 					switch(normalizedParts[depth++]){
 						case "the":
 							switch(normalizedParts[depth++]){
@@ -1341,11 +1344,18 @@ function ready(){
 
 		let args = [].slice.call(arguments,1),
 			callHandler = function(){
-				let mentionRegex = /^\s*<[@#](\d+)>\s*/,
+				let mentionAtStartRegex = /^\s*<[@#](\d+)>\s*/,
+					mentionAtEndRegex = /\s*<[@#](\d+)>\s*$/,
 					mentioned;
-				if (mentionRegex.test(message)){
-					mentioned = message.match(mentionRegex)[1];
-					message = message.replace(mentionRegex,'');
+				if (mentionAtStartRegex.test(message)){
+					mentioned = message.match(mentionAtStartRegex)[1];
+					message = message.replace(mentionAtStartRegex,'');
+					args[2] = message;
+				}
+				else if (mentionAtEndRegex.test(message)){
+					mentioned = message.match(mentionAtEndRegex)[1];
+					message = message.replace(mentionAtEndRegex,'');
+					args[2] = message;
 				}
 				if (/^\s*[!/]\w+/.test(message))
 					return processCommand.apply(this, args);
