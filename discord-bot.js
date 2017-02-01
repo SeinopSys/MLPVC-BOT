@@ -1,20 +1,28 @@
 // jshint -W014
-const util = require('util');
-var Discord = require('discord.io'),
+const
 	config = require('./config'),
-	bot = new Discord.Client({
-		autorun: true,
-		token: config.TOKEN,
-	}),
+	util = require('util'),
+	Discord = require('discord.io'),
+	unirest = require('unirest'),
+	moment = require('moment'),
 	chalk = require('chalk'),
-	hasOwner = typeof config.OWNER_ID === 'string' && config.OWNER_ID.length,
-	replyTo = function(userID, message){
-		return "<@"+userID+"> "+message;
+	{VM} = require('vm2'),
+	fs = require('fs'),
+	YouTubeAPI = require('youtube-api'),
+	wrapOutput = (output) => '```js\n'+output+'\n```',
+	vmTimeout = 5000,
+	defineTimeLimit = 20000,
+	vmSandbox = {
+		process: {
+			exit: function(){ return { rawOutput: 'Nice try' } },
+		},
+		choice: function(){
+			let items = [].slice.apply(arguments);
+			return items[Math.floor(Math.random()*items.length)];
+		},
 	},
-	replyToIfNotPM = function(isPM, userID, message){
-		if (isPM) return message;
-		return replyTo(userID, message);
-	},
+	replyTo = (userID, message) => "<@"+userID+"> "+message;
+	replyToIfNotPM = (isPM, userID, message) => (isPM ? message : replyTo(userID, message)),
 	respond = function(channelID, message, callback){
 		return bot.sendMessage({
 			to: channelID,
@@ -33,43 +41,19 @@ var Discord = require('discord.io'),
 			}
 		});
 	},
-	readline = require('readline'),
-	rl,
-	getRl = function(){
-		if (typeof rl === 'undefined')
-			rl = readline.createInterface({
-				input: process.stdin,
-				output: process.stdout
-			});
-		return rl;
-	},
-	unirest = require('unirest'),
-	moment = require('moment'),
-	{VM} = require('vm2'),
-	wrapOutput = (output) => '```js\n'+output+'\n```',
-	vmSandbox = {
-		process: {
-			exit: function(){ return { rawOutput: 'Nice try' } },
-			kill: function(){ return { rawOutput: '*The bot pretends to be dead*' } },
-		},
-		choice: function(){
-			var items = [].slice.apply(arguments);
-			return items[Math.floor(Math.random()*items.length)];
-		},
-	},
-	vmTimeout = 5000,
-	evalTimedOut = {},
-	Youtube = require('youtube-api'),
-	yt = Youtube.authenticate({
-		type: "key",
-		key: config.YT_API_KEY,
+	exec = require('child_process').exec;
+var bot = new Discord.Client({
+		autorun: true,
+		token: config.TOKEN,
 	}),
-	fs = require('fs'),
+	hasOwner = typeof config.OWNER_ID === 'string' && config.OWNER_ID.length,
+	readline = require('readline').createInterface({
+		input: process.stdin,
+		output: process.stdout
+	}),
+	evalTimedOut = {},
 	table = require('text-table'),
-	OurServer,
-	exec,
-	defineCommandLastUsed,
-	defineTimeLimit = 20000;
+	defineCommandLastUsed;
 
 if (config.LOCAL === true && /^https:/.test(config.SITE_ABSPATH))
 	process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -84,16 +68,16 @@ require("console-stamp")(console, {
 bot.on('ready', ready);
 
 function ready(){
-	var i;
+	let i;
 
 	bot.setPresence({ idle_since: null });
 	console.log('Logged in as '+bot.username);
 
-	var serverIDs = Object.keys(bot.servers),
+	let serverIDs = Object.keys(bot.servers),
 		getClientID = function(){
 			if (typeof config.CLIENT_ID !== 'undefined')
 				return config.CLIENT_ID;
-			else getRl().question('Enter app Client ID (or ^C to exit): ', function(answer){
+			else readline.question('Enter app Client ID (or ^C to exit): ', function(answer){
 				if (/\D/.test(answer))
 					return console.log('> ID must be numeric, try again (or ^C to exit): ');
 				rl.close();
@@ -106,18 +90,18 @@ function ready(){
 	if (serverIDs.length === 0){
 		console.log('Bot is not part of any server. To join the bot to a server, get your client ID from https://discordapp.com/developers/applications/me and enter it below.');
 
-		var openAuthPage = function(clientID){
-			var url = getAuthURL();
+		let openAuthPage = function(){
+			let url = getAuthURL();
 			if (config.LOCAL){
 				console.log('Opening default browser to authorization URL ('+url+')');
-				var browser = require('opener')(url);
+				let browser = require('opener')(url);
 				browser.unref();
 				browser.stdin.unref();
 				browser.stdout.unref();
 				browser.stderr.unref();
 			}
 			else console.log('Open '+url+' in your favourite browser to continue.');
-			getRl().question('When you\'re done, press enter to re-run script (or ^C to exit)', function(){
+			readline.question('When you\'re done, press enter to re-run script (or ^C to exit)', function(){
 				console.log('Reconnecting...\n');
 				bot.disconnect();
 				bot.connect();
@@ -129,11 +113,11 @@ function ready(){
 		return;
 	}
 
-	OurServer = bot.servers[config.SERVER_ID];
+	let OurServer = bot.servers[config.SERVER_ID];
 	if (typeof OurServer === 'undefined'){
 		console.log('Could not find Our server, listing currently joined servers:\n');
 		for (i=0; i<serverIDs.length; i++){
-			var id = serverIDs[i];
+			let id = serverIDs[i];
 			console.log('    '+id+' '+'('+bot.servers[id].name+')');
 		}
 		console.log('\nSet one of the IDs above as the SERVER_ID configuration option.\nTo join the bot to another server, visit '+getAuthURL());
@@ -141,14 +125,14 @@ function ready(){
 	}
 	console.log('Found Our server ('+OurServer.name+')');
 
-	var OurRoleIDs = {},
+	let OurRoleIDs = {},
 		OurChannelIDs = {},
 		staffRoleID;
 	for (i in OurServer.roles){
 		if (!OurServer.roles.hasOwnProperty(i))
 			continue;
 
-		var role = OurServer.roles[i];
+		let role = OurServer.roles[i];
 		OurRoleIDs[role.name] = role.id;
 		if (typeof staffRoleID === 'undefined' && role.name === 'Staff')
 			staffRoleID = role.id;
@@ -159,21 +143,19 @@ function ready(){
 		if (!OurServer.channels.hasOwnProperty(i))
 			continue;
 
-		var channel = OurServer.channels[i];
+		let channel = OurServer.channels[i];
 		OurChannelIDs[channel.name] = channel.id;
 	}
 
 
-	function Permission(name, checker){
-		return {
-			name: name,
-			check: function(userID){
-				return checker(userID);
-			}
-		};
+	class Permission{
+		constructor(name, checker){
+			this.name = name;
+			this.check = userID => checker(userID);
+		}
 	}
 
-	var isOwner = new Permission('Bot Developer',function(userID){
+	let isOwner = new Permission('Bot Developer',function(userID){
 			return userID === config.OWNER_ID;
 		}),
 		isStaff = new Permission('Staff',function(userID){
@@ -198,7 +180,7 @@ function ready(){
 			console.log('The configured owner is not among the channel members'+limitedFunc);
 		}
 		else {
-			var _owner = bot.users[config.OWNER_ID];
+			let _owner = bot.users[config.OWNER_ID];
 			console.log('Owner is '+_owner.username+' ('+_owner.id+')');
 		}
 	}
@@ -216,7 +198,7 @@ function ready(){
 			channelID: channelID,
 			messageID: messageID,
 		},function(err){
-			var callback = function(msg){
+			let callback = function(msg){
 				if (!msg)
 					return;
 				respond(channelID, userID ? replyTo(userID, msg) : msg);
@@ -230,7 +212,7 @@ function ready(){
 		});
 	}
 
-	var commandsArray = [
+	let commandsArray = [
 			{
 				name: 'help',
 				help:
@@ -394,8 +376,8 @@ function ready(){
 				aliases: ['nice'],
 			},
 		];
-	var commands = (function(){
-			var obj = {}, i;
+	let commands = (function(){
+			let obj = {}, i;
 			for (i=0; i<commandsArray.length; i++)
 				obj[commandsArray[i].name] = commandsArray[i];
 			return obj;
@@ -409,9 +391,8 @@ function ready(){
 		onserver = 'This command must be run from within a channel on our server.';
 
 	function getVersion(channelID, userID, callback){
-		exec = exec || require('child_process').exec;
 		exec('git rev-parse --short=4 HEAD', function(_, version){
-			var m, privateMsg = userID === channelID;
+			let m, privateMsg = userID === channelID;
 			if (_){
 				console.log('Error getting version', _);
 				m = 'Error while getting version number' + (hasOwner ? ' (<@' + config.OWNER_ID + '> Logs may contain more info)' : '');
@@ -430,7 +411,7 @@ function ready(){
 	}
 
 	function getUserData(targetUser, channelID, userID, isPM){
-		var member,
+		let member,
 			i,
 			userIDregex = /^<@!?(\d+)>$/;
 		if (typeof targetUser !== 'string' || targetUser.trim().length === 0)
@@ -463,7 +444,7 @@ function ready(){
 			}
 			else member = bot.users[targetUser.replace(userIDregex,'$1')];
 		}
-		var data = {},
+		let data = {},
 			membership = OurServer.members[member.id];
 		data.id = member.id;
 		data.username = member.username;
@@ -486,10 +467,10 @@ function ready(){
 	}
 
 	function CallCommand(userID, channelID, message, event, userIdent, command, argStr, args){
-		var isPM = !(channelID in bot.channels),
+		let isPM = !(channelID in bot.channels),
 			respondWithDerpibooruImage = function(image){
 				if (!image.is_rendered){
-					var tries = typeof this.tries === 'undefined' ? 1 : this.tries;
+					let tries = typeof this.tries === 'undefined' ? 1 : this.tries;
 					if (tries > 2)
 						return respond(channelID, replyTo(userID, 'The requested image is not yet processed by Derpibooru, please try again in a bit'));
 					return setTimeout(function(){
@@ -509,15 +490,15 @@ function ready(){
 
 		switch (command){
 			case "help": (function helpCommandHandler(){
-				var cmd;
+				let cmd;
 				if (typeof args[0] === 'string'){
-					var tcmd = args[0],
+					let tcmd = args[0],
 						here = args[1] === 'here' && !isPM,
 						targetChannel = here ? channelID : userID;
 					if (!isPM && !here)
 						wipeMessage(channelID, event.d.id);
 					if (!(tcmd in commands) || (!commandPermCheck(tcmd, userID) && !isStaff.check(userID))){
-						for (var i=0; i<commandsArray.length; i++){
+						for (let i=0; i<commandsArray.length; i++){
 							if (!commandsArray[i].aliases)
 								continue;
 
@@ -537,9 +518,9 @@ function ready(){
 						respond(targetChannel, 'The specified command ('+cmd.name+') has no associated help text.');
 					}
 
-					var usage = [];
+					let usage = [];
 					if (cmd.usage){
-						for (var j=0; j<cmd.usage.length; j++){
+						for (let j=0; j<cmd.usage.length; j++){
 							usage.push('/'+cmd.name+(cmd.usage[j]===true?'':' '+cmd.usage[j]));
 						}
 					}
@@ -551,7 +532,7 @@ function ready(){
 						(usage.length?'\n__Usage, examples:__\n```\n'+(usage.join('\n'))+'\n```':'')
 					);
 				}
-				var canrun = [], x, l=commandsArray.length;
+				let canrun = [], x, l=commandsArray.length;
 				for (x=0; x<l; x++){
 					cmd = commandsArray[x];
 					if (cmd.perm.check(userID))
@@ -560,32 +541,31 @@ function ready(){
 				canrun = canrun.sort(function(a,b){
 					return a.localeCompare(b);
 				});
-				var exampleCommand = canrun[Math.floor(Math.random()*canrun.length)],
-					msg = 'Commands must be prefixed with `!` or `/` when sent in one of the channels, and all commands are case-insensitive (meaning `/'+exampleCommand
+				let exampleCommand = canrun[Math.floor(Math.random()*canrun.length)],
+					msg = 'Commands must be prefixed with `!` or `/` when sent in one of the channels, and all command names are case-insensitive (meaning `/'+exampleCommand
 						+'` is the same as `/'+(exampleCommand.replace(/^(.)/,function(a){
 							return a.toUpperCase();
 						}))+'` or `/'+(exampleCommand.toUpperCase())+'`).\n'+
-						'_If you PM the bot, the prefix is not needed; every PM is considered a command._\n'+
 						'Here\'s a list of all commands __you__ can run:\n```\n',
 					commandsTable = [],
 					columns = 3;
-				for (var ix=0; ix<canrun.length; ix+=columns)
+				for (let ix=0; ix<canrun.length; ix+=columns)
 					commandsTable.push(canrun.slice(ix,ix+columns));
 
 				msg += table(commandsTable,{ hsep: '  ' });
 
 				if (!isPM)
 					wipeMessage(channelID, event.d.id);
-				respond(userID, msg.trim()+'\n```\nIf you want to learn what a specific command does, simply run `/help commandname` (e.g. `/help '+exampleCommand+'`)');
+				respond(userID, msg.trim()+'\n```\nIf you want to find out what a specific command does, simply run `/help commandname` (e.g. `/help '+exampleCommand+'`)');
 			})(); break;
 			case "channels": (function(){
 				if (!commandPermCheck(command, userID))
 					return respond(channelID, replyTo(userID, 'You must be owner to use this command'));
 
-				var ids = [];
+				let ids = [];
 				for (i in OurServer.channels){
 					if (OurServer.channels.hasOwnProperty(i)){
-						var channel = OurServer.channels[i];
+						let channel = OurServer.channels[i];
 						ids.push('├ '+(channel.type==='text'?'#':'')+channel.name+' ('+channel.id+')');
 					}
 				}
@@ -608,7 +588,7 @@ function ready(){
 				if (!commandPermCheck(command, userID))
 					respond(channelID, replyTo(userID, 'You must be owner to use this command'));
 
-				var message = [],
+				let message = [],
 					keys = Object.keys(OurRoleIDs);
 				keys.forEach(function(key){
 					message.push(OurRoleIDs[key]+' ('+key+')');
@@ -630,7 +610,7 @@ function ready(){
 				if (channelID === OurChannelIDs.casual)
 					return wipeMessage(channelID, event.d.id);
 
-				var possible_images = [
+				let possible_images = [
 						'mountain', // Original by DJDavid98
 									// RIP IN PEPPERONI (Coco & Rarity by Pirill) ;_;7
 						'abcm',     // Applebloom's new CM by Drakizora
@@ -657,7 +637,7 @@ function ready(){
 					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 
 				bot.simulateTyping(channelID);
-				var query = argStr,
+				let query = argStr,
 					humanRegex = /\bhuman\b/g,
 					eqg = humanRegex.test(query);
 				if (eqg)
@@ -670,7 +650,7 @@ function ready(){
 							return respond(channelID, replyTo(userID, 'Color Guide search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
 						}
 
-						var data = result.body;
+						let data = result.body;
 						if (!data.status)
 							return respond(channelID, replyTo(userID, data.message));
 
@@ -685,7 +665,7 @@ function ready(){
 					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 
 				bot.simulateTyping(channelID);
-				var apiurl = 'http://rkgk.api.searchify.com/v1/indexes/kym_production/instantlinks?query='+encodeURIComponent(argStr)+'&field=name&fetch=url&function=10&len=1';
+				let apiurl = 'http://rkgk.api.searchify.com/v1/indexes/kym_production/instantlinks?query='+encodeURIComponent(argStr)+'&field=name&fetch=url&function=10&len=1';
 				unirest.get(apiurl)
 					.header("Accept", "application/json")
 					.end(function (result) {
@@ -694,7 +674,7 @@ function ready(){
 							return respond(channelID, replyTo(userID, 'Know Your Meme search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
 						}
 
-						var data = result.body;
+						let data = result.body;
 						if (!data.results.length || typeof data.results[0].text !== 'string')
 							return respond(channelID, replyTo(userID, 'Know Your Meme search returned no results.'));
 
@@ -709,7 +689,7 @@ function ready(){
 					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 
 				bot.simulateTyping(channelID);
-				var searchUrl = 'https://google.com/search?q='+encodeURIComponent(argStr);
+				let searchUrl = 'https://google.com/search?q='+encodeURIComponent(argStr);
 				unirest.get(searchUrl+'&btnI')
 					.followRedirect(function(res){
 						if (typeof res.headers.location !== 'string')
@@ -739,7 +719,7 @@ function ready(){
 
 				bot.simulateTyping(channelID);
 
-				Youtube.search.list({
+				YouTubeAPI.search.list({
 					part: 'snippet',
 					q: argStr,
 					type: 'video',
@@ -786,7 +766,7 @@ function ready(){
 									return respond(channelID, replyTo(userID, 'Derpibooru random image search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
 								}
 
-								var data = result.body;
+								let data = result.body;
 								if (typeof data.id === 'undefined')
 									return respond(channelID, replyTo(userID, 'Failed to get random Derpibooru image ID'));
 
@@ -814,7 +794,7 @@ function ready(){
 					extra += '&sd='+order[1];
 				}
 				query = query.replace(/,{2,}/g,',').replace(/(^,|,$)/,'');
-				var url = 'https://derpibooru.org/search.json?q='+encodeURIComponent(query)+extra;
+				let url = 'https://derpibooru.org/search.json?q='+encodeURIComponent(query)+extra;
 				if (returnAsLink)
 					return respond(channelID, replyTo(userID, url.replace('/search.json','/search')));
 				bot.simulateTyping(channelID);
@@ -827,7 +807,7 @@ function ready(){
 							return respond(channelID, replyTo(userID, 'Derpibooru search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
 						}
 
-					var data = result.body;
+					let data = result.body;
 					if (typeof data.search === 'undefined' || typeof data.search[0] === 'undefined')
 						return respond(channelID, replyTo(userID, 'Derpibooru search returned no results.'+
 							(
@@ -846,7 +826,7 @@ function ready(){
 				if (channelID in OurServer.channels && OurServer.channels[channelID].name === 'nsfw' && args[0] !== 'leave')
 					return;
 				if (!args.length){
-					var message = (
+					let message = (
 						channelID === OurChannelIDs.nsfw
 						? null
 						: (
@@ -878,7 +858,7 @@ function ready(){
 								if (!err && error)
 									console.log('Error while adding Pony Sauce role to '+userIdent+error);
 
-								var response = err ? 'Failed to join <#'+OurChannelIDs.nsfw+'> channel' :'';
+								let response = err ? 'Failed to join <#'+OurChannelIDs.nsfw+'> channel' :'';
 
 								response = addErrorMessageToResponse(err, response);
 
@@ -906,7 +886,7 @@ function ready(){
 								if (!err && error)
 									console.log('Error while removing Pony Sauce role from '+userIdent+error);
 
-								var response = addErrorMessageToResponse(err, '');
+								let response = addErrorMessageToResponse(err, '');
 
 								if (response)
 									return respond(channelID, replyTo(userID, response));
@@ -933,7 +913,7 @@ function ready(){
 				if (!args.length)
 					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 
-				var delta;
+				let delta;
 				if (typeof defineCommandLastUsed === 'undefined')
 					defineCommandLastUsed = Date.now();
 				else if ((delta = Date.now() - defineCommandLastUsed) < defineTimeLimit && !isOwner.check(userID)){
@@ -955,11 +935,11 @@ function ready(){
 							return respond(channelID, replyTo(userID, 'WordsAPI search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
 						}
 
-						var data = result.body;
+						let data = result.body;
 						if (result.status === 404 || !data.results || data.results.length === 0)
 							return respond(channelID, replyTo(userID, 'WordsAPI search returned no results.'+(/s$/.test(argStr)?' Plural words can cause this issue. If you used a plural word, please use the singluar form instead.':'')));
 
-						var defs = [];
+						let defs = [];
 						data.results.slice(0,4).forEach(function(def){
 							defs.push(
 								(data.results.length>1?(defs.length+1)+'. ':'')+def.partOfSpeech+' — '+def.definition+
@@ -973,19 +953,19 @@ function ready(){
 				if (!commandPermCheck(command, userID))
 					return respond(channelID, replyToIfNotPM(isPM, userID, 'You do not have permission to use this command.'));
 
-				var url = argStr.trim(),
+				let url = argStr.trim(),
 					reset = url === 'reset',
 					actioned = reset?'reset':'updated',
 					setAvatar = function(avatarBase64){
 						bot.editUserInfo({
 							avatar: avatarBase64,
-						}, function(err, response){
+						}, function(err){
 							if (err){
 								console.log(err);
 								return respond(channelID, replyToIfNotPM(isPM, userID, 'Setting avatar failed. ' + (hasOwner ? '<@' + config.OWNER_ID + '>' : 'The bot owner') + ' should see what caused the issue in the logs.'));
 							}
 
-							var outputChannel = OurChannelIDs.staffchat,
+							let outputChannel = OurChannelIDs.staffchat,
 								staffChatExists = typeof OurChannelIDs.staffchat === 'string';
 							if (!staffChatExists){
 								if (isPM)
@@ -1003,7 +983,7 @@ function ready(){
 				if (!/^https?:\/\/.*$/.test(url))
 					respond(channelID, replyToIfNotPM(isPM, userID, 'The parameter must be a valid URL'));
 
-				var Request = unirest.get(url)
+				unirest.get(url)
 					.encoding(null)
 					.end(function(result){
 						if ((result.error || !(result.body instanceof Buffer))){
@@ -1011,7 +991,7 @@ function ready(){
 							return respond(channelID, replyTo(userID, 'Could not download image (HTTP ' + result.status + '). ' + (hasOwner ? '<@' + config.OWNER_ID + '>' : 'The bot owner') + ' should see what caused the issue in the logs.'));
 						}
 
-						var avatarBase64 = new Buffer(result.body).toString('base64');
+						let avatarBase64 = new Buffer(result.body).toString('base64');
 
 						setAvatar(avatarBase64, reset);
 					});
@@ -1020,24 +1000,24 @@ function ready(){
 				if (!commandPermCheck(command, userID))
 					return respond(channelID, replyToIfNotPM(isPM, userID, 'You must be owner to use this command'));
 
-				var data = getUserData(args[0], channelID, userID, isPM);
+				let data = getUserData(args[0], channelID, userID, isPM);
 
 				respond(channelID, replyToIfNotPM(isPM, userID, 'User details:\n```json\n'+JSON.stringify(data,null,'\t')+'\n```'));
 			})(); break;
 			case "fixnick": (function(){
-				var data = getUserData(isStaff.check(userID) ? (args[0]||'me') : 'me', channelID, userID, isPM);
+				let data = getUserData(isStaff.check(userID) ? (args[0]||'me') : 'me', channelID, userID, isPM);
 				if (typeof data !== 'object')
 					return;
 				if (typeof data.nick !== 'string')
 					return respond(channelID, replyToIfNotPM(isPM, userID, 'You do not have a nickname on our server.'));
 
-				var originalNick = data.nick.replace(/^.*\(([a-zA-Z\d-]{1,20})\)$/,'$1'),
+				let originalNick = data.nick.replace(/^.*\(([a-zA-Z\d-]{1,20})\)$/,'$1'),
 					nick = originalNick === data.nick ? data.username+' ('+originalNick+')' : originalNick;
 				bot.editNickname({
 					serverID: OurServer.id,
 					userID: data.id,
 					nick: nick,
-				},function(err, response){
+				},function(err){
 					if (err){
 						if (err.response && err.response.message === 'Privilege is too low...')
 							return respond(channelID, replyToIfNotPM(isPM, userID, 'Changing nick failed: Due to Discord API limitations the bot can only set the nicks of users whose roles are under the bot\'s in the hierarchy.'));
@@ -1054,7 +1034,7 @@ function ready(){
 				if (!commandPermCheck(command, userID))
 					return respond(channelID, replyToIfNotPM(isPM, userID, 'You mustn\'t be part of Club Members or Staff to use this command'));
 
-				var token = args[0];
+				let token = args[0];
 				if (typeof token === 'undefined' || token.length === 0)
 					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 				if (/^[a-z\d]{10,}$/.test(token))
@@ -1070,7 +1050,7 @@ function ready(){
 							return respond(channelID, replyTo(userID, 'Verifyiing account failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
 						}
 
-						var data = result.body;
+						let data = result.body;
 						if (!data.status)
 							return respond(channelID, replyToIfNotPM(isPM, userID, 'Error: '+data.message));
 
@@ -1108,7 +1088,7 @@ function ready(){
 			})(); break;
 			case "tut":
 			case "tutorials": (function(){
-				var url = 'http://mlp-vectorclub.deviantart.com/gallery/34905690/Tutorials';
+				let url = 'http://mlp-vectorclub.deviantart.com/gallery/34905690/Tutorials';
 				if (typeof args[0] === 'string'){
 					switch (args[0]){
 						case "ai":
@@ -1144,7 +1124,7 @@ function ready(){
 					}
 				}
 
-				var code = argStr.replace(/^`(?:``(?:js)?\n)?/, '').replace(/`+$/,''),
+				let code = argStr.replace(/^`(?:``(?:js)?\n)?/, '').replace(/`+$/,''),
 					output,
 					vm = new VM({ sandbox: vmSandbox, timeout: vmTimeout });
 				try {
@@ -1183,76 +1163,42 @@ function ready(){
 			case "nick":
 			case "say": break;
 			default:
-				var isProfanity = !isPM && ProfanityFilter(userID, channelID, message, event);
-				if (!isProfanity){
-					var notfound = 'Command `/'+command+'` not found. Use `/help` to see a list of all available commands';
-					console.log(notfound);
-					bot.sendMessage({
-						to: channelID,
-						message: replyTo(userID, notfound),
-					});
-				}
+				let notfound = `Command \`/${command}\` not found`;
+				console.log(notfound);
+				respond(channelID, replyToIfNotPM(isPM, userID, `${notfound}. Use \`/help\` to see a list of all available commands`));
 		}
 	}
 
 	function ProcessCommand(userID, channelID, message, event){
-		var isPM = !(channelID in bot.channels),
-			commandRegex = new RegExp('^'+(!isPM?'(?:\\s*<[@#]\\d+>)?\\s*[!/]':'\\s*[!/]?')+'(\\w+)(?:\\s+([ -~]+|`(?:``(?:js)\\n)?[\\S\\s]+`(?:``)?)?)?$'),
+		let isPM = !(channelID in bot.channels),
+			commandRegex = new RegExp('^\\s*'+(!isPM?'(?:<[@#]\\d+>)?\\s*':'')+'[!/](\\w+)(?:\\s+([ -~]+|`(?:``(?:js)\\n)?[\\S\\s]+`(?:``)?)?)?$'),
 			userIdent = getIdent(userID);
 		console.log(userIdent+' ran '+message+' from '+(isPM?'a PM':chalk.blue('#'+bot.channels[channelID].name)));
 		if (!commandRegex.test(message)){
-			var matchingCommand = message.match(/^([!/]?\S+)/);
+			let matchingCommand = message.match(/^([!/]?\S+)/);
 			return bot.sendMessage({
 				to: channelID,
 				message: replyTo(userID, 'Invalid command'+(matchingCommand ? ': '+matchingCommand[1] : '')),
 			});
 		}
-		var commandMatch = message.match(commandRegex);
+		let commandMatch = message.match(commandRegex);
 		if (!commandMatch)
 			return;
-		var command = commandMatch[1],
+		let command = commandMatch[1],
 			argStr = commandMatch[2] ? commandMatch[2].trim() : '',
 			args = argStr ? argStr.split(/\s+/) : [];
 
 		CallCommand(userID, channelID, message, event, userIdent, command, argStr, args);
 	}
 
-	function ProfanityFilter(userID, channelID, message, event){
-		if (isStaff.check(userID) || isMember.check(userID))
-			return;
-
-		var matching = /\b(f+[u4a]+[Ссc]+k+(?:tard|[1i]ng)?|[Ссc]un[7t]|a[5$s]{2,}(?:h[0o]+l[3e]+)|(?:d[1i]+|[Ссc][0o])[Ссc]k(?:h[3e][4a]*d)?|b[1ie3a4]+t[Ссc]h)\b/ig,
-			userident = getIdent(userID);
-
-		if (!matching.test(message))
-			return false;
-
-		console.log(userident+' triggered profanity filter in channel '+chalk.blue('#'+bot.channels[channelID].name)+' with message: '+(message.replace(matching,function(str){
-			return chalk.red(str);
-		})));
-
-		if (channelID === OurChannelIDs.nsfw){
-			console.log(userident+' wasn\'t warned because they cursed in the NSFW channel');
-			return false;
-		}
-
-		wipeMessage(channelID, event.d.id, function(msg){
-			msg = 'Please avoid using swear words.\nYour message (shown below) in <#'+channelID+'> contained inapproperiate language and it was promptly removed.'+msg+'\n\n**Original message:**\n'+(message.replace(matching,'__*$1*__'));
-			respond(userID, msg);
-		});
-		return true;
-	}
-
-	function onMessage(username, userID, channelID, message, event) {
+	function onMessage(_, userID, channelID, message, event) {
 		if (userID === bot.id)
 			return;
 
-		var args = [].slice.call(arguments,1),
+		let args = [].slice.call(arguments,1),
 			callHandler = function(isPM){
 				if (isPM || /^(?:\s*<[@#]\d+>)?\s*[!/]\w+/.test(message))
 					return ProcessCommand.apply(this, args);
-
-				ProfanityFilter.apply(this, args);
 			};
 
 		if (channelID in OurServer.channels)
@@ -1287,6 +1233,7 @@ function ready(){
 	});
 
 	process.on('SIGINT', function(){
+		console.log('Goodbye cruel world.');
 		idle();
 		process.exit();
 	});

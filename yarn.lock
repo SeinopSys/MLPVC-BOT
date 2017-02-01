@@ -3,8 +3,8 @@
 
 
 ansi-regex@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/ansi-regex/-/ansi-regex-2.0.0.tgz#c5061b6e0ef8a81775e50f5d66151bf6bf371107"
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/ansi-regex/-/ansi-regex-2.1.1.tgz#c3b33ab5ee360d86e0e628f0468ae7ef27d654df"
 
 ansi-styles@^2.2.1:
   version "2.2.1"
@@ -129,9 +129,9 @@ chalk@^1.1.1, chalk@^1.1.3:
     strip-ansi "^3.0.0"
     supports-color "^2.0.0"
 
-cjopus@0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/cjopus/-/cjopus-0.0.2.tgz#90f24775f3b4dfe1054e977f2d5659ce72798cf3"
+cjopus@^0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/cjopus/-/cjopus-0.0.4.tgz#46f3cfc96b83f7d78446de8b4cfd994b5889a9a0"
 
 combined-stream@^1.0.5, combined-stream@~1.0.5:
   version "1.0.5"
@@ -160,8 +160,8 @@ concat-stream@~1.4.7:
     typedarray "~0.0.5"
 
 console-stamp@^0.2.4:
-  version "0.2.4"
-  resolved "https://registry.yarnpkg.com/console-stamp/-/console-stamp-0.2.4.tgz#84b038694480c04021eb4103a6ffbd5998fc3b76"
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/console-stamp/-/console-stamp-0.2.5.tgz#8e88542165d8fcdcb3fa494f6df3dd15304cd6ff"
   dependencies:
     chalk "^1.1.1"
     dateformat "^1.0.11"
@@ -209,10 +209,10 @@ delayed-stream@~1.0.0:
   resolved "https://registry.yarnpkg.com/delayed-stream/-/delayed-stream-1.0.0.tgz#df3ae199acadfb7d440aaae0b29e2272b24ec619"
 
 discord.io@^2.3.0:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/discord.io/-/discord.io-2.3.0.tgz#b7151d3d942a952f2f6a430cb2d22e7bf1a41fd2"
+  version "2.4.2"
+  resolved "https://registry.yarnpkg.com/discord.io/-/discord.io-2.4.2.tgz#bd21ecfc8bbd03a9d33e767cf1a5cc47eae1be7d"
   dependencies:
-    cjopus "0.0.2"
+    cjopus "^0.0.4"
     tweetnacl "^0.14.0"
     ws "^1.1.0"
 
@@ -559,15 +559,15 @@ mime-db@~1.12.0:
   version "1.12.0"
   resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.12.0.tgz#3d0c63180f458eb10d325aaa37d7c58ae312e9d7"
 
-mime-db@~1.25.0:
-  version "1.25.0"
-  resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.25.0.tgz#c18dbd7c73a5dbf6f44a024dc0d165a1e7b1c392"
+mime-db@~1.26.0:
+  version "1.26.0"
+  resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.26.0.tgz#eaffcd0e4fc6935cf8134da246e2e6c35305adff"
 
 mime-types@^2.1.11, mime-types@~2.1.7:
-  version "2.1.13"
-  resolved "https://registry.yarnpkg.com/mime-types/-/mime-types-2.1.13.tgz#e07aaa9c6c6b9a7ca3012c69003ad25a39e92a88"
+  version "2.1.14"
+  resolved "https://registry.yarnpkg.com/mime-types/-/mime-types-2.1.14.tgz#f7ef7d97583fcaf3b7d282b6f8b5679dab1e94ee"
   dependencies:
-    mime-db "~1.25.0"
+    mime-db "~1.26.0"
 
 mime-types@~2.0.3:
   version "2.0.14"
@@ -588,8 +588,8 @@ moment@^2.17.1:
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.17.1.tgz#fed9506063f36b10f066c8b59a144d7faebe1d82"
 
 node-forge@^0.6.46:
-  version "0.6.46"
-  resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.6.46.tgz#04a8a1c336eb72ef6f434ba7c854d608916c328d"
+  version "0.6.48"
+  resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.6.48.tgz#6986ea43bdd3cadc47a19db97759055edf753c01"
 
 node-uuid@~1.4.7:
   version "1.4.7"
@@ -617,8 +617,8 @@ object-assign@^1.0.0:
   resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-1.0.0.tgz#e65dc8766d3b47b4b8307465c8311da030b070a6"
 
 object-assign@^4.0.1:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.0.tgz#7a3b3d0e98063d43f4c03f2e8ae6cd51a86883a0"
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
 
 opener@^1.4.2:
   version "1.4.2"
@@ -825,8 +825,8 @@ spdx-license-ids@^1.0.2:
   resolved "https://registry.yarnpkg.com/spdx-license-ids/-/spdx-license-ids-1.2.2.tgz#c9df7a3424594ade6bd11900d596696dc06bac57"
 
 sshpk@^1.7.0:
-  version "1.10.1"
-  resolved "https://registry.yarnpkg.com/sshpk/-/sshpk-1.10.1.tgz#30e1a5d329244974a1af61511339d595af6638b0"
+  version "1.10.2"
+  resolved "https://registry.yarnpkg.com/sshpk/-/sshpk-1.10.2.tgz#d5a804ce22695515638e798dbe23273de070a5fa"
   dependencies:
     asn1 "~0.2.3"
     assert-plus "^1.0.0"
@@ -959,7 +959,7 @@ xtend@^4.0.0:
   resolved "https://registry.yarnpkg.com/xtend/-/xtend-4.0.1.tgz#a5c6d532be656e23db820efb943a1f04998d63af"
 
 youtube-api@^2.0.4:
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/youtube-api/-/youtube-api-2.0.4.tgz#33ca49cbb54a85cef2cae4676027298de4a063cd"
+  version "2.0.6"
+  resolved "https://registry.yarnpkg.com/youtube-api/-/youtube-api-2.0.6.tgz#1f0fe8feb091471411cf90fcb706442e4068aa81"
   dependencies:
     googleapis "^5.2.1"
