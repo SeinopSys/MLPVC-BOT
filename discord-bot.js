@@ -21,7 +21,7 @@ const
 			return items[Math.floor(Math.random()*items.length)];
 		},
 	},
-	replyTo = (userID, message) => "<@"+userID+"> "+message;
+	replyTo = (userID, message) => "<@"+userID+"> "+message,
 	replyToIfNotPM = (isPM, userID, message) => (isPM ? message : replyTo(userID, message)),
 	respond = function(channelID, message, callback){
 		return bot.sendMessage({
@@ -54,6 +54,9 @@ var bot = new Discord.Client({
 	evalTimedOut = {},
 	table = require('text-table'),
 	defineCommandLastUsed;
+Array.prototype.randomElement = function () {
+    return this[Math.floor(Math.random() * this.length)]
+};
 
 if (config.LOCAL === true && /^https:/.test(config.SITE_ABSPATH))
 	process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -466,7 +469,7 @@ function ready(){
 		return user.username+'#'+user.discriminator;
 	}
 
-	function CallCommand(userID, channelID, message, event, userIdent, command, argStr, args){
+	function callCommand(userID, channelID, message, event, userIdent, command, argStr, args){
 		let isPM = !(channelID in bot.channels),
 			respondWithDerpibooruImage = function(image){
 				if (!image.is_rendered){
@@ -474,7 +477,7 @@ function ready(){
 					if (tries > 2)
 						return respond(channelID, replyTo(userID, 'The requested image is not yet processed by Derpibooru, please try again in a bit'));
 					return setTimeout(function(){
-						CallCommand.call({tries: tries + 1}, userID, channelID, message, event, userIdent, command, argStr, args);
+						callCommand.call({tries: tries + 1}, userID, channelID, message, event, userIdent, command, argStr, args);
 					}, 1000);
 				}
 
@@ -630,9 +633,6 @@ function ready(){
 				wipeMessage(channelID, event.d.id, 'Please continue this discussion in <#'+OurChannelIDs.casual+'>\n'+config.SITE_ABSPATH+'img/discord/casual/'+possible_images[k]+'.png');
 			})(); break;
 			case "cg": (function(){
-				if (isPM)
-					return respond(channelID, onserver);
-
 				if (!args.length)
 					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
 
@@ -647,14 +647,14 @@ function ready(){
 					.end(function (result) {
 						if (result.error || typeof result.body !== 'object'){
 							console.log(result.error, result.body);
-							return respond(channelID, replyTo(userID, 'Color Guide search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+							return respond(channelID, replyToIfNotPM(isPM, userID, 'Color Guide search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
 						}
 
 						let data = result.body;
 						if (!data.status)
-							return respond(channelID, replyTo(userID, data.message));
+							return respond(channelID, replyToIfNotPM(isPM, userID, data.message));
 
-						respond(channelID, replyTo(userID, config.SITE_ABSPATH+(data.goto.substring(1))));
+						respond(channelID, replyToIfNotPM(isPM, userID, config.SITE_ABSPATH+(data.goto.substring(1))));
 					});
 			})(); break;
 			case "kym": (function(){
@@ -1169,7 +1169,7 @@ function ready(){
 		}
 	}
 
-	function ProcessCommand(userID, channelID, message, event){
+	function processCommand(userID, channelID, message, event){
 		let isPM = !(channelID in bot.channels),
 			commandRegex = new RegExp('^\\s*'+(!isPM?'(?:<[@#]\\d+>)?\\s*':'')+'[!/](\\w+)(?:\\s+([ -~]+|`(?:``(?:js)\\n)?[\\S\\s]+`(?:``)?)?)?$'),
 			userIdent = getIdent(userID);
@@ -1188,20 +1188,171 @@ function ready(){
 			argStr = commandMatch[2] ? commandMatch[2].trim() : '',
 			args = argStr ? argStr.split(/\s+/) : [];
 
-		CallCommand(userID, channelID, message, event, userIdent, command, argStr, args);
+		callCommand(userID, channelID, message, event, userIdent, command, argStr, args);
+	}
+
+	let interactions = {
+		greetingsNoThere: ['Hello!','Hi!','Hey!'],
+		greetings: ['Hey there!','Hello there!','Hi there!'],
+		bestpony: ['What a silly question, obviously it\'s me!','I have to go with yours truly on that one.','Duh, of course it\'s me!','Me.'],
+		bestprincess: ["I'd rather not start a flame war","Yes.","I don't have a strong opinion."],
+		joke: ["I would if I knew any.","The guy who coded me was too lazy to add any jokes here, sorry.","Just go on imgur or something"],
+		cgfound: ['Here you go:','Indeed, here:','Yep, right here:'],
+		cgnotfound: ["I'm afraid there isn't one yet.","I'm pretty sure there isn't one, unless you mistyped the name.","Seems like there isn't one."],
+		shyGreeting: ['_blushes_','Oh... h-h-hello ^^,','Hi ^^,','H-hi!'],
+		thebest: ["I know, you don't have to remind me.","Was there ever any doubt?","Of course I am!","Can't argue with that."],
+		insulted: ["I just don't know what went wrong","I'm not sure I deserved that","Please donQt be mean.","I thought we were friends :c","Well, that escalated quickly."],
+	};
+	function interact(userID, channelID, message){
+		const
+			userIdent = getIdent(userID),
+			isPM = !(channelID in bot.channels),
+			respondWithInteraction = (which)=>{
+				let randomResponse = interactions[which].randomElement();
+				console.log('Responded to '+userIdent+' with "'+randomResponse+'"');
+				respond(channelID, replyToIfNotPM(isPM, userID, randomResponse));
+			};
+		console.log('Interaction initiated by '+userIdent+', message: '+message);
+
+		let normalized = message.toLowerCase(),
+			normalizedParts = normalized.split(/\s+/);
+		normalized = normalizedParts.join(' ');
+
+		if (this.lax){
+			let depth = 0,
+				whois = () => {
+					switch(normalizedParts[depth++]){
+						case "best":
+							switch(normalizedParts[depth++]){
+								case "pony":
+								case "pony?":
+									return respondWithInteraction('bestpony');
+								break;
+								case "princess":
+								case "princess?":
+									return respondWithInteraction('bestprincess');
+								break;
+							}
+						break;
+					}
+				},
+				youare = () => {
+					switch(normalizedParts[depth++]){
+						case "the":
+							switch(normalizedParts[depth++]){
+								case "best":
+									return respondWithInteraction('thebest');
+								break;
+							}
+						break;
+					}
+				};
+
+			switch(normalizedParts[depth++]){
+				case "hi":
+				case "hey":
+				case "hello":
+					if (/(cutie|qt|sweetie|sweetheart)$/.test(normalized))
+						return respondWithInteraction('shyGreeting');
+					if (/^there!?/.test(normalizedParts[depth]))
+						return respondWithInteraction('greetingsNoThere');
+					if (!normalizedParts[depth])
+						return respondWithInteraction('greetings');
+				break;
+				case "hi!":
+				case "hey!":
+				case "hi?":
+					return respondWithInteraction('greetings');
+				break;
+				case "who":
+					switch(normalizedParts[depth++]){
+						case "is":
+							return whois();
+						break;
+					}
+				break;
+				case "who's":
+					return whois(0);
+				break;
+				case "tell":
+					switch(normalizedParts[depth++]){
+						case "me":
+							switch(normalizedParts[depth++]){
+								case "a":
+									switch(normalizedParts[depth++]){
+										case "joke":
+											return respondWithInteraction('joke');
+										break;
+									}
+								break;
+							}
+						break;
+					}
+				break;
+				case "you're":
+					return youare();
+				break;
+				case "you":
+					switch(normalizedParts[depth++]){
+						case "are":
+							return youare();
+						break;
+					}
+				break;
+				case "fuck":
+					switch(normalizedParts[depth++]){
+						case "you":
+							return respondWithInteraction('insulted');
+						break;
+					}
+				break;
+			}
+		}
+
+		let cgtest = /^(?:is|si) t(?:he|eh)re a (?:colou?r ?)?guide for([\w\s]+)\??$/;
+		if (cgtest.test(normalized)){
+			bot.simulateTyping(channelID);
+			let query = normalized.match(cgtest)[1].trim(),
+				eqgTest = /\bhuman\b/,
+				eqg = eqgTest.test(normalized);
+
+				unirest.get(config.SITE_ABSPATH+'cg'+(eqg?'/eqg':'')+'/1?js=true&q='+encodeURIComponent(query)+'&GOFAST=true')
+					.header("Accept", "application/json")
+					.end(function (result) {
+						if (result.error || typeof result.body !== 'object'){
+							console.log(result.error, result.body);
+							return respond(channelID, replyToIfNotPM(isPM, userID, 'I could not check it right now. '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see why in the logs.'));
+						}
+
+						let data = result.body;
+						if (!data.status)
+							return respond(channelID, replyToIfNotPM(isPM, userID, interactions.cgnotfound.randomElement()));
+
+						respond(channelID, replyToIfNotPM(isPM, userID, interactions.cgfound.randomElement()+' '+config.SITE_ABSPATH+(data.goto.substring(1))));
+					});
+		}
 	}
 
 	function onMessage(_, userID, channelID, message, event) {
 		if (userID === bot.id)
 			return;
 
+		let isPM = !(channelID in OurServer.channels);
+
 		let args = [].slice.call(arguments,1),
-			callHandler = function(isPM){
-				if (isPM || /^(?:\s*<[@#]\d+>)?\s*[!/]\w+/.test(message))
-					return ProcessCommand.apply(this, args);
+			callHandler = function(){
+				let mentionRegex = /^\s*<[@#](\d+)>\s*/,
+					mentioned;
+				if (mentionRegex.test(message)){
+					mentioned = message.match(mentionRegex)[1];
+					message = message.replace(mentionRegex,'');
+				}
+				if (/^\s*[!/]\w+/.test(message))
+					return processCommand.apply(this, args);
+				interact.apply({ lax: isPM || mentioned === bot.id }, args);
 			};
 
-		if (channelID in OurServer.channels)
+		if (!isPM)
 			callHandler();
 		else if (channelID in bot.directMessages){
 			if (!(userID in OurServer.members))
@@ -1209,7 +1360,7 @@ function ready(){
 
 			console.log('Received PM from #'+userID+' (@'+getIdent(userID)+'), contents: '+message);
 
-			callHandler(true);
+			callHandler();
 		}
 	}
 	bot.on('message', onMessage);
