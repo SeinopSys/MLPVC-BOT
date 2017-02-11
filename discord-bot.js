@@ -42,6 +42,11 @@ const
 		});
 	},
 	exec = require('child_process').exec;
+// This is needed so we don't hit the anonymous usage cap
+YouTubeAPI.authenticate({
+	type: "key",
+	key: config.YT_API_KEY,
+});
 //noinspection ES6ConvertVarToLetConst
 var bot = new Discord.Client({
 		autorun: true,
@@ -730,7 +735,7 @@ function ready(){
 					safeSearch: channelID === OurChannelIDs.nsfw ? 'none' : 'moderate',
 				}, function(error, result) {
 					if (error || typeof result.items === 'undefined'){
-						console.log(error, result.items);
+						console.log(error, result);
 						return respond(channelID, replyTo(userID, 'YouTube search failed. '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
 					}
 
