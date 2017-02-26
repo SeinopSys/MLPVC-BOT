@@ -1115,7 +1115,7 @@ function ready(){
 						break;
 					}
 				}
-				respond(channelID, replyToIfNotPM(isPM, userID, url));
+				respond(channelID, replyToIfNotPM(isPM, userID, '<'+url+'>'));
 			})(); break;
 			case "e":
 			case "eval": (function(){
