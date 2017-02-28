@@ -384,6 +384,12 @@ function ready(){
 				usage: [true],
 				aliases: ['nice'],
 			},
+			{
+				name: 'age',
+				help: 'Return the age of the server',
+				perm: everyone,
+				usage: [true],
+			},
 		];
 	let commands = (function(){
 			let obj = {}, i;
@@ -1156,6 +1162,14 @@ function ready(){
 					return respond(channelID, onserver);
 
 				respond(channelID, replyTo(userID,'https://youtube.com/watch?v=ffQmb-cNFuk'));
+			break;
+			case "age":
+				if (isPM)
+					return respond(channelID, onserver);
+
+				let age = moment(new Date((OurServer.id / 4194304) + 1420070400000)),
+					delta = age.fromNow();
+				respond(channelID, replyTo(userID,'The server was created on '+(age.format('Do MMMM, YYYY'))+' ('+delta+')'));
 			break;
 			// Ignore Discord's own commands
 			case "gamerscape":
