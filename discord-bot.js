@@ -343,9 +343,9 @@ function ready(){
 			},
 			{
 				name: 'fixnick',
-				help: 'Toggles the nickname of the user running the command between the `DiscordName (DAName)` and `DAName` formats. Staff can use a user\'s name as the first argument to fix a specific user\'s nick. Does not work on Staff members due to API limitations.',
+				help: 'Toggles the nickname of the user running the command between the `DiscordName (DAName)` or `DAName | DiscordName`, and `DAName` formats. To get the piped format, pass `pipe` as the first argument. Staff can use a user\'s name as the last argument to fix a specific user\'s nick. Does not work on Staff members due to API limitations.',
 				perm: everyone,
-				usage: [true,'<nick>','@Mention#1234'],
+				usage: [true,'pipe me','@Mention#1234'],
 			},
 			{
 				name: 'verify',
@@ -1017,14 +1017,15 @@ function ready(){
 				respond(channelID, replyToIfNotPM(isPM, userID, 'User details:\n```json\n'+JSON.stringify(data,null,'\t')+'\n```'));
 			})(); break;
 			case "fixnick": (function(){
-				let data = getUserData(isStaff.check(userID) ? (args[0]||'me') : 'me', channelID, userID, isPM);
+				let data = getUserData(isStaff.check(userID) ? (args[arguments.length-1]||'me') : 'me', channelID, userID, isPM);
+				let format = args[0] === 'pipe' ? 'da | disc' : 'disc (da)';
 				if (typeof data !== 'object')
 					return;
 				if (typeof data.nick !== 'string')
 					return respond(channelID, replyToIfNotPM(isPM, userID, 'You do not have a nickname on our server.'));
 
-				let originalNick = data.nick.replace(/^.*\(([a-zA-Z\d-]{1,20})\)$/,'$1'),
-					nick = originalNick === data.nick ? data.username+' ('+originalNick+')' : originalNick;
+				let originalNick = data.nick.replace(/^(?:.*\(([a-zA-Z\d-]{1,20})\)|([a-zA-Z\d-]{1,20})\s\|.*)$/,'$1$2'),
+					nick = originalNick === data.nick ? (format.replace('da',originalNick).replace('disc',data.username)) : originalNick;
 				bot.editNickname({
 					serverID: OurServer.id,
 					userID: data.id,
