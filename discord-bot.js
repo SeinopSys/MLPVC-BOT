@@ -156,8 +156,7 @@ function ready(){
 		OurChannelIDs[channel.name] = channel.id;
 	}
 
-
-	class Permission{
+	class Permission {
 		constructor(name, checker){
 			this.name = name;
 			this.check = userID => checker(userID);
@@ -219,6 +218,10 @@ function ready(){
 			response = addErrorMessageToResponse(err, response);
 			callback(response, Boolean(err));
 		});
+	}
+
+	function getRules(){
+		return fs.readFileSync('rules.txt', 'utf8').replace(/#([a-z_-]+)/g,(_,n)=>'<#'+OurChannelIDs[n]+'>');
 	}
 
 	let commandsArray = [
@@ -1172,6 +1175,20 @@ function ready(){
 					delta = age.fromNow();
 				respond(channelID, replyTo(userID,'The server was created on '+(age.format('Do MMMM, YYYY'))+' ('+delta+')'));
 			break;
+			case "welcomemsg": (function(){
+				if (!isPM)
+					wipeMessage(channelID, event.d.id);
+				respond(OurChannelIDs.welcome,
+					`__**Welcome to the MLP-VectorClub's Discord Server!**__\n\n`+
+					getRules()+ // Always ends with a spare newline
+					`\nPlease send the command \`/read\` to this channel to reveal the rest of the channels on our server and start chatting. You can always get this information again by running the \`/rules\` command.`
+				);
+			})(); break;
+			case "rules": (function(){
+				if (!isPM)
+					wipeMessage(channelID, event.d.id);
+				respond(userID, '__**Server rules:**__\n\n'+getRules());
+			})(); break;
 			// Ignore Discord's own commands
 			case "gamerscape":
 			case "xvidb":
@@ -1364,6 +1381,31 @@ function ready(){
 
 		let args = [].slice.call(arguments,1),
 			callHandler = function(){
+				if (channelID === OurChannelIDs.welcome){
+					wipeMessage(channelID,event.d.id);
+					if (message.trim().indexOf('/read') === 0){
+						bot.addToRole({
+							serverID: OurServer.id,
+							userID: userID,
+							roleID: OurRoleIDs['Informed'],
+						},function(err){
+							if (!err)
+								console.log('Error while adding Informed role to '+userID);
+
+							let response = err ? 'Failed to add Informed role' :'';
+
+							response = addErrorMessageToResponse(err, response);
+
+							if (response)
+								return respond(channelID, response);
+
+							OurServer.members[userID].roles.push(OurRoleIDs['Informed']);
+
+							respond(OurChannelIDs.casual, `Please welcome <@${userID}> on our server!`);
+						});
+					}
+					return;
+				}
 				let mentionAtStartRegex = /^\s*<[@#](\d+)>\s*/,
 					mentionAtEndRegex = /\s*<[@#](\d+)>\s*$/,
 					mentioned;
