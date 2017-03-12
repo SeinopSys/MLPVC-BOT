@@ -393,6 +393,18 @@ function ready(){
 				perm: everyone,
 				usage: [true],
 			},
+			{
+				name: 'welcomemsg',
+				help: `Sends the welcome message to the <#${OurChannelIDs.welcome}> channel.`,
+				perm: isStaff,
+				usage: [true],
+			},
+			{
+				name: 'roles',
+				help: 'List the server rules',
+				perm: everyone,
+				usage: [true],
+			},
 		];
 	let commands = (function(){
 			let obj = {}, i;
