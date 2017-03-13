@@ -7,5 +7,5 @@
     #vectors: Request critique, suggestions or help with vectors - for all vector editing applications
     #support: Ask questions about the request/color guide site, the group, or the Discord server
     #spoilers: Here you can talk about upcoming or recently aired episodes and movies, as well as the comics
-    #bot-sandbox: Here you can play around with the features of our very own bot, @Penny Curve#7159, without distrupting the conversation in other channels.
+    #bot-sandbox: Here you can play around with the features of our very own bot, @me, without distrupting the conversation in other channels.
     #nsfw: This room is invite-only, and as the name suggests, it's for discussing adult material and sensitive topics. You can use the command `/nsfw join` to enter and `/nsfw leave` to leave

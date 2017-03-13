@@ -221,7 +221,7 @@ function ready(){
 	}
 
 	function getRules(){
-		return fs.readFileSync('rules.txt', 'utf8').replace(/#([a-z_-]+)/g,(_,n)=>'<#'+OurChannelIDs[n]+'>');
+		return fs.readFileSync('rules.txt', 'utf8').replace(/#([a-z_-]+)/g,(_,n)=>'<#'+OurChannelIDs[n]+'>').replace('@me',`<@${bot.id}>`);
 	}
 
 	let commandsArray = [
