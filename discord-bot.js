@@ -294,7 +294,7 @@ function ready(){
 				name: 'derpi',
 				help:
 					'This command can be used to return the first result of a Derpibooru search.\n'+
-					'**Note:** Any rooms aside from <#'+OurChannelIDs.nsfw+'> will only show results accessible by the site\'s default filter\n\n'+
+					'**Note:** Any rooms aside from <#'+OurChannelIDs.nsfw+'> will only show results accessible by the site\'s default filter. Using the command in a DM is the same as being in <#'+OurChannelIDs.nsfw+'>\n\n'+
 					'__**Bot-secific search keywords:**__\n\n'+
 					' ● `o:<desc|asc>` - Order of the results (if ommited, defaults to `desc`)\n'+
 					' ● `by:<score|relevance|width|height|comments|random>` - Same as "Sort by" on the actual site\n'+
@@ -773,7 +773,7 @@ function ready(){
 
 				let query = argStr,
 					extra = '',
-					inNSFW = channelID === OurChannelIDs.nsfw,
+					inNSFW = channelID === OurChannelIDs.nsfw || isPM,
 					orderTest = /\bo:(desc|asc)\b/i,
 					sortbyTest = /\bby:(score|relevance|width|height|comments|random)\b/i,
 					asLinkTest = /\bas:link\b/i, returnAsLink = false;
