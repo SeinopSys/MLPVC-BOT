@@ -1262,7 +1262,8 @@ function ready(){
 				console.log('Responded to '+userIdent+' with "'+randomResponse+'"');
 				respond(channelID, replyToIfNotPM(isPM, userID, randomResponse));
 			};
-		console.log('Interaction initiated by '+userIdent+', message: '+message);
+		if (isPM)
+			console.log('PM interaction initiated by '+userIdent+', message: '+message);
 
 		let normalized = message.toLowerCase(),
 			normalizedParts = normalized.split(/\s+/);
