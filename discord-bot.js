@@ -1421,7 +1421,7 @@ function ready(){
 
 							OurServer.members[userID].roles.push(OurRoleIDs['Informed']);
 
-							respond(OurChannelIDs.casual, `Please welcome <@${userID}> on our server!`);
+							respond(OurChannelIDs.casual, `Please welcome <@${userID}> to our server!`);
 						});
 					}
 					return;
