@@ -1,4 +1,4 @@
-**1.** Everyone (including non-members) is welcome; you don't have to be an artist/musician/writer to be part of the conversation.
+**1.** Everyone (including non-members) is welcome; you don't have to be an artist/musician/writer to be part of the conversation. However, if you *are* a club member, please tell us (along with your DeviantArt name) so we can assign you the approperiate role.
 
 **2.** If your Discord username is different from your DeviantArt username we'll give you a nickname that matches your DA name. This is especially important if you're a member or someone who interacts with the group frequently. If you want to keep your Discord name visible, you can use the `/fixnick` command. To learn more, use `/help fixnick`.
 

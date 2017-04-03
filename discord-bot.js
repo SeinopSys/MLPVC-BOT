@@ -1200,7 +1200,7 @@ function ready(){
 				respond(OurChannelIDs.welcome,
 					`__**Welcome to the MLP-VectorClub's Discord Server!**__\n\n`+
 					getRules()+ // Always ends with a spare newline
-					`\nPlease send the command \`/read\` to this channel to reveal the rest of the channels on our server and start chatting. You can always get this information again by running the \`/rules\` command.`
+					`\nPlease send the command **/read** to this channel to reveal the rest of the channels on our server and start chatting. You can always get this information again by running the \`/rules\` command.`
 				);
 			})(); break;
 			case "rules": (function(){
