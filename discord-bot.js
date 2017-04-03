@@ -1197,9 +1197,29 @@ function ready(){
 			case "welcomemsg": (function(){
 				if (!isPM)
 					wipeMessage(channelID, event.d.id);
-				respond(OurChannelIDs.welcome, `__**Welcome to the MLP-VectorClub's Discord Server!**__`);
-				respond(OurChannelIDs.welcome, getRules());
-				respond(OurChannelIDs.welcome, `Please send the command **/read** to this channel to reveal the rest of the channels on our server and start chatting. You can always get this information again by running the \`/rules\` command.`);
+				respond(OurChannelIDs.welcome, `__**Welcome to the MLP-VectorClub's Discord Server!**__`, function(err){
+					if (err){
+						console.log(err);
+						bot.sendMessage({
+							to: channelID,
+							message: 'A message to this channel failed to send. (HTTP '+err.statusCode+')\n'+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.',
+						});
+						return;
+					}
+
+					respond(OurChannelIDs.welcome, 'We have a few rules that you should keep in mind:\n\n'+getRules(), function(err){
+						if (err){
+							console.log(err);
+							bot.sendMessage({
+								to: channelID,
+								message: 'A message to this channel failed to send. (HTTP '+err.statusCode+')\n'+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.',
+							});
+							return;
+						}
+
+						respond(OurChannelIDs.welcome, `Please send the command **/read** to this channel to reveal the rest of the channels on our server and start chatting. You can always get this information again by running the \`/rules\` command.`);
+					});
+				});
 			})(); break;
 			case "rules": (function(){
 				if (!isPM)
