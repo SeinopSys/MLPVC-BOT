@@ -1442,6 +1442,7 @@ function ready(){
 							respond(OurChannelIDs.casual, `Please welcome <@${userID}> to our server!`);
 						});
 					}
+					else respond(userID, 'You will not be able to chat on our server until you\'ve read the rules in <#'+OurChannelIDs.welcome+'>.');
 					return;
 				}
 				let mentionAtStartRegex = /^\s*<[@#](\d+)>\s*/,
