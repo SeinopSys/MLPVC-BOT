@@ -15,6 +15,7 @@ const
 	YouTubeAPI = require('youtube-api'),
 	table = require('text-table'),
 	nth = require('nth'),
+	Time = require('./Time'),
 	wrapOutput = (output) => '```js\n'+output+'\n```',
 	vmTimeout = 5000,
 	defineTimeLimit = 20000,
@@ -1198,8 +1199,10 @@ function ready(){
 				if (isPM)
 					return respond(channelID, onserver);
 
-				let age = moment(new Date((OurServer.id / 4194304) + 1420070400000)),
-					delta = age.fromNow();
+				const
+					date = new Date((OurServer.id / 4194304) + 1420070400000),
+					age = moment(date),
+					delta = Time.Remaining(new Date, date);
 				respond(channelID, replyTo(userID,'The server was created on '+(age.format('Do MMMM, YYYY'))+' ('+delta+')'));
 			break;
 			case "welcomemsg": (function(){
@@ -1249,7 +1252,7 @@ function ready(){
 
 						const
 							which = data.episode === 1 ? 'first' : nth.appendSuffix(data.episode),
-							when = moment(data.airs).fromNow();
+							when = Time.Remaining(new Date, new Date(data.airs));
 						let sentence = `The ${which} episode of season ${data.season} titled ${data.title} is going to air ${when}`;
 						respond(channelID, replyTo(userID, sentence));
 					});
