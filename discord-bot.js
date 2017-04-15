@@ -8,7 +8,12 @@ const
 	chalk = require('chalk'),
 	{VM} = require('vm2'),
 	fs = require('fs'),
+	readline = require('readline').createInterface({
+		input: process.stdin,
+		output: process.stdout
+	}),
 	YouTubeAPI = require('youtube-api'),
+	table = require('text-table'),
 	wrapOutput = (output) => '```js\n'+output+'\n```',
 	vmTimeout = 5000,
 	defineTimeLimit = 20000,
@@ -53,12 +58,7 @@ var bot = new Discord.Client({
 		token: config.TOKEN,
 	}),
 	hasOwner = typeof config.OWNER_ID === 'string' && config.OWNER_ID.length,
-	readline = require('readline').createInterface({
-		input: process.stdin,
-		output: process.stdout
-	}),
 	evalTimedOut = {},
-	table = require('text-table'),
 	defineCommandLastUsed;
 Array.prototype.randomElement = function () {
     return this[Math.floor(Math.random() * this.length)]
@@ -89,7 +89,7 @@ function ready(){
 			else readline.question('Enter app Client ID (or ^C to exit): ', function(answer){
 				if (/\D/.test(answer))
 					return console.log('> ID must be numeric, try again (or ^C to exit): ');
-				rl.close();
+				readline.close();
 				return answer;
 			});
 		},
