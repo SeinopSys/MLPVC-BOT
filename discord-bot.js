@@ -14,6 +14,7 @@ const
 	}),
 	YouTubeAPI = require('youtube-api'),
 	table = require('text-table'),
+	nth = require('nth'),
 	wrapOutput = (output) => '```js\n'+output+'\n```',
 	vmTimeout = 5000,
 	defineTimeLimit = 20000,
@@ -400,10 +401,17 @@ function ready(){
 				usage: [true],
 			},
 			{
-				name: 'roles',
+				name: 'rules',
 				help: 'List the server rules',
 				perm: everyone,
 				usage: [true],
+			},
+			{
+				name: 'nextep',
+				help: 'Returns the season, episode number and title of the next episode along with relative air time',
+				perm: everyone,
+				usage: [true],
+				aliases: ['horsewhen'],
 			},
 		];
 	let commands = (function(){
@@ -1225,6 +1233,26 @@ function ready(){
 				if (!isPM)
 					wipeMessage(channelID, event.d.id);
 				respond(userID, '__**Server rules:**__\n\n'+getRules());
+			})(); break;
+			case "nextep": (function(){
+				unirest.post(config.SITE_ABSPATH+'episode/nextup')
+					.header("Accept", "application/json")
+					.end(function(result){
+						if (result.error || typeof result.body !== 'object'){
+							console.log(result.error, result.body);
+							return respond(channelID, replyTo(userID, 'Request to the website\'s API failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+						}
+
+						const data = result.body;
+						if (!data.status)
+							respond(channelID, replyTo(userID, data.message));
+
+						const
+							which = data.episode === 1 ? 'first' : nth.appendSuffix(data.episode),
+							when = moment(data.airs).fromNow();
+						let sentence = `The ${which} episode of season ${data.season} titled ${data.title} is going to air ${when}`;
+						respond(channelID, replyTo(userID, sentence));
+					});
 			})(); break;
 			// Ignore Discord's own commands
 			case "gamerscape":
