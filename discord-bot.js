@@ -1237,6 +1237,7 @@ function ready(){
 					wipeMessage(channelID, event.d.id);
 				respond(userID, '__**Server rules:**__\n\n'+getRules());
 			})(); break;
+			case "horsewhen":
 			case "nextep": (function(){
 				unirest.post(config.SITE_ABSPATH+'episode/nextup')
 					.header("Accept", "application/json")
