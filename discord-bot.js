@@ -1427,8 +1427,11 @@ function ready(){
 							userID: userID,
 							roleID: OurRoleIDs['Informed'],
 						},function(err){
-							if (!err)
-								console.log('Error while adding Informed role to '+userID);
+							if (err){
+								console.log('Error while adding Informed role to '+getIdent(userID));
+								console.lg(err);
+								return respond(OurChannelIDs.staffchat, `Failed to add Informed role to <@${userID}>`);
+							}
 
 							let response = err ? 'Failed to add Informed role' :'';
 
