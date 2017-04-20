@@ -1440,20 +1440,27 @@ function ready(){
 				eqgTest = /\bhuman\b/,
 				eqg = eqgTest.test(normalized);
 
-				unirest.get(config.SITE_ABSPATH+'cg'+(eqg?'/eqg':'')+'/1?js=true&q='+encodeURIComponent(query)+'&GOFAST=true')
-					.header("Accept", "application/json")
-					.end(function (result) {
-						if (result.error || typeof result.body !== 'object'){
-							console.log(result.error, result.body);
-							return respond(channelID, replyToIfNotPM(isPM, userID, 'I could not check it right now. '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see why in the logs.'));
-						}
+			unirest.get(config.SITE_ABSPATH+'cg'+(eqg?'/eqg':'')+'/1?js=true&q='+encodeURIComponent(query)+'&GOFAST=true')
+				.header("Accept", "application/json")
+				.end(function (result) {
+					if (result.error || typeof result.body !== 'object'){
+						console.log(result.error, result.body);
+						return respond(channelID, replyToIfNotPM(isPM, userID, 'I could not check it right now. '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see why in the logs.'));
+					}
 
-						let data = result.body;
-						if (!data.status)
-							return respond(channelID, replyToIfNotPM(isPM, userID, interactions.cgnotfound.randomElement()));
+					let data = result.body;
+					if (!data.status)
+						return respond(channelID, replyToIfNotPM(isPM, userID, interactions.cgnotfound.randomElement()));
 
-						respond(channelID, replyToIfNotPM(isPM, userID, interactions.cgfound.randomElement()+' '+config.SITE_ABSPATH+(data.goto.substring(1))));
-					});
+					respond(channelID, replyToIfNotPM(isPM, userID, interactions.cgfound.randomElement()+' '+config.SITE_ABSPATH+(data.goto.substring(1))));
+				});
+			return;
+		}
+
+		let informedtest = /^.*\b(?:why (?:is there|(?:do (?:you|we) )?have) an?|what(?:'s| is) the (?:(?:purpose|reason) (?:of|for(?: having)?|behind) the)?) ['"]?informed['"]? role\??$/i;
+		if (informedtest.test(normalized)){
+			respond(channelID, replyToIfNotPM(isPM, userID, "The purpose of the Informed role is to distinguish users who've read the server rules in the <#"+OurChannelIDs.welcome+"> channel. Once new users run the `/read` command mentioned in said channel, they will be given this role, which grants them access to view and chat in all other channels. Members who have already been part of the server at the time this change was introduced were given this role manually to spare them the hassle of reading the rules they were already familiar with."));
+			return;
 		}
 	}
 
