@@ -1457,7 +1457,7 @@ function ready(){
 			return;
 		}
 
-		let informedtest = /^.*\b(?:why(?:(?:'?s| is) there|(?: do (?:you|we) )?(even )?have) an?|what(?:'?s| is) the (?:(?:purpose|reason) (?:of|for(?: having)?|behind) the)?) ['"]?informed['"]? role\??$/i;
+		let informedtest = /^(?:.*?\b)?(?:why(?:(?:'?s| is) there|(?: do (?:you|we) )?(even )?have) an?|what(?:'?s| is) the(?: (?:purpose|reason) (?:of|for(?: having)?|behind) the)?) ['"]?informed['"]? role\??$/i;
 		if (informedtest.test(normalized)){
 			respond(channelID, replyToIfNotPM(isPM, userID, "The purpose of the Informed role is to distinguish users who've read the server rules in the <#"+OurChannelIDs.welcome+"> channel. Once new users run the `/read` command mentioned in said channel, they will be given this role, which grants them access to view and chat in all other channels. Members who have already been part of the server at the time this change was introduced were given this role manually to spare them the hassle of reading the rules they were already familiar with."));
 			//return;
