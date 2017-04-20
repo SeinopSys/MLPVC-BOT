@@ -27,6 +27,20 @@ const
 			let items = [].slice.apply(arguments);
 			return items[Math.floor(Math.random()*items.length)];
 		},
+		// Convert HEX to RGB
+		hex2rgb: hexstr =>
+			({
+				r: parseInt(hexstr.substring(1, 3), 16),
+				g: parseInt(hexstr.substring(3, 5), 16),
+				b: parseInt(hexstr.substring(5, 7), 16)
+			}),
+		// Convert RGB to HEX
+		rgb2hex: color => '#'+(
+			16777216 +
+			(parseInt(color.length ? color[0] : color.r, 10) << 16) +
+			(parseInt(color.length ? color[1] : color.g, 10) << 8) +
+			 parseInt(color.length ? color[2] : color.b, 10)
+		).toString(16).toUpperCase().substring(1),
 	},
 	replyTo = (userID, message) => "<@"+userID+"> "+message,
 	replyToIfNotPM = (isPM, userID, message) => (isPM ? message : replyTo(userID, message)),
