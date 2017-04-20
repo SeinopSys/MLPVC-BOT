@@ -517,7 +517,7 @@ function ready(){
 					}, 1000);
 				}
 
-				respond(channelID, replyTo(userID, 'http://derpibooru.org/' + image.id));
+				respond(channelID, replyTo(userID, 'https://derpibooru.org/' + image.id));
 			};
 		command = command.toLowerCase();
 
