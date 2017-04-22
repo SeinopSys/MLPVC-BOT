@@ -1493,9 +1493,11 @@ function ready(){
 							if (response)
 								return respond(channelID, response);
 
-							OurServer.members[userID].roles.push(OurRoleIDs['Informed']);
-
-							respond(OurChannelIDs.casual, `Please welcome <@${userID}> to our server!`);
+							respond(OurChannelIDs.casual, `Please welcome <@${userID}> to our server!`, function(){
+								// Force a restart to update members in the script
+								console.log('New user joining caused script restart');
+								process.exit();
+							});
 						});
 					}
 					else respond(userID, 'You will not be able to chat on our server until you\'ve read the rules in <#'+OurChannelIDs.welcome+'>.');
