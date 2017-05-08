@@ -438,9 +438,7 @@ function ready(){
 		commandPermCheck = function(command, userID){
 			return commands[command] ? commands[command].perm.check(userID) : false;
 		},
-		reqparams = function(cmd){
-			return 'This command requires additional parameters. Use `/help '+cmd+'` for more information.';
-		},
+		reqparams = cmd => 'This command requires additional parameters. Use `/help '+cmd+'` for more information.',
 		onserver = 'This command must be run from within a channel on our server.';
 
 	function getVersion(channelID, userID, callback){
@@ -451,7 +449,7 @@ function ready(){
 				m = 'Error while getting version number' + (hasOwner ? ' (<@' + config.OWNER_ID + '> Logs may contain more info)' : '');
 				return respond(channelID, !privateMsg ? replyTo(userID, m): m);
 			}
-			exec('git log -1 --date=short --pretty=format:%ci', function(_, ts){
+			exec('git log -1 --date=short --pretty=format:%cI', function(_, ts){
 				if (_){
 					console.log('Error getting creation time', _);
 					m = 'Error while getting creation time' + (!privateMsg && hasOwner ? ' (<@' + config.OWNER_ID + '> Logs may contain more info)' : '');
