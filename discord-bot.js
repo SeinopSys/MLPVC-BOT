@@ -292,6 +292,7 @@ function ready(){
 				help: 'Performs an "I\'m feeling lucky" Google search. If the search returned no obvious result, then the link to the search page is sent instead.',
 				usage: ['meaning of life','procractination','vinyl scratch mlp wikia'],
 				perm: everyone,
+				aliases: ['g'],
 			},
 			{
 				name: 'kym',
@@ -729,6 +730,7 @@ function ready(){
 						respond(channelID, replyTo(userID, 'http://knowyourmeme.com'+data.results[0].text));
 					});
 			})(); break;
+			case "g":
 			case "google": (function(){
 				if (isPM)
 					return respond(channelID, onserver);
