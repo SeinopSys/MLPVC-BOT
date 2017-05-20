@@ -443,22 +443,15 @@ function ready(){
 		onserver = 'This command must be run from within a channel on our server.';
 
 	function getVersion(channelID, userID, callback){
-		exec('git rev-parse --short=4 HEAD', function(_, version){
+		exec('git log -1 --date=short --pretty=format:%h$%cr', function(_, data){
 			let m, privateMsg = userID === channelID;
 			if (_){
-				console.log('Error getting version', _);
-				m = 'Error while getting version number' + (hasOwner ? ' (<@' + config.OWNER_ID + '> Logs may contain more info)' : '');
+				console.log('Error getting commit data', _);
+				m = 'Error while getting commit data' + (hasOwner ? ' (<@' + config.OWNER_ID + '> Logs may contain more info)' : '');
 				return respond(channelID, !privateMsg ? replyTo(userID, m): m);
 			}
-			exec('git log -1 --date=short --pretty=format:%cI', function(_, ts){
-				if (_){
-					console.log('Error getting creation time', _);
-					m = 'Error while getting creation time' + (!privateMsg && hasOwner ? ' (<@' + config.OWNER_ID + '> Logs may contain more info)' : '');
-					return respond(channelID, !privateMsg ? replyTo(userID, m): m);
-				}
 
-				return callback(version.trim(), ts);
-			});
+			return callback.apply(null, data.trim().split('$'));
 		});
 	}
 
@@ -651,8 +644,8 @@ function ready(){
 			case "version": (function(){
 				bot.simulateTyping(channelID);
 
-				getVersion(channelID,userID,function(ver,ts){
-					respond(channelID, replyTo(userID, 'Bot is running version `'+ver+'` created '+(moment(ts).fromNow())+'\nView commit on GitHub: http://github.com/ponydevs/MLPVC-BOT/commit/'+ver));
+				getVersion(channelID,userID,function(ver,timeago){
+					respond(channelID, replyTo(userID, 'Bot is running version `'+ver+'` created '+timeago+'\nView commit on GitHub: http://github.com/ponydevs/MLPVC-BOT/commit/'+ver));
 				});
 			})(); break;
 			case "casual": (function(){
