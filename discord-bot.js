@@ -179,6 +179,7 @@ function ready(){
 		}
 	}
 
+	//noinspection JSUnusedLocalSymbols
 	let isOwner = new Permission('Bot Developer',function(userID){
 			return userID === config.OWNER_ID;
 		}),
@@ -366,12 +367,6 @@ function ready(){
 				help: 'Changes your nickname to the format specified in the first argument (if you have one).\n\t- `brackets`: DiscordName (DAName)\n\t- `pipe`: DAName | DiscordName\n\t- `da`: DAName\nStaff can use a user\'s name as the last argument to change specific user\'s nick. Does not work on Staff members due to API limitations.',
 				perm: everyone,
 				usage: ['brackets','pipe me','da @Mention#1234'],
-			},
-			{
-				name: 'verify',
-				help: 'Verifies the club membership of the user running the command. If you want to verify your identity, you can get a token here: '+config.SITE_ABSPATH+'u#verify-discord-identity',
-				perm: nonmembers,
-				usage: ['<token>'],
 			},
 			{
 				name: 'lewder',
@@ -1078,52 +1073,6 @@ function ready(){
 
 					return respond(channelID, replyToIfNotPM(isPM, userID, 'The nickname of <@'+data.id+'> has been updated to `'+nick+'`'));
 				});
-			})(); break;
-			case "verify": (function(){
-				if (typeof OurRoleIDs['Club Members'] === 'undefined')
-					return respond(channelID, replyToIfNotPM(isPM, userID, 'The Club Members role does not exist on this server'));
-				if (!commandPermCheck(command, userID))
-					return respond(channelID, replyToIfNotPM(isPM, userID, 'You mustn\'t be part of Club Members or Staff to use this command'));
-
-				let token = args[0];
-				if (typeof token === 'undefined' || token.length === 0)
-					return respond(channelID, replyToIfNotPM(isPM, userID, reqparams(command)));
-				if (/^[a-z\d]{10,}$/.test(token))
-					return respond(channelID, replyToIfNotPM(isPM, userID, 'Invalid token'));
-
-				bot.simulateTyping(channelID);
-
-				unirest.post(config.SITE_ABSPATH+'u/discord-verify?token='+token)
-					.header("Accept", "application/json")
-					.end(function(result){
-						if (result.error || typeof result.body !== 'object'){
-							console.log(result.error, result.body);
-							return respond(channelID, replyTo(userID, 'Verifyiing account failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
-						}
-
-						let data = result.body;
-						if (!data.status)
-							return respond(channelID, replyToIfNotPM(isPM, userID, 'Error: '+data.message));
-
-						if (data.role !== 'member')
-							return respond(channelID, replyToIfNotPM(isPM, userID, 'You are not a club member.'));
-
-						bot.addToRole({
-							serverID: OurServer.id,
-							userID: userID,
-							roleID: OurRoleIDs['Club Members'],
-						},function(err){
-							if (err){
-								console.log(err);
-								return respond(channelID, replyToIfNotPM(isPM, userID, 'Adding the Club Members role failed. ' + (hasOwner ? '<@' + config.OWNER_ID + '>' : 'The bot owner') + ' should see what caused the issue in the logs.'));
-							}
-
-							OurServer.members[userID].roles.push(OurRoleIDs['Club Members']);
-
-							respond(channelID, replyToIfNotPM(isPM, userID, "You've been added to Club Members. Welcome to the Discord server!"));
-							respond(OurChannelIDs.staffchat, '<@'+userID+'> was added to <@&'+OurRoleIDs['Club Members']+'> after verifying their identity.');
-						});
-					});
 			})(); break;
 			case "lewder": (function(){
 				unirest.get('https://derpibooru.org/images/1308747.json')
