@@ -400,6 +400,12 @@ function ready(){
 				aliases: ['nice'],
 			},
 			{
+				name: 'yes',
+				help: 'Yes',
+				perm: everyone,
+				usage: [true],
+			},
+			{
 				name: 'age',
 				help: 'Return the age of the server',
 				perm: everyone,
@@ -1150,6 +1156,12 @@ function ready(){
 					return respond(channelID, onserver);
 
 				respond(channelID, replyTo(userID,'https://youtube.com/watch?v=ffQmb-cNFuk'));
+			break;
+			case "yes":
+				if (isPM)
+					return respond(channelID, onserver);
+
+				respond(channelID, replyTo(userID,'https://www.youtube.com/watch?v=P3ALwKeSEYs'));
 			break;
 			case "age":
 				if (isPM)
