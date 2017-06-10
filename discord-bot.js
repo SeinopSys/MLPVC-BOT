@@ -96,7 +96,7 @@ function ready(){
 	let i;
 
 	bot.setPresence({ idle_since: null });
-	console.log('Logged in as '+bot.username+' ('+bot.id+')');
+	console.log('Logged in as '+getIdent(bot.id)+' ('+bot.id+')');
 
 	let serverIDs = Object.keys(bot.servers),
 		getClientID = function(){
@@ -104,7 +104,7 @@ function ready(){
 				return config.CLIENT_ID;
 			else readline.question('Enter app Client ID (or ^C to exit): ', function(answer){
 				if (/\D/.test(answer))
-					return console.log('> ID must be numeric, try again (or ^C to exit): ');
+					return console.log('> ID can only contain numbers, try again (or ^C to exit): ');
 				readline.close();
 				return answer;
 			});
@@ -163,7 +163,7 @@ function ready(){
 			staffRoleID = role.id;
 	}
 	if (typeof staffRoleID === 'undefined')
-		console.log('Staff role name must be set to enable admin-only functionality.');
+		console.log(chalk.red('Staff role name must be set to enable admin-only functionality.'));
 	for (i in OurServer.channels){
 		if (!OurServer.channels.hasOwnProperty(i))
 			continue;
@@ -205,8 +205,7 @@ function ready(){
 			console.log('The configured owner is not among the channel members'+limitedFunc);
 		}
 		else {
-			let _owner = bot.users[config.OWNER_ID];
-			console.log('Owner is '+_owner.username+' ('+_owner.id+')');
+			console.log('Owner is '+getIdent(config.OWNER_ID)+' ('+config.OWNER_ID+')');
 		}
 	}
 
@@ -1267,125 +1266,19 @@ function ready(){
 	}
 
 	let interactions = {
-		greetingsNoThere: ['Hello!','Hi!','Hey!'],
-		greetings: ['Hey there!','Hello there!','Hi there!'],
-		bestpony: ['What a silly question, obviously it\'s me!','I have to go with yours truly on that one.','Duh, of course it\'s me!','Me.'],
-		bestprincess: ["I'd rather not start a flame war","Yes.","I don't have a strong opinion."],
-		joke: ["I would if I knew any.","The guy who coded me was too lazy to add any jokes here, sorry.","Just go on imgur or something"],
 		cgfound: ['Here you go:','Indeed, here:','Yep, right here:'],
 		cgnotfound: ["I'm afraid there isn't one yet.","I'm pretty sure there isn't one, unless you mistyped the name.","Seems like there isn't one."],
-		shyGreeting: ['_blushes_','Oh... h-h-hello ^^,','Hi ^^,','H-hi!'],
-		thebest: ["I know, you don't have to remind me.","Was there ever any doubt?","Of course I am!","Can't argue with that."],
-		insulted: ["I just don't know what went wrong","I'm not sure I deserved that","Please donQt be mean.","I thought we were friends :c","Well, that escalated quickly."],
 	};
 	function interact(userID, channelID, message){
 		const
 			userIdent = getIdent(userID),
-			isPM = !(channelID in bot.channels),
-			respondWithInteraction = (which)=>{
-				let randomResponse = interactions[which].randomElement();
-				console.log('Responded to '+userIdent+' with "'+randomResponse+'"');
-				respond(channelID, replyToIfNotPM(isPM, userID, randomResponse));
-			};
+			isPM = !(channelID in bot.channels);
 		if (isPM)
 			console.log('PM interaction initiated by '+userIdent+', message: '+message);
 
 		let normalized = message.toLowerCase(),
 			normalizedParts = normalized.split(/\s+/);
 		normalized = normalizedParts.join(' ');
-
-		if (this.lax){
-			let depth = 0,
-				whois = () => {
-					console.log(normalizedParts[depth]);
-					switch(normalizedParts[depth++]){
-						case "best":
-							switch(normalizedParts[depth++]){
-								case "pony":
-								case "pony?":
-									return respondWithInteraction('bestpony');
-								break;
-								case "princess":
-								case "princess?":
-									return respondWithInteraction('bestprincess');
-								break;
-							}
-						break;
-					}
-				},
-				youare = () => {
-					console.log(normalizedParts[depth]);
-					switch(normalizedParts[depth++]){
-						case "the":
-							switch(normalizedParts[depth++]){
-								case "best":
-									return respondWithInteraction('thebest');
-								break;
-							}
-						break;
-					}
-				};
-
-			switch(normalizedParts[depth++]){
-				case "hi":
-				case "hey":
-				case "hello":
-					if (/(cutie|qt|sweetie|sweetheart)$/.test(normalized))
-						return respondWithInteraction('shyGreeting');
-					if (/^there!?/.test(normalizedParts[depth]))
-						return respondWithInteraction('greetingsNoThere');
-					if (!normalizedParts[depth])
-						return respondWithInteraction('greetings');
-				break;
-				case "hi!":
-				case "hey!":
-				case "hi?":
-					return respondWithInteraction('greetings');
-				break;
-				case "who":
-					switch(normalizedParts[depth++]){
-						case "is":
-							return whois();
-						break;
-					}
-				break;
-				case "who's":
-					return whois(0);
-				break;
-				case "tell":
-					switch(normalizedParts[depth++]){
-						case "me":
-							switch(normalizedParts[depth++]){
-								case "a":
-									switch(normalizedParts[depth++]){
-										case "joke":
-											return respondWithInteraction('joke');
-										break;
-									}
-								break;
-							}
-						break;
-					}
-				break;
-				case "you're":
-					return youare();
-				break;
-				case "you":
-					switch(normalizedParts[depth++]){
-						case "are":
-							return youare();
-						break;
-					}
-				break;
-				case "fuck":
-					switch(normalizedParts[depth++]){
-						case "you":
-							return respondWithInteraction('insulted');
-						break;
-					}
-				break;
-			}
-		}
 
 		let cgtest = /^(?:is|si) t(?:he|eh)re a (?:colou?r ?)?guide for([\w\s]+)\??$/;
 		if (cgtest.test(normalized)){
