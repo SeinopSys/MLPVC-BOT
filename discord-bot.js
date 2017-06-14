@@ -1073,6 +1073,9 @@ function ready(){
 					if (err){
 						if (err.response && err.response.message === 'Privilege is too low...')
 							return respond(channelID, replyToIfNotPM(isPM, userID, 'Changing nick failed: Due to Discord API limitations the bot can only set the nicks of users whose roles are under the bot\'s in the hierarchy.'));
+						const nickmatch = /^Must be (\d+)/;
+						if (err.response && nickmatch.test(err.response.nick))
+							return respond(channelID, replyToIfNotPM(isPM, userID, `The resulting nickname (`${nick}`) exceeds Discord's ${err.response.nick.match(nickmatch)[1]} character limit.`));
 						console.log(err);
 						return respond(channelID, replyToIfNotPM(isPM, userID, 'Changing nick failed.'+(err.response && err.response.message ? ' ('+err.response.message+')' : '')+'\n'+(hasOwner ? '<@' + config.OWNER_ID + '>' : 'The bot owner') + ' should see what caused the issue in the logs.'));
 					}
