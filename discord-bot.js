@@ -1053,6 +1053,7 @@ function ready(){
 				let format;
 				switch (args[0]){
 					case "pipe": format = 'da | disc'; break;
+					case "brackets":
 					case "bracket": format = 'disc (da)'; break;
 					case "da": format = 'da'; break;
 				}
