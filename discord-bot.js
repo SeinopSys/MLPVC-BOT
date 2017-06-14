@@ -1057,9 +1057,9 @@ function ready(){
 					case "bracket": format = 'disc (da)'; break;
 					case "da": format = 'da'; break;
 				}
-				let data = getUserData(isStaff.check(userID) ? (args[arguments.length-1]||'me') : 'me', channelID, userID, isPM);
+				let data = getUserData(isStaff.check(userID) ? (args[1]||'me') : 'me', channelID, userID, isPM);
 				if (typeof data !== 'object')
-					return;
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'Could not find the specified user'));
 				if (typeof data.nick !== 'string')
 					return respond(channelID, replyToIfNotPM(isPM, userID, 'You do not have a nickname on our server.'));
 
