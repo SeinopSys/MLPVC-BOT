@@ -318,7 +318,7 @@ function ready(){
 					' ● `as:link` - Returns the link of the search with the specified parameters instead of the first matching result',
 				usage: ['safe,o:asc','safe,rd o:asc','ts by:random'],
 				perm: everyone,
-				aliases: ['db'],
+				aliases: ['db','derpibooru'],
 			},
 			{
 				name: 'nsfw',
@@ -782,6 +782,7 @@ function ready(){
 					respond(channelID, replyTo(userID, 'https://youtube.com/watch?v='+result.items[0].id.videoId));
 				});
 			})(); break;
+			case "derpibooru":
 			case "db":
 			case "derpi": (function(){
 				if (!args.length)
