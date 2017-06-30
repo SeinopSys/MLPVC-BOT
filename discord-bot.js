@@ -1,4 +1,5 @@
 // jshint -W014
+'use strict';
 const
 	config = require('./config'),
 	util = require('util'),
@@ -35,6 +36,7 @@ const
 				b: parseInt(hexstr.substring(5, 7), 16)
 			}),
 		// Convert RGB to HEX
+		//jshint -W016
 		rgb2hex: color => '#'+(
 			16777216 +
 			(parseInt(color.length ? color[0] : color.r, 10) << 16) +
@@ -76,9 +78,7 @@ var bot = new Discord.Client({
 	hasOwner = typeof config.OWNER_ID === 'string' && config.OWNER_ID.length,
 	evalTimedOut = {},
 	defineCommandLastUsed;
-Array.prototype.randomElement = function () {
-    return this[Math.floor(Math.random() * this.length)]
-};
+Array.prototype.randomElement = () =>  this[Math.floor(Math.random() * this.length)];
 
 if (config.LOCAL === true && /^https:/.test(config.SITE_ABSPATH))
 	process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -476,7 +476,9 @@ function ready(){
 				}
 				if (typeof member === 'undefined')
 					for (i in OurServer.members){
-						if (!OurServer.members.hasOwnProperty(i) || typeof OurServer.members[i].nick === 'undefined')
+						if (!OurServer.members.hasOwnProperty(i))
+							continue;
+						if (typeof OurServer.members[i].nick === 'undefined')
 							continue;
 
 						if (OurServer.members[i].nick.toLowerCase().indexOf(targetUser.toLowerCase()) === 0){
@@ -1174,7 +1176,7 @@ function ready(){
 				const
 					date = new Date((OurServer.id / 4194304) + 1420070400000),
 					age = moment(date),
-					delta = Time.Remaining(new Date, date);
+					delta = Time.Remaining(new Date(), date);
 				respond(channelID, replyTo(userID,'The server was created on '+(age.format('Do MMMM, YYYY'))+' ('+delta+')'));
 			break;
 			case "welcomemsg": (function(){
@@ -1225,7 +1227,7 @@ function ready(){
 
 						const
 							which = data.episode === 1 ? 'first' : nth.appendSuffix(data.episode),
-							when = Time.Remaining(new Date, new Date(data.airs));
+							when = Time.Remaining(new Date(), new Date(data.airs));
 						let sentence = `The ${which} episode of season ${data.season} titled ${data.title} is going to air ${when}`;
 						respond(channelID, replyTo(userID, sentence));
 					});
@@ -1330,7 +1332,7 @@ function ready(){
 						bot.addToRole({
 							serverID: OurServer.id,
 							userID: userID,
-							roleID: OurRoleIDs['Informed'],
+							roleID: OurRoleIDs.Informed,
 						},function(err){
 							if (err){
 								console.log('Error while adding Informed role to '+getIdent(userID));
