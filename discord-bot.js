@@ -819,13 +819,13 @@ function ready(){
 								unirest.get('https://derpibooru.org/images/'+data.id+'.json')
 									.header("Accept", "application/json")
 									.end(function(result){
-									if (result.error || typeof result.body !== 'object'){
-										console.log(result.error, result.body);
-										return respond(channelID, replyTo(userID, 'Derpibooru random image data retrieval failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
-									}
+										if (result.error || typeof result.body !== 'object'){
+											console.log(result.error, result.body);
+											return respond(channelID, replyTo(userID, 'Derpibooru random image data retrieval failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+										}
 
-									respondWithDerpibooruImage(result.body);
-								});
+										respondWithDerpibooruImage(result.body);
+									});
 							});
 					}
 				}
