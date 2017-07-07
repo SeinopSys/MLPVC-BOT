@@ -743,7 +743,7 @@ function ready(){
 						return /(www\.)google\.((co\.)?[a-z]+)/.test(require('url').parse(res.headers.location).host);
 					})
 					.end(function(result){
-						if (result.error || [302, 200].indexOf(result.status) === -1){
+						if (result.error || [302, 200].indexOf(result.status) === -1 || /ipv4\.google\.com\/sorry/.test(result.headers.location)){
 							if (result.status === 503){
 								return respond(channelID, replyTo(userID, searchUrl));
 							}
