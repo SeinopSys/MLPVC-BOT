@@ -76,6 +76,7 @@ var bot = new Discord.Client({
 		token: config.TOKEN,
 	}),
 	hasOwner = typeof config.OWNER_ID === 'string' && config.OWNER_ID.length,
+	mentionOwner = userID => (hasOwner ? (config.OWNER_ID === userID ? 'You' : `<@${config.OWNER_ID}>`) : 'The bot owner'),
 	evalTimedOut = {},
 	defineCommandLastUsed;
 Array.prototype.randomElement = () =>  this[Math.floor(Math.random() * this.length)];
@@ -691,7 +692,7 @@ function ready(){
 					.end(function (result) {
 						if (result.error || typeof result.body !== 'object'){
 							console.log(result.error, result.body);
-							return respond(channelID, replyToIfNotPM(isPM, userID, 'Color Guide search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+							return respond(channelID, replyToIfNotPM(isPM, userID, 'Color Guide search failed (HTTP '+result.status+'). '+mentionOwner+' should see what caused the issue in the logs.'));
 						}
 
 						let data = result.body;
@@ -715,7 +716,7 @@ function ready(){
 					.end(function (result) {
 						if (result.error || typeof result.body !== 'object' || [302, 200].indexOf(result.status) === -1){
 							console.log(result.error, result.body);
-							return respond(channelID, replyTo(userID, 'Know Your Meme search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+							return respond(channelID, replyTo(userID, 'Know Your Meme search failed (HTTP '+result.status+'). '+mentionOwner(userID)+' should see what caused the issue in the logs.'));
 						}
 
 						let data = result.body;
@@ -750,7 +751,7 @@ function ready(){
 							}
 
 							console.log(result.error, result.body, result.headers);
-							return respond(channelID, replyTo(userID, 'Google search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+							return respond(channelID, replyTo(userID, 'Google search failed (HTTP '+result.status+'). '+mentionOwner(userID)+' should see what caused the issue in the logs.'));
 						}
 
 						if (typeof result.headers.location !== 'string')
@@ -780,7 +781,7 @@ function ready(){
 				}, function(error, result) {
 					if (error || typeof result.items === 'undefined'){
 						console.log(error, result);
-						return respond(channelID, replyTo(userID, 'YouTube search failed. '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+						return respond(channelID, replyTo(userID, 'YouTube search failed. '+mentionOwner(userID)+' should see what caused the issue in the logs.'));
 					}
 
 					if (typeof result.items[0] === 'undefined' || typeof result.items[0].id.videoId === 'undefined')
@@ -814,7 +815,7 @@ function ready(){
 							.end(function(result){
 								if (result.error || typeof result.body !== 'object'){
 									console.log(result.error, result.body);
-									return respond(channelID, replyTo(userID, 'Derpibooru random image search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+									return respond(channelID, replyTo(userID, 'Derpibooru random image search failed (HTTP '+result.status+'). '+mentionOwner(userID)+' should see what caused the issue in the logs.'));
 								}
 
 								let data = result.body;
@@ -826,7 +827,7 @@ function ready(){
 									.end(function(result){
 										if (result.error || typeof result.body !== 'object'){
 											console.log(result.error, result.body);
-											return respond(channelID, replyTo(userID, 'Derpibooru random image data retrieval failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+											return respond(channelID, replyTo(userID, 'Derpibooru random image data retrieval failed (HTTP '+result.status+'). '+mentionOwner(userID)+' should see what caused the issue in the logs.'));
 										}
 
 										respondWithDerpibooruImage(result.body);
@@ -855,7 +856,7 @@ function ready(){
 					.end(function(result){
 						if (result.error || typeof result.body !== 'object'){
 							console.log(result.error, result.body);
-							return respond(channelID, replyTo(userID, 'Derpibooru search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+							return respond(channelID, replyTo(userID, 'Derpibooru search failed (HTTP '+result.status+'). '+mentionOwner(userID)+' should see what caused the issue in the logs.'));
 						}
 
 					let data = result.body;
@@ -983,7 +984,7 @@ function ready(){
 					.end(function (result) {
 						if ((result.error || typeof result.body !== 'object') && result.status !== 404){
 							console.log(result.error, result.body);
-							return respond(channelID, replyTo(userID, 'WordsAPI search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+							return respond(channelID, replyTo(userID, 'WordsAPI search failed (HTTP '+result.status+'). '+mentionOwner(userID)+' should see what caused the issue in the logs.'));
 						}
 
 						let data = result.body;
@@ -1013,7 +1014,7 @@ function ready(){
 						}, function(err){
 							if (err){
 								console.log(err);
-								return respond(channelID, replyToIfNotPM(isPM, userID, 'Setting avatar failed. ' + (hasOwner ? '<@' + config.OWNER_ID + '>' : 'The bot owner') + ' should see what caused the issue in the logs.'));
+								return respond(channelID, replyToIfNotPM(isPM, userID, 'Setting avatar failed. ' + mentionOwner(userID) + ' should see what caused the issue in the logs.'));
 							}
 
 							let outputChannel = OurChannelIDs.staffchat,
@@ -1039,7 +1040,7 @@ function ready(){
 					.end(function(result){
 						if ((result.error || !(result.body instanceof Buffer))){
 							console.log(result.error, result.body);
-							return respond(channelID, replyTo(userID, 'Could not download image (HTTP ' + result.status + '). ' + (hasOwner ? '<@' + config.OWNER_ID + '>' : 'The bot owner') + ' should see what caused the issue in the logs.'));
+							return respond(channelID, replyTo(userID, 'Could not download image (HTTP ' + result.status + '). ' + mentionOwner(userID) + ' should see what caused the issue in the logs.'));
 						}
 
 						let avatarBase64 = new Buffer(result.body).toString('base64');
@@ -1085,7 +1086,7 @@ function ready(){
 						if (err.response && nickmatch.test(err.response.nick[0]))
 							return respond(channelID, replyToIfNotPM(isPM, userID, `The resulting nickname (\`${nick}\`) exceeds Discord's ${err.response.nick[0].match(nickmatch)[1]} character limit.`));
 						console.log(err);
-						return respond(channelID, replyToIfNotPM(isPM, userID, 'Changing nick failed.'+(err.response && err.response.message ? ' ('+err.response.message+')' : '')+'\n'+(hasOwner ? '<@' + config.OWNER_ID + '>' : 'The bot owner') + ' should see what caused the issue in the logs.'));
+						return respond(channelID, replyToIfNotPM(isPM, userID, 'Changing nick failed.'+(err.response && err.response.message ? ' ('+err.response.message+')' : '')+'\n'+mentionOwner(userID) + ' should see what caused the issue in the logs.'));
 					}
 
 					return respond(channelID, replyToIfNotPM(isPM, userID, 'The nickname of <@'+data.id+'> has been updated to `'+nick+'`'));
@@ -1097,7 +1098,7 @@ function ready(){
 					.end(function(result){
 						if (result.error || typeof result.body !== 'object'){
 							console.log(result.error, result.body);
-							return respond(channelID, replyTo(userID, 'Derpibooru image data retrieval failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+							return respond(channelID, replyTo(userID, 'Derpibooru image data retrieval failed (HTTP '+result.status+'). '+mentionOwner(userID)+' should see what caused the issue in the logs.'));
 						}
 
 						respondWithDerpibooruImage(result.body);
@@ -1192,7 +1193,7 @@ function ready(){
 						console.log(err);
 						bot.sendMessage({
 							to: channelID,
-							message: 'A message to this channel failed to send. (HTTP '+err.statusCode+')\n'+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.',
+							message: 'A message to this channel failed to send. (HTTP '+err.statusCode+')\n'+mentionOwner(userID)+' should see what caused the issue in the logs.',
 						});
 						return;
 					}
@@ -1202,7 +1203,7 @@ function ready(){
 							console.log(err);
 							bot.sendMessage({
 								to: channelID,
-								message: 'A message to this channel failed to send. (HTTP '+err.statusCode+')\n'+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.',
+								message: 'A message to this channel failed to send. (HTTP '+err.statusCode+')\n'+mentionOwner(userID)+' should see what caused the issue in the logs.',
 							});
 							return;
 						}
@@ -1223,7 +1224,7 @@ function ready(){
 					.end(function(result){
 						if (result.error || typeof result.body !== 'object'){
 							console.log(result.error, result.body);
-							return respond(channelID, replyTo(userID, 'Request to the website\'s API failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
+							return respond(channelID, replyTo(userID, 'Request to the website\'s API failed (HTTP '+result.status+'). '+mentionOwner(userID)+' should see what caused the issue in the logs.'));
 						}
 
 						const data = result.body;
@@ -1304,7 +1305,7 @@ function ready(){
 				.end(function (result) {
 					if (result.error || typeof result.body !== 'object'){
 						console.log(result.error, result.body);
-						return respond(channelID, replyToIfNotPM(isPM, userID, 'I could not check it right now. '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see why in the logs.'));
+						return respond(channelID, replyToIfNotPM(isPM, userID, 'I could not check it right now. '+mentionOwner(userID)+' should see why in the logs.'));
 					}
 
 					let data = result.body;
