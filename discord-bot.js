@@ -744,6 +744,10 @@ function ready(){
 					})
 					.end(function(result){
 						if (result.error || [302, 200].indexOf(result.status) === -1){
+							if (result.status === 503){
+								return respond(channelID, replyTo(userID, searchUrl));
+							}
+
 							console.log(result.error, result.body, result.headers);
 							return respond(channelID, replyTo(userID, 'Google search failed (HTTP '+result.status+'). '+(hasOwner?'<@'+config.OWNER_ID+'>':'The bot owner')+' should see what caused the issue in the logs.'));
 						}
