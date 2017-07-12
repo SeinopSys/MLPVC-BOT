@@ -79,7 +79,7 @@ var bot = new Discord.Client({
 	mentionOwner = userID => (hasOwner ? (config.OWNER_ID === userID ? 'You' : `<@${config.OWNER_ID}>`) : 'The bot owner'),
 	evalTimedOut = {},
 	defineCommandLastUsed;
-Array.prototype.randomElement = () =>  this[Math.floor(Math.random() * this.length)];
+Array.prototype.randomElement = function(){ return this[Math.floor(Math.random() * this.length)] };
 
 if (config.LOCAL === true && /^https:/.test(config.SITE_ABSPATH))
 	process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -1293,11 +1293,12 @@ function ready(){
 			normalizedParts = normalized.split(/\s+/);
 		normalized = normalizedParts.join(' ');
 
-		let cgtest = /^(?:is|si) t(?:he|eh)re a (?:colou?r ?)?guide for([\w\s]+)\??$/;
+		let cgtest = /^(?:is|si) t(?:he|eh)re a (?:(?:colou?r ?)?gui?de for ([\w\s]+)|([\w\s]+?) (?:colou?r ?)?gui?de)\??$/;
 		if (cgtest.test(normalized)){
 			bot.simulateTyping(channelID);
-			let query = normalized.match(cgtest)[1].trim(),
-				eqgTest = /\bhuman\b/,
+			let match = normalized.match(cgtest),
+				eqgTest = /\b(human|eqg|equestria girls)\b/i,
+				query = (match[1]||match[2]).replace(eqgTest, '').trim(),
 				eqg = eqgTest.test(normalized);
 
 			unirest.get(config.SITE_ABSPATH+'cg'+(eqg?'/eqg':'')+'/1?js=true&q='+encodeURIComponent(query)+'&GOFAST=true')
@@ -1309,8 +1310,13 @@ function ready(){
 					}
 
 					let data = result.body;
-					if (!data.status)
+
+					if (!data.status){
+						console.log('Color guide not found for "'+query+'" because: '+data.message);
+						if (data.unavail === true)
+							return;
 						return respond(channelID, replyToIfNotPM(isPM, userID, interactions.cgnotfound.randomElement()));
+					}
 
 					respond(channelID, replyToIfNotPM(isPM, userID, interactions.cgfound.randomElement()+' '+config.SITE_ABSPATH+(data.goto.substring(1))));
 				});
