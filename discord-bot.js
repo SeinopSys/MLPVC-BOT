@@ -692,7 +692,7 @@ function ready(){
 					.end(function (result) {
 						if (result.error || typeof result.body !== 'object'){
 							console.log(result.error, result.body);
-							return respond(channelID, replyToIfNotPM(isPM, userID, 'Color Guide search failed (HTTP '+result.status+'). '+mentionOwner+' should see what caused the issue in the logs.'));
+							return respond(channelID, replyToIfNotPM(isPM, userID, 'Color Guide search failed (HTTP '+result.status+'). '+mentionOwner(userID)+' should see what caused the issue in the logs.'));
 						}
 
 						let data = result.body;
