@@ -192,6 +192,7 @@ function ready(){
 		}),
 		everyone = new Permission('Everyone',function(){ return true }),
 		nicePerm = new Permission('Nice',function(){ return true }),
+		jerkPerm = new Permission('Jerks',function(){ return true }),
 		nonmembers = new Permission('Non-members',function(userID){
 			return !isStaff.check(userID) && !isMember.check(userID);
 		}),
@@ -286,7 +287,7 @@ function ready(){
 				help: 'This command can be used to quickly link to an appearance using the site\'s "I\'m feeling lucky" search. The query is sent to the website as-is and the first result\'s link is returned, if any.\nUse names/tags separated by spaces, or include `*` and `?` characters to perform a wildcard search. Include the term `human` to search the EQG guide.',
 				usage: ['twilight sparkle','*pommel*','human twilight'],
 				perm: everyone,
-				aliases: ['guide'],
+				aliases: ['guide','colors'],
 			},
 			{
 				name: 'google',
@@ -300,6 +301,12 @@ function ready(){
 				help: 'Find the first matching entry of Know Your Meme, a popular wiki of Internet memes',
 				usage: ['here come dat boi','lenny face','pepe the frog'],
 				perm: everyone,
+			},
+			{
+				name: 'kys',
+				help: "That's not how you talk to a friend! :frowning:",
+				usage: "Don't",
+				perm: jerkPerm,
 			},
 			{
 				name: 'youtube',
@@ -568,16 +575,18 @@ function ready(){
 
 					let usage = [];
 					if (cmd.usage){
-						for (let j=0; j<cmd.usage.length; j++){
-							usage.push('/'+cmd.name+(cmd.usage[j]===true?'':' '+cmd.usage[j]));
-						}
+						if (typeof cmd.usage === 'string')
+							usage = cmd.usage;
+						else
+							for (let j=0; j<cmd.usage.length; j++)
+								usage.push('/'+cmd.name+(cmd.usage[j]===true?'':' '+cmd.usage[j]));
 					}
 					return respond(targetChannel,
 						'Showing help for command `'+cmd.name+'`'+(here?' (force-displayed)':'')+
 						'\n__Usable by:__ '+cmd.perm.name+'\n'+
 						'__Description:__\n'+(cmd.help.replace(/^(.)/gm,'\t\t$1'))+
 						(cmd.aliases?'\n__Aliases:__ `'+(cmd.aliases.join('`, `'))+'`':'')+
-						(usage.length?'\n__Usage, examples:__\n```\n'+(usage.join('\n'))+'\n```':'')
+						(usage.length?(typeof usage === 'string' ? `\n__Usage:__ ${usage}` : '\n__Usage, examples:__\n```\n'+(usage.join('\n'))+'\n```'):'')
 					);
 				}
 				let canrun = [], x, l=commandsArray.length;
@@ -687,7 +696,7 @@ function ready(){
 					eqg = humanRegex.test(query);
 				if (eqg)
 					query = query.replace(humanRegex,'');
-				unirest.get(config.SITE_ABSPATH+'cg'+(eqg?'/eqg':'')+'/1?js=true&q='+encodeURIComponent(query)+'&GOFAST=true')
+				unirest.get(config.SITE_ABSPATH+'cg'+(eqg?'/eqg':'')+'/1?btnl&q='+encodeURIComponent(query))
 					.header("Accept", "application/json")
 					.end(function (result) {
 						if (result.error || typeof result.body !== 'object'){
@@ -1279,8 +1288,23 @@ function ready(){
 	}
 
 	let interactions = {
-		cgfound: ['Here you go:','Indeed, here:','Yep, right here:'],
-		cgnotfound: ["I'm afraid there isn't one yet.","I'm pretty sure there isn't one, unless you mistyped the name.","Seems like there isn't one."],
+		cgfound: [
+			'Looking for this?',
+			"I've got you covered:",
+			"_smashes Enter_",
+		],
+		cgnotfound: [
+			"*shakes head*",
+			"Nu-uh",
+			"Nope",
+			"Nah",
+		],
+		cgSunset: [
+			"It's in the plans, but the iTunes Raw 1080p version isn't available yet. PLease be patient, we'll let everyone know when it's done.",
+			"Not yet, but it's on our radar.",
+			"There isn't one yet, but rest assured it'll be made as soon as we can pick accurate colors for her.",
+			"Patience is a virtue.",
+		],
 	};
 	function interact(userID, channelID, message){
 		const
@@ -1293,13 +1317,16 @@ function ready(){
 			normalizedParts = normalized.split(/\s+/);
 		normalized = normalizedParts.join(' ');
 
-		let cgtest = /^(?:is|si) t(?:he|eh)re a (?:(?:colou?r ?)?gui?de for ([\w\s]+)|([\w\s]+?) (?:colou?r ?)?gui?de)\??$/;
+		let cgtest = /^(?:(?:is|si) t(?:he|eh)re|(?:d(?:o|id) |(?:no|nah|(?:I )?don't think so),? but )?we? (do )?ha(?:ev|ve)) a (?:(?:colou?r ?)?gui?de for (?:(?:(?:th|ht)[ew]|a|an) )?([\w\s]+)|([\w\s]+?) (?:colou?r ?)?gui?de)\??$/;
 		if (cgtest.test(normalized)){
 			bot.simulateTyping(channelID);
 			let match = normalized.match(cgtest),
-				eqgTest = /\b(human|eqg|equestria girls)\b/i,
+				eqgTest = /\b(human|eqg|eq(?:uestria)? girls)\b/i,
 				query = (match[1]||match[2]).replace(eqgTest, '').trim(),
 				eqg = eqgTest.test(normalized);
+
+			if (!eqg && /\bsunset(?:\s?shimmer)?/.test(query))
+				return respond(channelID, replyToIfNotPM(isPM, userID, interactions.cgSunset.randomElement()));
 
 			unirest.get(config.SITE_ABSPATH+'cg'+(eqg?'/eqg':'')+'/1?js=true&q='+encodeURIComponent(query)+'&GOFAST=true')
 				.header("Accept", "application/json")
