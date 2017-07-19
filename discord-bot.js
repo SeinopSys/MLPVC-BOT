@@ -1247,6 +1247,9 @@ function ready(){
 						respond(channelID, replyTo(userID, sentence));
 					});
 			})(); break;
+			case "kys":
+				wipeMessage(channelID,event.d.id);
+			break;
 			// Ignore Discord's own commands
 			case "gamerscape":
 			case "xvidb":
