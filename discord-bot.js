@@ -669,7 +669,7 @@ function ready(){
 
 				let possible_images = [
 						'mountain', // Original by DJDavid98
-									// RIP IN PEPPERONI (Coco & Rarity by Pirill) ;_;7
+						'coco',		// Coco & Rarity by Pirill
 						'abcm',     // Applebloom's new CM by Drakizora
 						'abfall',   // Applebloom falling by Drakizora
 						'abfloat',  // CMs floating around Applebloom by Drakizora
