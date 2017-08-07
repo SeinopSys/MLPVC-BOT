@@ -1098,7 +1098,7 @@ function ready(){
 						return respond(channelID, replyToIfNotPM(isPM, userID, 'Changing nick failed.'+(err.response && err.response.message ? ' ('+err.response.message+')' : '')+'\n'+mentionOwner(userID) + ' should see what caused the issue in the logs.'));
 					}
 
-					return respond(channelID, replyToIfNotPM(isPM, userID, 'The nickname of <@'+data.id+'> has been updated to `'+nick+'`'));
+					return respond(channelID, replyToIfNotPM(isPM, userID, (userID === data.id ? 'Your nickname' : 'The nickname of <@'+data.id+'>')+' has been updated to `'+nick+'`'));
 				});
 			})(); break;
 			case "lewder": (function(){
