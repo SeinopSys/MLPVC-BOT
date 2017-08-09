@@ -854,7 +854,7 @@ function ready(){
 					query = query.replace(orderTest, '').trim();
 					extra += '&sd='+order[1];
 				}
-				query = query.replace(/,{2,}/g,',').replace(/(^,|,$)/,'');
+				query = query.replace(/,{2,}/g,',').trim().replace(/(^,|,$)/,'');
 				let url = 'https://derpibooru.org/search.json?q='+encodeURIComponent(query)+extra;
 				if (returnAsLink)
 					return respond(channelID, replyTo(userID, url.replace('/search.json','/search')));
