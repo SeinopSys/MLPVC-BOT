@@ -521,7 +521,7 @@ function ready(){
 		return user.username+'#'+user.discriminator;
 	}
 
-	function callCommand(userID, channelID, message, event, userIdent, command, argStr, args){
+	function callCommand(userID, channelID, message, event, userIdent, command, argStr, args, silentFail){
 		let isPM = !(channelID in bot.channels),
 			respondWithDerpibooruImage = function(image){
 				if (!image.is_rendered){
@@ -529,7 +529,7 @@ function ready(){
 					if (tries > 2)
 						return respond(channelID, replyTo(userID, 'The requested image is not yet processed by Derpibooru, please try again in a bit'));
 					return setTimeout(function(){
-						callCommand.call({tries: tries + 1}, userID, channelID, message, event, userIdent, command, argStr, args);
+						callCommand.call({tries: tries + 1}, userID, channelID, message, event, userIdent, command, argStr, args, silentFail);
 					}, 1000);
 				}
 
@@ -1262,6 +1262,8 @@ function ready(){
 			case "nick":
 			case "say": break;
 			default:
+				if (silentFail)
+					return;
 				let notfound = `Command \`/${command}\` not found`;
 				console.log(notfound);
 				respond(channelID, replyToIfNotPM(isPM, userID, `${notfound}. Use \`/help\` to see a list of all available commands`));
@@ -1283,11 +1285,13 @@ function ready(){
 		let commandMatch = message.match(commandRegex);
 		if (!commandMatch)
 			return;
-		let command = commandMatch[1],
+		const
+			command = commandMatch[1],
 			argStr = commandMatch[2] ? commandMatch[2].trim() : '',
-			args = argStr ? argStr.split(/\s+/) : [];
+			args = argStr ? argStr.split(/\s+/) : [],
+			silentFail = message[0] === '/';
 
-		callCommand(userID, channelID, message, event, userIdent, command, argStr, args);
+		callCommand(userID, channelID, message, event, userIdent, command, argStr, args, silentFail);
 	}
 
 	let interactions = {
