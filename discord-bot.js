@@ -523,7 +523,7 @@ function ready(){
 
 	function callCommand(userID, channelID, message, event, userIdent, command, argStr, args, silentFail){
 		let isPM = !(channelID in bot.channels),
-			respondWithDerpibooruImage = function(image){
+			respondWithDerpibooruImage = image => {
 				if (!image.is_rendered){
 					let tries = typeof this.tries === 'undefined' ? 1 : this.tries;
 					if (tries > 2)
