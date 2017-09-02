@@ -242,6 +242,51 @@ function ready(){
 		return fs.readFileSync('rules.txt', 'utf8').replace(/#([a-z_-]+)/g,(_,n)=>'<#'+OurChannelIDs[n]+'>').replace('@me',`<@${bot.id}>`);
 	}
 
+	function addRole(userID, rolename){
+		if (typeof OurRoleIDs[rolename] === 'undefined')
+			console.log('Trying to add non-existing role "'+rolename+'" to '+getIdent(userID));
+		return new Promise((fulfill, reject) => {
+			bot.addToRole({
+				serverID: OurServer.id,
+				userID: userID,
+				roleID: OurRoleIDs[rolename],
+			},function(err){
+				if (err){
+					console.log('Error while adding '+rolename+' role to '+getIdent(userID));
+					console.log(err);
+					reject(err);
+					return;
+				}
+
+				OurServer.members[userID].roles.push(OurRoleIDs[rolename]);
+				fulfill();
+			});
+		});
+	}
+	function removeRole(userID, rolename){
+		if (typeof OurRoleIDs[rolename] === 'undefined')
+			console.log('Trying to remove non-existing role "'+rolename+'" from '+getIdent(userID));
+		return new Promise((fulfill, reject) => {
+			bot.removeFromRole({
+				serverID: OurServer.id,
+				userID: userID,
+				roleID: OurRoleIDs[rolename],
+			},function(err){
+				if (err){
+					console.log('Error while adding '+rolename+' role to '+getIdent(userID));
+					console.log(err);
+					reject(err);
+					return;
+				}
+
+				const roleix = OurServer.members[userID].roles.indexOf(OurRoleIDs['Pony Sauce']);
+				if (roleix !== -1)
+					OurServer.members[userID].roles.splice(roleix, 1);
+				fulfill();
+			});
+		});
+	}
+
 	let commandsArray = [
 			{
 				name: 'help',
@@ -436,6 +481,12 @@ function ready(){
 				perm: everyone,
 				usage: [true],
 				aliases: ['horsewhen'],
+			},
+			{
+				name: 'vapp',
+				help: 'Adds and removes roles related to vector apps. Use `+` or `-` before an app name to indicate add/remove.\nApp names:\n\t- `is`: Inkscape\n\t- `ai`: Illustrator',
+				perm: everyone,
+				usage: ['+ai','+ai -is','-is -ai'],
 			},
 		];
 	let commands = (function(){
@@ -910,24 +961,14 @@ function ready(){
 								return respond(userID, 'Because you have the Staff role you will see the <#'+OurChannelIDs.nsfw+'> channel no matter what.\nIf you don\'t wand to be notified of new messages, right-click the channel and click `Mute #nsfw`');
 							else if (OurServer.members[userID].roles.indexOf(OurRoleIDs['Pony Sauce']) !== -1)
 								return respond(userID, 'You are already a member of the #nsfw channel. To leave, send `/nsfw leave` in any channel.\n(**Notice:** Messages sent in PMs are ignored!)');
+							if (error){
+								console.log('Error while adding Pony Sauce role to ' + userIdent);
+								console.log(error);
+							}
 
-							bot.addToRole({
-								serverID: OurServer.id,
-								userID: userID,
-								roleID: OurRoleIDs['Pony Sauce'],
-							},function(err){
-								if (!err && error)
-									console.log('Error while adding Pony Sauce role to '+userIdent+error);
-
-								let response = err ? 'Failed to join <#'+OurChannelIDs.nsfw+'> channel' :'';
-
-								response = addErrorMessageToResponse(err, response);
-
-								if (response)
-									return respond(channelID, response);
-
-								OurServer.members[userID].roles.push(OurRoleIDs['Pony Sauce']);
-
+							addRole(userID, 'Pony Sauce').catch(err => {
+								respond(channelID, addErrorMessageToResponse(err, 'Failed to join <#'+OurChannelIDs.nsfw+'> channel'));
+							}).then(() => {
 								respond(OurChannelIDs.nsfw, replyTo(userID, 'Welcome aboard. If at any point you wish to leave the channel, use `/nsfw leave`'));
 							});
 						});
@@ -938,22 +979,14 @@ function ready(){
 								return respond(userID, 'Because you have the Staff role you will see the <#'+OurChannelIDs.nsfw+'> channel no matter what.\nIf you don\'t wand to be notified of new messages, right-click the channel and click `Mute #nsfw`');
 							else if (OurServer.members[userID].roles.indexOf(OurRoleIDs['Pony Sauce']) === -1)
 								return respond(userID, 'You are not a member of the #nsfw channel. To join, send `/nsfw join` in any channel.\n(**Notice:** Messages sent in PMs are ignored!)');
+							if (error){
+								console.log('Error while removing Pony Sauce role from ' + userIdent);
+								console.log(error);
+							}
 
-							bot.removeFromRole({
-								serverID: OurServer.id,
-								userID: userID,
-								roleID: OurRoleIDs['Pony Sauce'],
-							},function(err){
-								if (!err && error)
-									console.log('Error while removing Pony Sauce role from '+userIdent+error);
-
-								let response = addErrorMessageToResponse(err, '');
-
-								if (response)
-									return respond(channelID, replyTo(userID, response));
-
-								OurServer.members[userID].roles.splice(OurServer.members[userID].roles.indexOf(OurRoleIDs['Pony Sauce']), 1);
-
+							removeRole(userID, 'Pony Sauce').catch(err => {
+								respond(channelID, addErrorMessageToResponse(err, 'Failed to leave <#'+OurChannelIDs.nsfw+'> channel'));
+							}).then(() => {
 								respond(OurChannelIDs.nsfw, replyTo(userID, 'left the channel'));
 							});
 						});
@@ -1250,6 +1283,73 @@ function ready(){
 			case "kys":
 				wipeMessage(channelID,event.d.id);
 			break;
+			case "vapp": (function(){
+				if (args.length < 1)
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'This command requires at least 1 argument'));
+				if (args.length > 2)
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'This command does not accept more than 2 arguments'));
+				const action = (which, role) => {
+					return new Promise(fulfill => {
+						switch (which){
+							case '+':
+								addRole(userID, role).catch(err => {
+									respond(channelID, addErrorMessageToResponse(err, 'Failed to add <@&'+OurRoleIDs[role]+'> role to <@'+userID+'>'));
+								}).then(() => {
+									fulfill();
+								});
+							break;
+							case '-':
+								removeRole(userID, role).catch(err => {
+									respond(channelID, addErrorMessageToResponse(err, 'Failed to remove <@&'+OurRoleIDs[role]+'> role from <@'+userID+'>'));
+								}).then(() => {
+									fulfill();
+								});
+							break;
+						}
+					});
+				};
+
+				const
+					rolemap = {
+						ai: 'Illustrator',
+						is: 'Inkscape',
+					},
+					actions = [];
+				let cont = true;
+				args.forEach(arg => {
+					const match = arg.match(/^([+-])(ai|is)$/);
+					if (!match){
+						respond(channelID, replyToIfNotPM(isPM, userID, 'Invalid argument: `'+arg+'`'));
+						return (cont = false);
+					}
+
+					const role = rolemap[match[2]];
+					if (typeof role !== 'undefined'){
+						rolemap[match[2]] = void 0;
+					}
+					else {
+						respond(channelID, replyToIfNotPM(isPM, userID, 'You may only specify one action per role'));
+						return (cont = false);
+					}
+
+					actions.push({
+						which: match[1],
+						role,
+					});
+				});
+				if (!cont)
+					return;
+				if (!actions.length)
+					return respond(channelID, replyToIfNotPM(isPM, userID, 'No valid arguments passed'));
+				(function recurse(i){
+					const el = actions[i];
+					if (typeof el === 'undefined')
+						return respond(channelID, replyToIfNotPM(isPM, userID, 'Roles updated'));
+					action(el.which, el.role).catch(() => void 0).then(() => {
+						setTimeout(() => recurse(i+1), 500);
+					});
+				})(0);
+			})(); break;
 			// Ignore Discord's own commands
 			case "gamerscape":
 			case "xvidb":
