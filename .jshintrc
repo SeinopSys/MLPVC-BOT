@@ -63,7 +63,7 @@
 	"shelljs": false,
 	"singleGroups": false,
 	"smarttabs": false,
-	"strict": true,
+	"strict": false,
 	"sub": false,
 	"supernew": false,
 	"trailing": true,

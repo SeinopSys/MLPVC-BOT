@@ -136,8 +136,8 @@ chalk@^1.1.1:
     supports-color "^2.0.0"
 
 chalk@^2.0.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/chalk/-/chalk-2.1.0.tgz#ac5becf14fa21b99c6c92ca7a7d7cfd5b17e743e"
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/chalk/-/chalk-2.3.0.tgz#b5ea48efc9c1793dccc9b4767c93914d3f2d52ba"
   dependencies:
     ansi-styles "^3.1.0"
     escape-string-regexp "^1.0.5"
@@ -182,8 +182,8 @@ concat-stream@~1.4.7:
     typedarray "~0.0.5"
 
 console-stamp@^0.2.4:
-  version "0.2.5"
-  resolved "https://registry.yarnpkg.com/console-stamp/-/console-stamp-0.2.5.tgz#8e88542165d8fcdcb3fa494f6df3dd15304cd6ff"
+  version "0.2.6"
+  resolved "https://registry.yarnpkg.com/console-stamp/-/console-stamp-0.2.6.tgz#9aa21b945b788d639ce3d1f9b1cd1c5a7ecc96c0"
   dependencies:
     chalk "^1.1.1"
     dateformat "^1.0.11"
@@ -230,9 +230,17 @@ delayed-stream@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/delayed-stream/-/delayed-stream-1.0.0.tgz#df3ae199acadfb7d440aaae0b29e2272b24ec619"
 
-discord.io@^2.3.0:
-  version "2.5.2"
-  resolved "https://registry.yarnpkg.com/discord.io/-/discord.io-2.5.2.tgz#bea7668fa0dfb3f9deef2e35501660952e5119c6"
+discord.io@^2.4.0:
+  version "2.5.3"
+  resolved "https://registry.yarnpkg.com/discord.io/-/discord.io-2.5.3.tgz#a2db9daa4057831a58ecca75efb940b7799d435f"
+  dependencies:
+    cjopus "^0.0.4"
+    tweetnacl "^0.14.0"
+    ws "^1.1.0"
+
+discord.io@izy521/discord.io:
+  version "2.5.3"
+  resolved "https://codeload.github.com/izy521/discord.io/tar.gz/a65e165c8cbdfc64a69d98e7bc6e25f490469086"
   dependencies:
     cjopus "^0.0.4"
     tweetnacl "^0.14.0"
@@ -601,8 +609,8 @@ minimist@^1.1.0, minimist@^1.1.3:
   resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.0.tgz#a35008b20f41383eec1fb914f4cd5df79a264284"
 
 moment@^2.17.1:
-  version "2.18.1"
-  resolved "https://registry.yarnpkg.com/moment/-/moment-2.18.1.tgz#c36193dd3ce1c2eed2adb7c802dbbc77a81b1c0f"
+  version "2.19.1"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.19.1.tgz#56da1a2d1cbf01d38b7e1afc31c10bcfa1929167"
 
 node-forge@^0.7.1:
   version "0.7.1"
@@ -978,8 +986,8 @@ verror@1.10.0:
     extsprintf "^1.2.0"
 
 vm2@^3.1.0:
-  version "3.5.0"
-  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.5.0.tgz#14448d7833f13c94d5275735ed171034cb0423f1"
+  version "3.5.2"
+  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.5.2.tgz#6ae7c75a867775946e1d4a66623374e0245150e0"
 
 ws@^1.1.0:
   version "1.1.4"
@@ -993,7 +1001,7 @@ xtend@^4.0.0:
   resolved "https://registry.yarnpkg.com/xtend/-/xtend-4.0.1.tgz#a5c6d532be656e23db820efb943a1f04998d63af"
 
 youtube-api@^2.0.4:
-  version "2.0.8"
-  resolved "https://registry.yarnpkg.com/youtube-api/-/youtube-api-2.0.8.tgz#6f9ac0b3c4cfe110b100330ea404aa0ad885501f"
+  version "2.0.9"
+  resolved "https://registry.yarnpkg.com/youtube-api/-/youtube-api-2.0.9.tgz#d566ed0745cef8d6b3bd73856584a0bab33ab53a"
   dependencies:
     googleapis "^5.2.1"
