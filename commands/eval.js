@@ -57,7 +57,7 @@ module.exports = new Command({
 			output = vm.run(code);
 			if (typeof output !== 'undefined' && typeof output.rawOutput !== 'undefined')
 				output = output.rawOutput;
-			else output = wrapOutput(nodeUtil.inspect(output,{breakLength:1}));
+			else output = wrapOutput(nodeUtil.inspect(output,{breakLength:1}).replace(/([^\\])\\n/g,'$1\n'));
 		}
 		catch(e){
 			let estr = ''+e;
