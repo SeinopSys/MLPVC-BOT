@@ -14,7 +14,7 @@ module.exports = new Command({
 	name: 'welcome',
 	help: `Welcomes the specified user as the bot`,
 	perm: 'isStaff',
-	usage: [Server.bot.username, Server.bot.username+'#'+Server.bot.discriminator, Server.bot.id],
+	usage: [Server.bot.username, '@'+Server.bot.username+'#'+Server.bot.discriminator, Server.bot.id],
 	action: args => {
 		if (!args.isPM)
 			Server.wipeMessage(args.channelID, args.event.d.id);
