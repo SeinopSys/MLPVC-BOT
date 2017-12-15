@@ -63,7 +63,7 @@ class Server {
 		this.bot.on('guildMemberAdd', member => {
 			this.bot.users[member.id] = member.user;
 			delete member.user;
-			this.bot.members[member.id] = member;
+			this.our.members[member.id] = member;
 
 			console.log('New guild member detected: '+this.bot.users[member.id].name);
 		});
@@ -247,8 +247,10 @@ class Server {
 		let member,
 			i,
 			userIDregex = /^<@!?(\d+)>$/;
-		if (typeof targetUser !== 'string' || targetUser.trim().length === 0)
-			return this.respond(args.channelID, util.replyToIfNotPM(args.isPM, args.userID, 'The user identifier is missing'));
+		if (typeof targetUser !== 'string' || targetUser.trim().length === 0){
+			this.respond(args.channelID, util.replyToIfNotPM(args.isPM, args.userID, 'The user identifier is missing'));
+			return false;
+		}
 		if (targetUser === 'me')
 			member = this.bot.users[args.userID];
 		else {
@@ -274,8 +276,10 @@ class Server {
 							break;
 						}
 					}
-				if (typeof member === 'undefined')
-					return this.respond(args.channelID, util.replyToIfNotPM(args.isPM, args.userID, 'The user identifier is missing or invalid (`'+targetUser+'`)'));
+				if (typeof member === 'undefined'){
+					this.respond(args.channelID, util.replyToIfNotPM(args.isPM, args.userID, 'The user identifier is missing or invalid (`'+targetUser+'`)'));
+					return false;
+				}
 			}
 			else member = this.bot.users[targetUser.replace(userIDregex,'$1')];
 		}
