@@ -253,6 +253,8 @@ class Server {
 		}
 		if (targetUser === 'me')
 			member = this.bot.users[args.userID];
+		else if (/^\d+$/.test(targetUser))
+			member = this.bot.users[targetUser];
 		else {
 			if (typeof targetUser !== 'string' || !userIDregex.test(targetUser)){
 				for (i in this.bot.users){
@@ -283,6 +285,11 @@ class Server {
 			}
 			else member = this.bot.users[targetUser.replace(userIDregex,'$1')];
 		}
+		if (typeof member !== 'object'){
+			this.respond(args.channelID, util.replyToIfNotPM(args.isPM, args.userID, 'Could not find user based on the following identifier: `'+targetUser+'`'));
+			return false;
+		}
+
 		let data = {},
 			membership = this.our.members[member.id];
 		data.id = member.id;

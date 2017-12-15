@@ -13,6 +13,8 @@ module.exports = new Command({
 			return Server.respond(args.channelID, util.replyToIfNotPM(args.isPM, args.userID, 'You must be owner to use this command'));
 
 		let data = Server.getUserData(args.argArr[0], args);
+		if (data === false)
+			return;
 
 		Server.respond(args.channelID, util.replyToIfNotPM(args.isPM, args.userID, 'User details:\n```json\n' + JSON.stringify(data, null, '\t') + '\n```'));
 	},
