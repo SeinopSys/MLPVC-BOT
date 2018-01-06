@@ -6,6 +6,7 @@ class Command {
 		this.aliases = opts.aliases;
 		this.usage = opts.usage;
 		this.action = opts.action;
+		this.allowPM = opts.allowPM;
 	}
 }
 

@@ -5,29 +5,53 @@ const
 	util = require('../shared-utils'),
 	Server = require('../classes/Server');
 
+const
+	ordering = 'o:(desc|asc)',
+	sorting = 'by:(score|relevance|width|height|comments|random|wilson)',
+	linking = 'as:link',
+	briefing = 'e:brief';
+
 module.exports = new Command({
 	name: 'derpibooru',
 	help:
 	'This command can be used to return the first result of a Derpibooru search.\n' +
-	'**Note:** Any rooms aside from <#nsfw> will only show results accessible by the site\'s default filter. Using the command in a DM is the same as being in <#nsfw>\n\n' +
+	`**Note:** When called outside the NSFW channel or a PM this command will only show results accessible by the site's default filter.\n\n` +
 	'__**Bot-secific search keywords:**__\n\n' +
-	' ● `o:<desc|asc>` - Order of the results (if ommited, defaults to `desc`)\n' +
-	' ● `by:<score|relevance|width|height|comments|random|wilson>` - Same as "Sort by" on the actual site\n' +
-	' ● `as:link` - Returns the link of the search with the specified parameters instead of the first matching result',
-	usage: ['safe,o:asc', 'safe,rd o:asc', 'ts by:random'],
+	` ● \`${ordering}\` - Order of the results (default: \`desc\`)\n` +
+	` ● \`${sorting}\` - Same as "Sort by" on the actual site.\n` +
+	` ● \`${linking}\` - When specified only returns the link to the search page with the specified parameters instead of displaying the image as an embed` +
+	` ● \`${briefing}\` - When specified details like the description, uploader and counters will not be shown in the embed`,
+	usage: ['safe,o:asc', 'safe,rd o:asc', 'ts by:random', 'meme e:brief'],
 	perm: 'everyone',
+	allowPM: true,
 	action: args =>{
 		if (!args.argArr.length)
-			return Server.respond(args.channelID, util.replyToIfNotPM(args.isPM, args.userID, util.reqparams(args.command)));
+			return Server.reply(args.message, util.reqparams(args.command));
 
 		let query = args.argStr,
 			extra = '',
-			inNSFW = args.channelID === Server.channelids.nsfw || args.isPM,
-			orderTest = /\bo:(desc|asc)\b/i,
-			sortbyTest = /\bby:(score|relevance|width|height|comments|random|wilson)\b/i,
-			asLinkTest = /\bas:link\b/i, returnAsLink = false;
+			inNSFW = args.channel.name === 'nsfw' || args.isPM,
+			orderTest =  new RegExp(`(^|\\s)${ordering}(\\s|$)`,'i'),
+			sortbyTest = new RegExp(`(^|\\s)${sorting }(\\s|$)`,'i'),
+			asLinkTest = new RegExp(`(^|\\s)${linking }(\\s|$)`,'ig'),
+			briefTest =  new RegExp(`(^|\\s)${briefing}(\\s|$)`,'ig'),
+			returnAsLink = false,
+			briefEmbed = false;
 		if (inNSFW)
 			extra += '&filter_id=56027';
+		if (asLinkTest.test(query)){
+			returnAsLink = true;
+			query = query.replace(asLinkTest, '').trim();
+		}
+		if (briefTest.test(query)){
+			briefEmbed = true;
+			query = query.replace(briefTest, '').trim();
+		}
+		if (orderTest.test(query)){
+			let order = query.match(orderTest);
+			query = query.replace(orderTest, '').trim();
+			extra += '&sd=' + order[1];
+		}
 		if (sortbyTest.test(query)){
 			let sortby = query.match(sortbyTest);
 			query = query.replace(sortbyTest, '').trim();
@@ -59,40 +83,30 @@ module.exports = new Command({
 					});
 			}
 		}
-		if (asLinkTest.test(query)){
-			returnAsLink = true;
-			query = query.replace(asLinkTest, '').trim();
-		}
 
-		if (orderTest.test(query)){
-			let order = query.match(orderTest);
-			query = query.replace(orderTest, '').trim();
-			extra += '&sd=' + order[1];
-		}
 		query = query.replace(/,{2,}/g, ',').trim().replace(/(^,|,$)/, '');
 		let url = 'https://derpibooru.org/search.json?q=' + encodeURIComponent(query) + extra;
 		if (returnAsLink)
-			return Server.respond(args.channelID, util.replyTo(args.userID, url.replace('/search.json', '/search')));
-		Server.bot.simulateTyping(args.channelID);
-		console.log('Derpi search for ' + chalk.blue(url));
+			return Server.reply(args.message, url.replace('/search.json', '/search'));
+		console.info('Derpi search for ' + chalk.blue(url));
 		unirest.get(url)
 			.header("Accept", "application/json")
 			.end(function(result){
 				if (result.error || typeof result.body !== 'object'){
-					console.log(result.error, result.body);
-					return Server.respond(args.channelID, util.replyTo(args.userID, 'Derpibooru search failed (HTTP ' + result.status + '). ' + Server.mentionOwner(args.userID) + ' should see what caused the issue in the logs.'));
+					console.error(result.error, result.body);
+					return Server.reply(args.message, `Derpibooru search failed (HTTP ${result.status}). ${Server.mentionOwner(args.authorID)} should see what caused the issue in the logs.`);
 				}
 
 				let data = result.body;
 				if (typeof data.search === 'undefined' || typeof data.search[0] === 'undefined')
-					return Server.respond(args.channelID, util.replyTo(args.userID, 'Derpibooru search returned no results.' +
+					return Server.reply(args.message, 'Derpibooru search returned no results.' +
 						(
-							/(explicit|questionable|suggestive)/.test(query) && !inNSFW ?
-								` Searching for system tags other than \`safe\` is likely to produce no results outside the <#${Server.channelids.nsfw}> channel.` : ''
+							/(questionable|explicit|grimdark|grotesque)/.test(query) && !inNSFW ?
+								` Searching for system tags other than \`safe\` and \`suggestive\` is unlikely to produce any results outside the NSFW channel.` : ''
 						) + ' Don\'t forget that artist and OC tags need to be prefixed with `artist:` and `oc:` respectively.'
-					));
+					);
 
-				Server.respondWithDerpibooruImage(args, data.search[0]);
+				Server.respondWithDerpibooruImage(args, data.search[0], briefEmbed);
 			});
 	},
 });

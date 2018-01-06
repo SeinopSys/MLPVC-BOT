@@ -8,28 +8,25 @@ module.exports = new Command({
 	help: 'Adds and removes roles related to vector apps. Use `+` or `-` before an app name to indicate add/remove.\nApp names:\n\t- `is`: Inkscape\n\t- `ai`: Illustrator',
 	perm: 'everyone',
 	usage: ['+ai', '+ai -is', '-is -ai'],
+	allowPM: true,
 	action: args =>{
 		if (args.argArr.length < 1)
-			return Server.respond(args.channelID, util.replyToIfNotPM(args.isPM, args.userID, 'This command requires at least 1 argument'));
+			return Server.reply(args.message, 'This command requires at least 1 argument');
 		if (args.argArr.length > 2)
-			return Server.respond(args.channelID, util.replyToIfNotPM(args.isPM, args.userID, 'This command does not accept more than 2 arguments'));
+			return Server.reply(args.message, 'This command does not accept more than 2 arguments');
 		const action = (which, role) =>{
-			return new Promise(fulfill =>{
+			return new Promise(resolve =>{
 				switch (which){
 					case '+':
-						Server.addRole(args.userID, role).catch(err =>{
-							Server.respond(args.channelID, util.addErrorMessageToResponse(err, 'Failed to add <@&'+role+'> role to <@'+args.userID+'>'));
-						}).then(() =>{
-							fulfill();
-						});
-						break;
+						Server.addRole(args.author, role).catch(err =>{
+							Server.reply(args.message, util.addErrorMessageToResponse(err, `Failed to add ${role} role to ${Server.mention(args.author)}`));
+						}).then(resolve);
+					break;
 					case '-':
-						Server.removeRole(args.userID, role).catch(err =>{
-							Server.respond(args.channelID, util.addErrorMessageToResponse(err, 'Failed to remove <@&'+role+'> role from <@'+args.userID+'>'));
-						}).then(() =>{
-							fulfill();
-						});
-						break;
+						Server.removeRole(args.author, role).catch(err =>{
+							Server.reply(args.message, util.addErrorMessageToResponse(err, `Failed to remove ${role} role from ${Server.mention(args.author)}`));
+						}).then(resolve);
+					break;
 				}
 			});
 		};
@@ -44,7 +41,7 @@ module.exports = new Command({
 		args.argArr.forEach(arg =>{
 			const match = arg.match(/^([+-])(ai|is)$/);
 			if (!match){
-				Server.respond(args.channelID, util.replyToIfNotPM(args.isPM, args.userID, 'Invalid argument: `' + arg + '`'));
+				Server.reply(args.message, 'Invalid argument: `' + arg + '`');
 				return (cont = false);
 			}
 
@@ -53,7 +50,7 @@ module.exports = new Command({
 				rolemap[match[2]] = void 0;
 			}
 			else {
-				Server.respond(args.channelID, util.replyToIfNotPM(args.isPM, args.userID, 'You may only specify one action per role'));
+				Server.reply(args.message, 'You may only specify one action per role');
 				return (cont = false);
 			}
 
@@ -65,11 +62,11 @@ module.exports = new Command({
 		if (!cont)
 			return;
 		if (!actions.length)
-			return Server.respond(args.channelID, util.replyToIfNotPM(args.isPM, args.userID, 'No valid arguments passed'));
+			return Server.reply(args.message, 'No valid arguments passed');
 		(function recurse(i){
 			const el = actions[i];
 			if (typeof el === 'undefined')
-				return Server.respond(args.channelID, util.replyToIfNotPM(args.isPM, args.userID, 'Roles updated'));
+				return Server.reply(args.message, 'Roles updated');
 			action(el.which, el.role).catch(() => void 0).then(() =>{
 				setTimeout(() => recurse(i + 1), 500);
 			});

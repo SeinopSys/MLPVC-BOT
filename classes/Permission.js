@@ -1,7 +1,7 @@
 class Permission {
 	constructor(name, checker){
 		this.name = name;
-		this.check = userID => checker(userID);
+		this.check = authorID => checker(authorID);
 	}
 }
 

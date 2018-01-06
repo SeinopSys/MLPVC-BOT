@@ -7,7 +7,8 @@ module.exports = new Command({
 	help: 'Apply cold water to the burned area',
 	perm: 'everyone',
 	usage: [true],
+	allowPM: true,
 	action: args => {
-		Server.respond(args.channelID, '**REKT** https://www.youtube.com/watch?v=tfyqk26MqdE');
+		Server.reply(args.message, '**REKT** https://www.youtube.com/watch?v=tfyqk26MqdE');
 	},
 });

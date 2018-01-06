@@ -1,7 +1,6 @@
 const
 	Command = require('../classes/Command'),
-	Server = require('../classes/Server'),
-	util = require('../shared-utils');
+	Server = require('../classes/Server');
 
 module.exports = new Command({
 	name: 'yes',
@@ -9,6 +8,6 @@ module.exports = new Command({
 	perm: 'everyone',
 	usage: [true],
 	action: args => {
-		Server.respond(args.channelID, util.replyTo(args.userID,'https://www.youtube.com/watch?v=P3ALwKeSEYs'));
+		Server.reply(args.message, 'https://www.youtube.com/watch?v=P3ALwKeSEYs');
 	}
 });

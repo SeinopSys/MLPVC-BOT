@@ -1,22 +1,18 @@
 const
 	Command = require('../classes/Command'),
-	Server = require('../classes/Server'),
-	util = require('../shared-utils');
+	Server = require('../classes/Server');
 
 module.exports = new Command({
 	name: 'roleids',
 	help: 'Returns a list of role IDs on the server',
 	perm: 'isOwner',
 	usage: [true],
+	allowPM: true,
 	action: args => {
-		if (!Server.commandPermCheck(args.command, args.userID))
-			Server.respond(args.channelID, util.replyTo(args.userID, 'You must be owner to use this command'));
-
-		let message = [],
-			keys = Object.keys(Server.roleids);
-		keys.forEach(function(key){
-			message.push(Server.roleids[key]+' ('+key+')');
+		let message = [];
+		Server.our.roles.array().forEach(function(role){
+			message.push(`${role.id} (${role.name})`);
 		});
-		Server.respond(args.channelID, util.replyTo(args.userID, `List of available roles for server ${Server.our.name}:\n\`\`\`\n${message.join('\n')}\n\`\`\``));
+		Server.reply(args.message, `List of available roles in ${Server.our.name}:\n\`\`\`\n${message.join('\n')}\n\`\`\``);
 	}
 });

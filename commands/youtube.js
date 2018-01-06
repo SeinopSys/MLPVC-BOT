@@ -18,12 +18,10 @@ module.exports = new Command({
 	perm: 'everyone',
 	action: args => {
 		if (args.isPM)
-			return Server.respond(args.channelID, util.onserver);
+			return Server.reply(args.message, util.onserver);
 
 		if (!args.argArr.length)
-			return Server.respond(args.channelID, util.replyToIfNotPM(args.isPM, args.userID, util.reqparams(args.command)));
-
-		Server.bot.simulateTyping(args.channelID);
+			return Server.reply(args.message, util.reqparams(args.command));
 
 		YouTubeAPI.search.list({
 			part: 'snippet',
@@ -32,17 +30,17 @@ module.exports = new Command({
 			maxResults: 1,
 			regionCode: 'US',
 			relevanceLanguage: 'en',
-			safeSearch: args.channelID === Server.channelids.nsfw ? 'none' : 'moderate',
+			safeSearch: args.channel.name === 'nsfw' ? 'none' : 'moderate',
 		}, function(error, result) {
 			if (error || typeof result.items === 'undefined'){
-				console.log(error, result);
-				return Server.respond(args.channelID, util.replyTo(args.userID, 'YouTube search failed. '+Server.mentionOwner(args.userID)+' should see what caused the issue in the logs.'));
+				console.error(error, result);
+				return Server.reply(args.message, `YouTube search failed. ${Server.mentionOwner(args.authorID)} should see what caused the issue in the logs.`);
 			}
 
 			if (typeof result.items[0] === 'undefined' || typeof result.items[0].id.videoId === 'undefined')
-				return Server.respond(args.channelID, util.replyTo(args.userID, 'YouTube search returned no results.'));
+				return Server.reply(args.message, 'YouTube search returned no results.');
 
-			Server.respond(args.channelID, util.replyTo(args.userID, 'https://youtube.com/watch?v='+result.items[0].id.videoId));
+			Server.reply(args.message, `https://youtube.com/watch?v=${result.items[0].id.videoId}`);
 		});
 	},
 });

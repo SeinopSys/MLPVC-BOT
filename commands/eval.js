@@ -2,8 +2,7 @@ const
 	Command = require('../classes/Command'),
 	Server = require('../classes/Server'),
 	moment = require('moment'),
-	util = require('../shared-utils'),
-	nodeUtil = require('util'),
+	util = require('util'),
 	{VM} = require('vm2'),
 	wrapOutput = (output) => '```js\n'+output+'\n```',
 	vmTimeout = 5000,
@@ -35,18 +34,16 @@ const
 
 module.exports = new Command({
 	name: 'eval',
-	help: 'Evaluates an arbitrary JavaScript expression using `safe-eval` (https://www.npmjs.com/package/safe-eval)',
+	help: 'Evaluates an arbitrary JavaScript expression using `safe-eval` (<https://www.npmjs.com/package/safe-eval>)',
 	perm: 'everyone',
 	usage: ['2+2', 'Math.random()', '"Te" + "xt"'],
+	allowPM: false,
 	action: args => {
-		if (args.isPM)
-			return Server.respond(args.channelID, util.onserver);
-
-		if (typeof evalTimedOut[args.userID] !== 'undefined'){
+		if (typeof evalTimedOut[args.authorID] !== 'undefined'){
 			let now = moment();
-			if (now.diff(evalTimedOut[args.userID]) < 0){
-				let usein = evalTimedOut[args.userID].add(2, 'minutes').from(now);
-				return Server.respond(args.channelID, util.replyToIfNotPM(args.isPM,args.userID,'You will be allowed to use the `/eval` command again '+usein+' (contains a 2-minute penalty for attempting to use it again before the timeout ends).'));
+			if (now.diff(evalTimedOut[args.authorID]) < 0){
+				let usein = evalTimedOut[args.authorID].add(2, 'minutes').from(now);
+				return Server.reply(args.message, `You will be allowed to use the \`/eval\` command again ${usein} (contains a 2-minute penalty for attempting to use it again while being timed out).`);
 			}
 		}
 
@@ -57,19 +54,19 @@ module.exports = new Command({
 			output = vm.run(code);
 			if (typeof output !== 'undefined' && typeof output.rawOutput !== 'undefined')
 				output = output.rawOutput;
-			else output = wrapOutput(nodeUtil.inspect(output,{breakLength:1}).replace(/([^\\])\\n/g,'$1\n'));
+			else output = wrapOutput(util.inspect(output,{breakLength:1}).replace(/([^\\])\\n/g,'$1\n'));
 		}
 		catch(e){
 			let estr = ''+e;
 			output = wrapOutput(estr);
-			console.log('Exception while evaling code:\n\n'+code+'\n\n'+e.stack+'\n===============');
+			console.error('Exception while evaling code:\n\n'+code+'\n\n'+e.stack+'\n===============');
 			if (estr === 'Error: Script execution timed out.'){
 				// noinspection JSDeprecatedSymbols
-				evalTimedOut[args.userID] = moment().add(5, 'minutes');
+				evalTimedOut[args.authorID] = moment().add(5, 'minutes');
 				output = 'Your script took longer than '+(vmTimeout/1000)+' seconds to execute. Please refrain from running heavy operations _(e.g. infinite loops)_. You\'ll be able to use the `/eval` command again in 5 minutes.';
-				console.log(Server.getIdent(args.userID)+' has been timed out for 5 minutes due to ptential eval misuse');
+				console.info(`${Server.getIdent(args.authorID)} has been timed out for 5 minutes due to ptential eval misuse`);
 			}
 		}
-		Server.respond(args.channelID, util.replyToIfNotPM(args.isPM,args.userID,output));
+		Server.reply(args.message, output);
 	}
 });

@@ -1,7 +1,6 @@
 const
 	Command = require('../classes/Command'),
-	Server = require('../classes/Server'),
-	util = require('../shared-utils');
+	Server = require('../classes/Server');
 
 module.exports = new Command({
 	name: 'tutorials',
@@ -12,6 +11,7 @@ module.exports = new Command({
 	'\t● `ps`/`photoshop`: Tutorials - Photoshop',
 	perm: 'everyone',
 	usage: [true, 'ps', 'illustrator'],
+	allowPM: true,
 	action: args =>{
 		let url = 'http://mlp-vectorclub.deviantart.com/gallery/34905690/Tutorials';
 		if (typeof args.argArr[0] === 'string'){
@@ -34,6 +34,6 @@ module.exports = new Command({
 					break;
 			}
 		}
-		Server.respond(args.channelID, util.replyToIfNotPM(args.isPM, args.userID, '<' + url + '>'));
+		Server.reply(args.message, '<' + url + '>');
 	}
 });

@@ -11,24 +11,25 @@ module.exports = new Command({
 		'If a command is specified as the first parameter and the second parameter is `here` the help text will be output inside the current channel instead of being sent via a PM (the parameter does nothing when the command is called via PM).',
 	perm: 'everyone',
 	usage: [true, 'google', 'cg', 'ver here'],
+	allowPM: true,
 	action: args => {
 		if (typeof args.argArr[0] === 'string'){
 			let tcmd = args.argArr[0],
 				here = args.argArr[1] === 'here' && !args.isPM,
-				targetChannel = here ? args.channelID : args.userID;
+				targetChannel = here ? args.channel : args.author;
 			if (!args.isPM && !here)
-				Server.wipeMessage(args.channelID, args.event.d.id);
+				Server.wipeMessage(args.message);
 			if (!/^[a-z]+$/.test(tcmd))
-				return Server.respond(targetChannel, 'Invalid command (`'+tcmd+'`). You can get a list of available comands by running `/help`');
-			if (!Server.commandExists(tcmd) || (!Server.commandPermCheck(tcmd, args.userID) && !Server.perm.isStaff.check(args.userID))){
-				return Server.respond(targetChannel, 'The specified command (`'+tcmd+'`) does not exist'+(!Server.perm.isStaff.check(args.userID)?' or you don\'t have permission to use it':'')+'.');
+				return Server.send(targetChannel, `Invalid command (\`${tcmd}\`). You can get a list of available comands by running \`/help\``);
+			if (!Server.commandExists(tcmd) || (!Server.commandPermCheck(tcmd, args.authorID) && !Server.perm.isStaff.check(args.authorID))){
+				return Server.send(targetChannel, `The specified command (\`${tcmd}\`) does not exist${!Server.perm.isStaff.check(args.authorID) ? " or you don't have permission to use it" : ''}.`);
 			}
 
 			let cmd = Server.getCommand(tcmd);
 			if (typeof cmd.help !== 'string'){
 				if (!args.isPM && !here)
-					Server.wipeMessage(args.channelID, args.event.d.id);
-				Server.respond(targetChannel, 'The specified command ('+cmd.name+') has no associated help text.');
+					Server.wipeMessage(args.message);
+				Server.send(targetChannel, `The specified command (${cmd.name}) has no associated help text.`);
 			}
 
 			let usage = [];
@@ -39,9 +40,10 @@ module.exports = new Command({
 					for (let j=0; j<cmd.usage.length; j++)
 						usage.push('/'+cmd.name+(cmd.usage[j]===true?'':' '+cmd.usage[j]));
 			}
-			return Server.respond(targetChannel,
-				'Showing help for command `'+cmd.name+'`'+(here?' (force-displayed)':'')+
-				'\n__Usable by:__ '+Server.perm[cmd.perm].name+'\n'+
+			return Server.send(targetChannel,
+				'Showing help for command `'+cmd.name+'`'+(here?' (force-displayed)':'')+'\n'+
+				'__Usable by:__ '+Server.perm[cmd.perm].name+'\n'+
+				'__Usable in:__ '+(cmd.allowPM?"Server's channels and PMs":"Server's channels only (no PMs)")+'\n'+
 				'__Description:__\n'+(cmd.help.replace(/^(.)/gm,'\t\t$1'))+
 				(cmd.aliases?'\n__Aliases:__ `'+(cmd.aliases.join('`, `'))+'`':'')+
 				(usage.length?(typeof usage === 'string' ? `\n__Usage:__ ${usage}` : '\n__Usage, examples:__\n```\n'+(usage.join('\n'))+'\n```'):'')
@@ -49,11 +51,11 @@ module.exports = new Command({
 		}
 		let canrun = [];
 		fs.readdirSync('commands').forEach(file => {
-			let cmd = require('./'+file);
-			if (!(cmd instanceof Command))
+			let cmd = require(`./${file}`);
+			if (false === cmd instanceof Command)
 				return;
 
-			if (Server.perm[cmd.perm].check(args.userID))
+			if (Server.perm[cmd.perm].check(args.authorID))
 				canrun.push(cmd.name);
 		});
 		canrun = canrun.sort(function(a,b){
@@ -73,7 +75,7 @@ module.exports = new Command({
 		msg += table(commandsTable,{ hsep: '  ' });
 
 		if (!args.isPM)
-			Server.wipeMessage(args.channelID, args.event.d.id);
-		Server.respond(args.userID, msg.trim()+'\n```\nIf you want to find out what a specific command does, simply run `/help commandname` (e.g. `/help '+exampleCommand+'`)');
+			Server.wipeMessage(args.message);
+		Server.send(args.author, msg.trim()+'\n```\nIf you want to find out what a specific command does, simply run `/help commandname` (e.g. `/help '+exampleCommand+'`)');
 	}
 });

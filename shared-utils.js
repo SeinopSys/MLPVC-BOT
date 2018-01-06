@@ -1,12 +1,7 @@
-const replyTo = (userID, message) => "<@" + userID + "> " + message;
-const replyToIfNotPM = (isPM, userID, message) => (isPM ? message : replyTo(userID, message));
-const reqparams = cmd => 'This command requires additional parameters. Use `/help ' + cmd + '` for more information.';
-const onserver = 'This command must be run from within a channel on our server.';
-
+const Server = require('./classes/Server');
 module.exports = {
-	replyTo,
-	replyToIfNotPM,
-	reqparams,
-	onserver,
+	replyTo: (author, message) => `${Server.mention(author.id)} ${message}`,
+	reqparams: cmd => `This command requires additional parameters. Use \`/help ${cmd}\` for more information.`,
+	onserver: 'This command must be run from within a channel on our server.',
 	root: __dirname.replace(/[\\\/]$/,''),
 };

@@ -1,20 +1,18 @@
 const
-	moment = require('moment'),
 	config = require('../config'),
 	Command = require('../classes/Command'),
-	Server = require('../classes/Server');
+	Server = require('../classes/Server'),
+	moment = require('moment');
 
 module.exports = new Command({
 	name: 'casual',
-	help: `Politely asks everyone in the room to move to the <#${Server.channelids.casual}> channel (does nothing in said channel)`,
+	help: `Politely asks everyone in the room to move to the ${Server.mention(Server.findChannel('casual'))} channel (does nothing in said channel)`,
 	perm: 'everyone',
 	usage: [true],
+	allowPM: false,
 	action: args => {
-		if (args.isPM)
-			return Server.respond(args.channelID, args.onserver);
-
-		if (args.channelID === Server.channelids.casual)
-			return Server.wipeMessage(args.channelID, args.event.d.id);
+		if (args.channel.name === 'causal')
+			return Server.wipeMessage(args.message);
 
 		let possible_images = [
 				'mountain', // Original by DJDavid98
@@ -24,15 +22,9 @@ module.exports = new Command({
 				'abfloat',  // CMs floating around Applebloom by Drakizora
 			],
 			image_count = possible_images.length,
-			data = args.argArr[0],
-			k;
-
-		if (!isNaN(data))
-			k = Math.max(0,Math.min(image_count-1,parseInt(data, 10)-1));
-		else {
 			k = moment().minutes() % image_count;
-		}
 
-		Server.wipeMessage(args.channelID, args.event.d.id, 'Please continue this discussion in <#'+Server.channelids.casual+'>\n'+config.SITE_ABSPATH+'img/discord/casual/'+possible_images[k]+'.png');
+		Server.wipeMessage(args.message);
+		Server.send(args.channel, `Please continue this discussion in ${Server.mention(Server.findChannel('casual'))}\n${config.SITE_ABSPATH}img/discord/casual/${possible_images[k]}.png`);
 	},
 });
