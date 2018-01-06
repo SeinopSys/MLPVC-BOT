@@ -388,12 +388,6 @@ class Server {
 				description = description.substring(0, maxDescriptionLength).replace(/\s[\S]{1,24}$/,'') + '\u2026';
 			embed.setDescription(description);
 
-			embed.setThumbnail(
-				isImage
-					? `https:${image.representations.thumb_small}`
-					: `https://via.placeholder.com/160/E2EBF2/3D92D0?text=${format}`
-			);
-
 			let ratingTags = tagArray
 				.filter(tag => /^(safe|suggestive|questionable|explicit|semi-grimdark|grimdark|grotesque)$/.test(tag))
 				.map(tag => tag[0].toUpperCase()+tag.substring(1));
@@ -409,6 +403,8 @@ class Server {
 			embed.setImage(`https:${image.image}`);
 		}
 		else {
+
+			embed.setThumbnail(`https://via.placeholder.com/160/E2EBF2/3D92D0?text=${format}`);
 			embed.addField('Format', format, true);
 			if (image.source_url)
 				embed.addField('Source URL', image.source_url, true);
