@@ -20,12 +20,12 @@ module.exports = new Command({
 			eqg = humanRegex.test(query);
 		if (eqg)
 			query = query.replace(humanRegex,'');
-		unirest.get(config.SITE_ABSPATH+'cg'+(eqg?'/eqg':'')+'/1?btnl&q='+encodeURIComponent(query))
+		unirest.get(`${config.SITE_ABSPATH}cg${eqg?'/eqg':'/pony'}?btnl&json&q=${encodeURIComponent(query)}`)
 			.header("Accept", "application/json")
 			.end(function (result) {
 				if (result.error || typeof result.body !== 'object'){
 					console.error(result.error, result.body);
-					return Server.reply(args.message, 'Color Guide search failed (HTTP '+result.status+'). '+Server.mentionOwner(args.authorID)+' should see what caused the issue in the logs.');
+					return Server.reply(args.message, `Color Guide search failed (HTTP ${result.status}). ${Server.mentionOwner(args.authorID)} should see what caused the issue in the logs.`);
 				}
 
 				let data = result.body;
