@@ -216,7 +216,7 @@ class Server {
 		this.interact(message);
 	}
 	handleRulesRead(message){
-		this.addRole(message.author.id, this.findRole('Informed'), 'Read the rules').then(() => {
+		this.addRole(message.author.id, 'Informed', 'Read the rules').then(() => {
 			this.send(this.findChannel('casual'), `Please welcome ${Server.mention(message.author)} to our server!`);
 		}).catch(() => {
 			this.send(this.findChannel('staffchat'), `Failed to add Informed role to ${Server.mention(message.author)}\n${this.mentionOwner()} should see what caused this in the logs.`);
@@ -248,17 +248,17 @@ class Server {
 	}
 	/**
 	 * @private
-	 * @param {boolean} add
+	 * @param {boolean} isAdding
 	 * @param {Discord.User} user
 	 * @param {string} rolename
 	 * @param {string} reason
 	 * @return {Promise}
 	 */
-	_roleAction(add, user, rolename, reason){
-		const to = add ? 'to' : 'from';
+	_roleAction(isAdding, user, rolename, reason){
+		const to = isAdding ? 'to' : 'from';
 		const role = this.findRole(rolename);
 		if (!role){
-			const add = add ? 'add' : 'remove';
+			const add = isAdding ? 'add' : 'remove';
 			return console.error(`Trying to ${add} non-existing role "${rolename}" ${to} ${this.getIdent(user)}`);
 		}
 		const member = this.findMember(user.id);
@@ -266,7 +266,7 @@ class Server {
 			return console.error(`No member found with the ID ${user.id}`);
 		return new Promise((resolve, reject) => {
 			member.addRole(role, reason).then(resolve).catch(err => {
-				const adding = add ? 'adding' : 'removing';
+				const adding = isAdding ? 'adding' : 'removing';
 				console.error(`Error while ${adding} "${rolename}" role ${to} ${this.getIdent(user)}`, err);
 				reject(err);
 			});
