@@ -197,18 +197,17 @@ class Server {
 		}
 
 		if (message.channel.name === 'welcome'){
-			this.wipeMessage(message);
 			if (message.content.trim().indexOf('/read') === 0){
 				this.handleRulesRead(message);
-				return;
 			}
 			// If the user is Staff and the message being sent starts with /edit then we allow it through
 			else if (!this.perm.isStaff.check(message.author.id) || message.content.trim().indexOf('/edit') !== 0){
 				// Notify in a PM if not already informed
 				if (!this.perm.informed.check(message.author.id))
 					this.send(message.author, `You will not be able to chat on our server until you've read the rules in ${this.mention(this.findChannel('welcome'))}.`);
-				return;
 			}
+			this.wipeMessage(message);
+			return;
 		}
 
 		if (/^\s*[!/]\w+/.test(message))
@@ -216,10 +215,11 @@ class Server {
 		this.interact(message);
 	}
 	handleRulesRead(message){
+		console.log(message);
 		this.addRole(message.author.id, 'Informed', 'Read the rules').then(() => {
-			this.send(this.findChannel('casual'), `Please welcome ${Server.mention(message.author)} to our server!`);
+			this.send(this.findChannel('casual'), `Please welcome ${this.mention(message.author)} to our server!`);
 		}).catch(() => {
-			this.send(this.findChannel('staffchat'), `Failed to add Informed role to ${Server.mention(message.author)}\n${this.mentionOwner()} should see what caused this in the logs.`);
+			this.send(this.findChannel('staffchat'), `Failed to add Informed role to ${this.mention(message.author)}\n${this.mentionOwner()} should see what caused this in the logs.`);
 		});
 	}
 	getIdent(authorID = this.client.user){
@@ -255,16 +255,19 @@ class Server {
 	 * @return {Promise}
 	 */
 	_roleAction(isAdding, user, rolename, reason){
-		const to = isAdding ? 'to' : 'from';
-		const role = this.findRole(rolename);
-		if (!role){
-			const add = isAdding ? 'add' : 'remove';
-			return console.error(`Trying to ${add} non-existing role "${rolename}" ${to} ${this.getIdent(user)}`);
-		}
-		const member = this.findMember(user.id);
-		if (!member)
-			return console.error(`No member found with the ID ${user.id}`);
 		return new Promise((resolve, reject) => {
+			const to = isAdding ? 'to' : 'from';
+			const role = this.findRole(rolename);
+			if (!role){
+				const add = isAdding ? 'add' : 'remove';
+				console.error(`Trying to ${add} non-existing role "${rolename}" ${to} ${this.getIdent(user)}`);
+				return reject();
+			}
+			const member = this.findMember(user.id);
+			if (!member){
+				console.error(`No member found with the ID ${user.id}`);
+				return reject();
+			}
 			member.addRole(role, reason).then(resolve).catch(err => {
 				const adding = isAdding ? 'adding' : 'removing';
 				console.error(`Error while ${adding} "${rolename}" role ${to} ${this.getIdent(user)}`, err);
@@ -432,7 +435,7 @@ class Server {
 	}
 	addErrorMessageToResponse(err, response){
 		if (err)
-			response += '\n(' + (this.hasOwner ? Server.mention(config.OWNER_ID) + ' ' : '') + err.message + (err.response ? ': ' + err.response.message : '') + ')';
+			response += '\n(' + (this.hasOwner ? this.mention(config.OWNER_ID) + ' ' : '') + err.message + (err.response ? ': ' + err.response.message : '') + ')';
 		return response;
 	}
 	commandExists(command){
@@ -490,7 +493,7 @@ class Server {
 		if (!this.commandPermCheck(cmd, authorID))
 			return message.reply(`You don't have permission to use this command`);
 		if (isPM && cmd.allowPM !== true)
-			return Server.reply(message, util.onserver);
+			return this.reply(message, util.onserver);
 
 		cmd.action({ author, authorID, channel, channelID, message, command, argStr, argArr, isPM });
 	}
