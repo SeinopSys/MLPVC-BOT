@@ -215,8 +215,7 @@ class Server {
 		this.interact(message);
 	}
 	handleRulesRead(message){
-		console.log(message);
-		this.addRole(message.author.id, 'Informed', 'Read the rules').then(() => {
+		this.addRole(message.author, 'Informed', 'Read the rules').then(() => {
 			this.send(this.findChannel('casual'), `Please welcome ${this.mention(message.author)} to our server!`);
 		}).catch(() => {
 			this.send(this.findChannel('staffchat'), `Failed to add Informed role to ${this.mention(message.author)}\n${this.mentionOwner()} should see what caused this in the logs.`);
