@@ -1,5 +1,5 @@
 const
-	moment = require('moment'),
+	moment = require('moment-timezone'),
 	Command = require('../classes/Command'),
 	Server = require('../classes/Server'),
 	Time = require('../classes/Time');
@@ -13,8 +13,8 @@ module.exports = new Command({
 	action: args => {
 		const
 			date = Server.our.createdAt,
-			age = moment(date),
+			age = moment(date).tz('UTC'),
 			delta = Time.Remaining(new Date(), date);
-		Server.reply(args.message, `The ${Server.our.name} Discord server was created on ${age.format('Do MMMM, YYYY')} at ${age.format('HH:mm:ss')} (${delta})`);
+		Server.reply(args.message, `The ${Server.our.name} Discord server was created on ${age.format('Do MMMM, YYYY')} at ${age.format('HH:mm:ss z')} (${delta})`);
 	},
 });
