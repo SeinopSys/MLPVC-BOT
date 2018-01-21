@@ -15,6 +15,6 @@ module.exports = new Command({
 			date = Server.our.createdAt,
 			age = moment(date),
 			delta = Time.Remaining(new Date(), date);
-		Server.reply(args.message, `The ${Server.our.name} Discord server was created on ${age.format('Do MMMM, YYYY')} (${delta})`);
+		Server.reply(args.message, `The ${Server.our.name} Discord server was created on ${age.format('Do MMMM, YYYY')} at ${age.format('HH:mm:ss')} (${delta})`);
 	},
 });
