@@ -14,7 +14,7 @@ module.exports = new Command({
 	usage: ['sleep', 'apple pie', 'horse'],
 	perm: 'everyone',
 	allowPM: false,
-	action: args => {
+	action: async args => {
 		if (!args.argArr.length)
 			return Server.reply(args.message, util.reqparams(args.command));
 
@@ -28,7 +28,7 @@ module.exports = new Command({
 		}
 		else defineCommandLastUsed = Date.now();
 
-		if (args.channel.name === 'bot-sandbox' && !Server.perm.isStaff.check(args.author.id))
+		if (args.channel.name === 'bot-sandbox' && !(await Server.perm.isStaff.check(args.author.id)))
 			return Server.reply(args.message, `This command can only be used by members of the Staff role in ${Server.mention(args.channel)}. Please only use this command when neccessary as it's number of requests per day is limited.`);
 
 		unirest.get("https://wordsapiv1.p.mashape.com/words/"+encodeURIComponent(args.argStr))

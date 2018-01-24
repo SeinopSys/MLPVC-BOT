@@ -12,9 +12,9 @@ module.exports = new Command({
 	allowPM: false,
 	action: args => {
 		const
-			date = Server.our.createdAt,
+			date = Server.guild.createdAt,
 			age = moment(date).tz('UTC'),
 			delta = Time.Remaining(new Date(), date);
-		Server.reply(args.message, `The ${Server.our.name} Discord server was created on ${age.format('Do MMMM, YYYY')} at ${age.format('HH:mm:ss z')} (${delta})`);
+		Server.reply(args.message, `The ${Server.guild.name} Discord server was created on ${age.format('Do MMMM, YYYY')} at ${age.format('HH:mm:ss z')} (${delta})`);
 	},
 });

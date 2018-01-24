@@ -16,7 +16,7 @@ module.exports = new Command({
 	usage: [true, 'join', 'leave'],
 	perm: 'everyone',
 	allowPM: true,
-	action: args => {
+	action: async args => {
 		if (!args.isPM)
 			Server.wipeMessage(args.message);
 		if (args.channel.name !== 'nsfw' && args.argArr.length === 0){
@@ -24,15 +24,15 @@ module.exports = new Command({
 				args.channel.name === 'nsfw'
 				? null
 				: (
-					Server.perm.isStaff.check(args.authorID)
-					? 'Please avoid discussing anything NSFW '+(
+				(await Server.perm.isStaff.check(args.authorID))
+						? 'Please avoid discussing anything NSFW ' + (
 						!args.isPM
-						? 'in '+Server.mention(args.channel)
-						: 'outside '+Server.mention(Server.findChannel('nsfw'))
-					)+'.'
-					:''
+							? 'in ' + Server.mention(args.channel)
+							: 'outside ' + Server.mention(Server.findChannel('nsfw'))
+					) + '.'
+						: ''
 				)
-			)+' We have a dedicated invite-only NSFW channel, send `/nsfw join` if you\'d like to gain access.\n'+config.SITE_ABSPATH+'img/discord/nsfw.gif';
+			) + ' We have a dedicated invite-only NSFW channel, send `/nsfw join` if you\'d like to gain access.\n' + config.SITE_ABSPATH + 'img/discord/nsfw.gif';
 			if (!args.isPM)
 				Server.wipeMessage(args.message);
 			return Server.reply(args.message, responseText);
@@ -43,10 +43,10 @@ module.exports = new Command({
 			case "join":
 			case "leave":
 				const
-					member = Server.findMember(args.author.id),
+					member = await Server.findMember(args.author.id),
 					nsfwChannel = Server.findChannel('nsfw');
 				if (member.roles.get(Server.staffroleid))
-					return Server.send(args.author, `Because you have the Staff role you will see ${Server.mention(nsfwChannel)} no matter what.${action === 'leave'?` If you don't wand to see or be notified of new messages, right-click the channel and click \`Mute #nsfw\``:''}`);
+					return Server.send(args.author, `Because you have the Staff role you will see ${Server.mention(nsfwChannel)} no matter what.${action === 'leave' ? ` If you don't wand to see or be notified of new messages, right-click the channel and click \`Mute #nsfw\`` : ''}`);
 
 				if (action === 'join'){
 					if (member.roles.exists('name', nsfwRoleName))
@@ -68,7 +68,7 @@ module.exports = new Command({
 						Server.send(args.channel, Server.addErrorMessageToResponse(err, `Failed to leave ${Server.mention(Server.findChannel('nsfw'))} channel`));
 					});
 				}
-			break;
+				break;
 			default:
 				Server.reply(args.message, `Unknown action ${action}`);
 		}

@@ -8,7 +8,7 @@ module.exports = new Command({
 	perm: 'everyone',
 	usage: ['brackets', 'pipe me', 'da @Mention#1234'],
 	allowPM: true,
-	action: args => {
+	action: async args => {
 		if (typeof args.argArr[0] !== 'string')
 			return Server.reply(args.message, 'The first (format) parameter is mandatory');
 		let format;
@@ -23,7 +23,8 @@ module.exports = new Command({
 				return Server.reply(args.message, `Unknown format: \`${args.argArr[0]}\``);
 		}
 
-		let targetUserData = Server.getUserData(Server.perm.isStaff.check(args.authorID) ? (args.argArr[1]||'me') : 'me', args);
+		const forwho = (await Server.perm.isStaff.check(args.authorID)) ? (args.argArr[1]||'me') : 'me';
+		let targetUserData = await Server.getUserData(forwho, args);
 		if (targetUserData === false)
 			return;
 		if (typeof targetUserData !== 'object')

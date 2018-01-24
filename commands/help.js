@@ -12,7 +12,7 @@ module.exports = new Command({
 	perm: 'everyone',
 	usage: [true, 'google', 'cg', 'ver here'],
 	allowPM: true,
-	action: args => {
+	action: async args => {
 		if (typeof args.argArr[0] === 'string'){
 			let tcmd = args.argArr[0],
 				here = args.argArr[1] === 'here' && !args.isPM,
@@ -21,8 +21,8 @@ module.exports = new Command({
 				Server.wipeMessage(args.message);
 			if (!/^[a-z]+$/.test(tcmd))
 				return Server.send(targetChannel, `Invalid command (\`${tcmd}\`). You can get a list of available comands by running \`/help\``);
-			if (!Server.commandExists(tcmd) || (!Server.commandPermCheck(tcmd, args.authorID) && !Server.perm.isStaff.check(args.authorID))){
-				return Server.send(targetChannel, `The specified command (\`${tcmd}\`) does not exist${!Server.perm.isStaff.check(args.authorID) ? " or you don't have permission to use it" : ''}.`);
+			if (!Server.commandExists(tcmd) || (!Server.commandPermCheck(tcmd, args.authorID) && !(await Server.perm.isStaff.check(args.authorID)))){
+				return Server.send(targetChannel, `The specified command (\`${tcmd}\`) does not exist${!(await Server.perm.isStaff.check(args.authorID)) ? " or you don't have permission to use it" : ''}.`);
 			}
 
 			let cmd = Server.getCommand(tcmd);

@@ -13,11 +13,11 @@ module.exports = new Command({
 	perm: 'isStaff',
 	usage: [Server.client.user.username, '@'+Server.getIdent(), Server.client.user.id],
 	allowPM: true,
-	action: args => {
+	action: async args => {
 		if (!args.isPM)
 			Server.wipeMessage(args.message);
 
-		const user = Server.getUserData(args.argArr[0], args);
+		const user = await Server.getUserData(args.argArr[0], args);
 		if (user === false)
 			return;
 

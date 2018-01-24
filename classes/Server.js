@@ -15,21 +15,21 @@ class Server {
 			isOwner: new Permission('Bot Developer', userID => {
 				return userID === config.OWNER_ID;
 			}),
-			isStaff: new Permission('Staff', userID => {
-				const member = this.findMember(userID);
-				return typeof member === 'undefined' ? false : member.roles.exists('id', this.staffroleid);
+			isStaff: new Permission('Staff', async userID => {
+				const member = await this.findMember(userID);
+				return member.roles.exists('id', this.staffroleid);
 			}),
-			isMember: new Permission('Club Members', userID => {
-				const member = this.findMember(userID);
-				return typeof member === 'undefined' ? false : member.roles.exists('name', 'Club Members');
+			isMember: new Permission('Club Members', async userID => {
+				const member = await this.findMember(userID);
+				return  member.roles.exists('name', 'Club Members');
 			}),
 			everyone: new Permission('Everyone',function(){ return true }),
-			nonmembers: new Permission('Non-members', userID => {
-				return !this.perm.isStaff.check(userID) && !this.perm.isMember.check(userID);
+			nonmembers: new Permission('Non-members', async userID => {
+				return !(await this.perm.isStaff.check(userID)) && !(await this.perm.isMember.check(userID));
 			}),
-			informed: new Permission('Informed', userID => {
-				const member = this.findMember(userID);
-				return typeof member === 'undefined' ? false : member.roles.exists('name', 'Informed');
+			informed: new Permission('Informed', async userID => {
+				const member = await this.findMember(userID);
+				return member.roles.exists('name', 'Informed');
 			}),
 		};
 		this.aliases = require('../command-aliases');
@@ -47,7 +47,7 @@ class Server {
 			],
 			cgSunset: [
 				"It's in the plans, but the iTunes Raw 1080p version isn't available yet. PLease be patient, we'll let everyone know when it's done.",
-				"Not yet, but it's on our radar.",
+				"Not yet, but it's on guild radar.",
 				"There isn't one yet, but rest assured it'll be made as soon as we can pick accurate colors for her.",
 				"Patience is a virtue.",
 			],
@@ -124,8 +124,8 @@ class Server {
 		/**
 		 * @type {Discord.Guild}
 		 */
-		this.our = _theServer;
-		console.info('Found our server (Name: '+this.our.name+')');
+		this.guild = _theServer;
+		console.info('Found our server (Name: '+this.guild.name+')');
 
 		const staffRole = this.findRole('Staff');
 		if (false === staffRole instanceof Discord.Role)
@@ -188,13 +188,13 @@ class Server {
 	/**
 	 * @param {Discord.Message} message
 	 */
-	onMessage(message){
+	async onMessage(message){
 		if (message.author.bot || message.system)
 			return;
 
 		if (this.isPrivateChannel(message.channel)){
-			if (!this.our.members.get(message.author.id))
-				return this.send(message.author, `You must be a member of the ${this.our.name} Discord server to use this bot!`);
+			if (!this.guild.members.get(message.author.id))
+				return this.send(message.author, `You must be a member of the ${this.guild.name} Discord server to use this bot!`);
 
 			console.log(`Received PM from @${this.getIdent(message.author)} (${message.author.id}), contents:\n${message.content}`);
 		}
@@ -204,9 +204,9 @@ class Server {
 				this.handleRulesRead(message);
 			}
 			// If the user is Staff and the message being sent starts with /edit then we allow it through
-			else if (!this.perm.isStaff.check(message.author.id) || message.content.trim().indexOf('/edit') !== 0){
+			else if (!(await this.perm.isStaff.check(message.author.id)) || message.content.trim().indexOf('/edit') !== 0){
 				// Notify in a PM if not already informed
-				if (!this.perm.informed.check(message.author.id))
+				if (!(await this.perm.informed.check(message.author.id)))
 					this.send(message.author, `You will not be able to chat on our server until you've read the rules in ${this.mention(this.findChannel('welcome'))}.`);
 			}
 			this.wipeMessage(message);
@@ -257,7 +257,7 @@ class Server {
 	 * @return {Promise}
 	 */
 	_roleAction(isAdding, user, rolename, reason){
-		return new Promise((resolve, reject) => {
+		return new Promise(async (resolve, reject) => {
 			const to = isAdding ? 'to' : 'from';
 			const role = this.findRole(rolename);
 			if (!role){
@@ -265,7 +265,7 @@ class Server {
 				console.error(`Trying to ${add} non-existing role "${rolename}" ${to} ${this.getIdent(user)}`);
 				return reject();
 			}
-			const member = this.findMember(user.id);
+			const member = await this.findMember(user.id);
 			if (!member){
 				console.error(`No member found with the ID ${user.id}`);
 				return reject();
@@ -314,7 +314,7 @@ class Server {
 		if (typeof this.client !== 'undefined')
 			this.client.user.setPresence({ afk });
 	}
-	getUserData(targetUser, args){
+	async getUserData(targetUser, args){
 		let user,
 			membership,
 			userIDregex = /^<@!?(\d+)>$/;
@@ -332,7 +332,7 @@ class Server {
 			else {
 				user = this.findUser(targetUser, 'username');
 				if (user === null){
-					membership = this.findMember(targetUser, 'nickname');
+					membership = await this.findMember(targetUser, 'nickname');
 					if (membership !== null)
 						user = membership.user;
 				}
@@ -346,7 +346,7 @@ class Server {
 
 		let data = {};
 		if (typeof membership === 'undefined')
-			membership = this.findMember(user.id);
+			membership = await this.findMember(user.id);
 		data.id = user.id;
 		data.username = user.username;
 		data.discriminator = user.discriminator;
@@ -587,19 +587,19 @@ class Server {
 	 * @return {Discord.Channel|null}
 	 */
 	findChannel(value, key = 'name'){
-		return key === 'id' ? this.our.channels.get(value) : this.our.channels.find(key, value);
+		return key === 'id' ? this.guild.channels.get(value) : this.guild.channels.find(key, value);
 	}
 	/**
 	 * @return {boolean}
 	 */
 	channelExists(value, key = 'name'){
-		return key === 'id' ? this.our.channels.get(value) instanceof Discord.Channel : this.our.channels.exists(key, value);
+		return key === 'id' ? this.guild.channels.get(value) instanceof Discord.Channel : this.guild.channels.exists(key, value);
 	}
 	/**
 	 * @return {Discord.Role|null}
 	 */
 	findRole(name){
-		return this.our.roles.find('name', name);
+		return this.guild.roles.find('name', name);
 	}
 	/**
 	 * @return {Discord.User|null}
@@ -610,8 +610,14 @@ class Server {
 	/**
 	 * @return {Discord.GuildMember|null}
 	 */
-	findMember(value, key = 'id'){
-		return key === 'id' ? this.our.members.get(value) : this.our.members.find(key, value);
+	async findMember(value, key = 'id'){
+		if (key === 'id'){
+			let member = this.guild.members.get(value);
+			if (typeof member === 'undefined')
+				member = await this.guild.fetchMember(value);
+			return member;
+		}
+		return this.guild.members.find(key, value);
 	}
 	/**
 	 * @param {Discord.User|Discord.TextChannel|Discord.Role} thing

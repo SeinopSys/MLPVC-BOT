@@ -10,10 +10,10 @@ module.exports = new Command({
 	allowPM: true,
 	action: args => {
 		let ids = [];
-		Server.our.channels.array().forEach(channel => {
+		Server.guild.channels.array().forEach(channel => {
 			ids.push(`├ ${channel.type === 'text' ? '#' : ' '}${channel.name} (${channel.id})`);
 		});
 		ids.push(ids.pop().replace('├','└'));
-		Server.reply(args.message, "```"+Server.our.name+" ("+Server.our.id+")\n"+ids.join('\n')+'```');
+		Server.reply(args.message, "```"+Server.guild.name+" ("+Server.guild.id+")\n"+ids.join('\n')+'```');
 	}
 });
