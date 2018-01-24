@@ -16,17 +16,20 @@ class Server {
 				return userID === config.OWNER_ID;
 			}),
 			isStaff: new Permission('Staff', userID => {
-				return this.findMember(userID).roles.exists('id', this.staffroleid);
+				const member = this.findMember(userID);
+				return typeof member === 'undefined' ? false : member.roles.exists('id', this.staffroleid);
 			}),
 			isMember: new Permission('Club Members', userID => {
-				return this.findMember(userID).roles.exists('name', 'Club Members');
+				const member = this.findMember(userID);
+				return typeof member === 'undefined' ? false : member.roles.exists('name', 'Club Members');
 			}),
 			everyone: new Permission('Everyone',function(){ return true }),
 			nonmembers: new Permission('Non-members', userID => {
 				return !this.perm.isStaff.check(userID) && !this.perm.isMember.check(userID);
 			}),
 			informed: new Permission('Informed', userID => {
-				return this.findMember(userID).roles.exists('name', 'Informed');
+				const member = this.findMember(userID);
+				return typeof member === 'undefined' ? false : member.roles.exists('name', 'Informed');
 			}),
 		};
 		this.aliases = require('../command-aliases');
