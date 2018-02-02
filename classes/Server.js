@@ -178,7 +178,45 @@ class Server {
 			process.exit();
 		});
 
+		this.client.on('guildMemberAdd',    member => this.updateWebsiteUserLink(member));
+		this.client.on('guildMemberRemove', member => this.updateWebsiteUserLink(member));
+		this.client.on('guildMemberUpdate', member => this.updateWebsiteUserLink(member));
+		this.client.on('userUpdate', async user => {
+			if (user.bot)
+				return;
+
+			const member = await this.findMember(user.id);
+			if (member !== null)
+				this.updateWebsiteUserLink(member);
+		});
+
 		console.info('~ Ready ~');
+	}
+	updateWebsiteUserLink(member){
+		if (member.guild.id !== this.guild.id)
+			return;
+		const userId = member.id;
+		unirest.post(`${config.SITE_ABSPATH}discord-connect/bot-update/${userId}`)
+			.header("Accept", "application/json")
+			.send({ key: config.WS_SERVER_KEY })
+			.end(result => {
+				let owner;
+				const message = `Updating linked user on the site failed for ID ${userId}`;
+				if (this.hasOwner)
+					owner = this.findUser(config.OWNER_ID);
+				if (result.error || typeof result.body !== 'object'){
+					console.error(result.error, result.body);
+					if (this.hasOwner)
+						this.send(owner, `${message} (HTTP ${result.status})`);
+					return;
+				}
+
+				let data = result.body;
+				if (data.status)
+					return;
+
+				this.send(owner, `${message}: ${data.message}`);
+			});
 	}
 	isPrivateChannel(channel){
 		if (typeof channel === 'string')
