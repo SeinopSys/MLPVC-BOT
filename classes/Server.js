@@ -59,6 +59,8 @@ class Server {
 	 */
 	commandPermCheck(command, authorID){
 		const cmd = command instanceof Command ? command : this.getCommand(command);
+		if (typeof this.perm[cmd.perm] === 'undefined')
+			throw new Error(`Permission function ${cmd.perm} not found`);
 		return this.perm[cmd.perm].check(authorID);
 	}
 	makeClient(){
