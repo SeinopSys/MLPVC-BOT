@@ -553,8 +553,12 @@ class Server {
 		console.log(`${this.getIdent(authorID)} ran ${messageText} from ${ranWhere} (M#${message.id})`);
 
 		if (!commandRegex.test(messageText)){
-			let matchingCommand = messageText.match(/^([!/]?\S+)/);
-			return message.reply('Invalid command'+(matchingCommand ? ': '+matchingCommand[1] : ''));
+			const matchingCommand = messageText.match(/^([!/]?\S+)/);
+			const text = 'Invalid command'+(matchingCommand ? ': '+matchingCommand[1] : '');
+			if (!silentFail)
+				message.reply(text);
+			else console.error(text);
+			return;
 		}
 		let commandMatch = messageText.match(commandRegex);
 		if (!commandMatch)
