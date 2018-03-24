@@ -24,7 +24,7 @@ module.exports = new Command({
 	usage: ['safe,o:asc', 'safe,rd o:asc', 'ts by:random', 'meme e:brief'],
 	perm: 'everyone',
 	allowPM: true,
-	action: args =>{
+	action: args => {
 		if (!args.argArr.length)
 			return Server.reply(args.message, util.reqparams(args.command));
 

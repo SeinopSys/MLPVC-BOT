@@ -5,7 +5,7 @@ const list = {
 	'version': 'ver',
 	'tutorials': 'tut',
 	'eval': 'e',
-	'nextep': 'horsewhen',
+	'nextep': ['horsewhen','cd'],
 	'youtube': 'yt',
 };
 
