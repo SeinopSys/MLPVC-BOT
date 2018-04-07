@@ -464,7 +464,7 @@ class Server {
 		return new Promise((res, rej) => {
 			const separator = ';';
 			const command = shellescape(`git log -1 --date=short --pretty=format:%h${separator}%cr`.split(' '));
-			exec(command, function(err, data){
+			exec(command, (err, data) => {
 				if (err){
 					console.error('Error getting commit data', err);
 					return rej(`Error while getting commit data\n${this.mentionOwner() ? ' may find more info in the logs' : ''}`);
