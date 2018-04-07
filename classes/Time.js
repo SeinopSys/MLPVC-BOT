@@ -14,9 +14,9 @@ class Time {
 		const
 			current = now.getTime(),
 			target = timestamp.getTime(),
-			diff = current - target;
+			diff = Math.abs(current - target);
 		let dur = moment.duration(diff),
-			d = { past: diff > 0 };
+			d = { past: current > target };
 
 		['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds'].forEach(unit => {
 			const singular = unit.replace(/s$/,'');
