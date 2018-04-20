@@ -45,8 +45,9 @@ module.exports = new Command({
 				const
 					member = await Server.findMember(args.author.id),
 					nsfwChannel = Server.findChannel('nsfw');
+
 				if (member.roles.get(Server.staffroleid))
-					return Server.send(args.author, `Because you have the Staff role you will see ${Server.mention(nsfwChannel)} no matter what.${action === 'leave' ? ` If you don't wand to see or be notified of new messages, right-click the channel and click \`Mute #nsfw\`` : ''}`);
+					Server.send(args.author, `**Note:** Because you have the Staff role you will see ${Server.mention(nsfwChannel)} no matter what.${action === 'leave' ? ` If you don't wand to see or be notified of new messages, right-click the channel and click \`Mute #nsfw\`` : ''}`);
 
 				if (action === 'join'){
 					if (member.roles.exists('name', nsfwRoleName))
@@ -55,17 +56,19 @@ module.exports = new Command({
 					Server.addRole(args.author, nsfwRoleName, '/nsfw join command').then(() => {
 						Server.send(nsfwChannel, util.replyTo(args.author, 'Welcome aboard. If at any point you wish to leave the channel, use `/nsfw leave`'));
 					}).catch(err => {
+						console.error(err);
 						Server.send(args.channel, Server.addErrorMessageToResponse(err, `Failed to join ${Server.mention(nsfwChannel)} channel`));
 					});
 				}
 				else {
-					if (member.roles.exists('name', nsfwRoleName))
-						return Server.send(args.authorID, `You haevn't revealed the NSFW channel yet. To join, send \`/nsfw join\` in any channel.`);
+					if (!member.roles.exists('name', nsfwRoleName))
+						return Server.send(args.author, `You haven't revealed the NSFW channel yet. To join, send \`/nsfw join\` in any channel.`);
 
 					Server.removeRole(args.author, nsfwRoleName, '/nsfw leave command').then(() => {
-						Server.send(nsfwChannel, util.replyTo(args.authorID, 'left the channel'));
+						Server.send(nsfwChannel, util.replyTo(args.author, 'left the channel'));
 					}).catch(err => {
-						Server.send(args.channel, Server.addErrorMessageToResponse(err, `Failed to leave ${Server.mention(Server.findChannel('nsfw'))} channel`));
+						console.error(err);
+						Server.send(args.channel, Server.addErrorMessageToResponse(err, `Failed to leave ${Server.mention(nsfwChannel)} channel`));
 					});
 				}
 				break;

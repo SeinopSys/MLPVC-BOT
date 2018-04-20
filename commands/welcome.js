@@ -1,6 +1,7 @@
 const
 	Command = require('../classes/Command'),
-	Server = require('../classes/Server');
+	Server = require('../classes/Server'),
+	util = require('../shared-utils');
 
 const failure = (err, args) => {
 	console.error(err);
@@ -21,7 +22,7 @@ module.exports = new Command({
 		if (user === false)
 			return;
 
-		Server.send(Server.findChannel('casual'), `Please welcome ${Server.mentionUser(user.id)} to our server!`, function(err){
+		Server.send(Server.findChannel('casual'), `Please welcome ${util.mentionUser(user.id)} to our server!`, function(err){
 			if (err)
 				failure(err, args);
 		});

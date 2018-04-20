@@ -335,8 +335,10 @@ class Server {
 	 * @return {Promise}
 	 */
 	send(channel, message, embed){
-		if (typeof channel.send !== 'function')
+		if (typeof channel.send !== 'function'){
+			console.error('Could not send message:', message);
 			throw new Error('Server.send expects a text-based channel');
+		}
 		return channel.send(message, {embed}).catch(err => {
 			console.error(err);
 			channel.send(`A message to this channel failed to send. ${this.mentionOwner()} should see what caused the issue in the logs.`);
@@ -349,7 +351,7 @@ class Server {
 	 * @return {Promise}
 	 */
 	reply(message, response, embed){
-		return this.send(message.channel, `${this.mentionUser(message.author.id)} ${response}`.trim(), embed);
+		return this.send(message.channel, `${util.mentionUser(message.author.id)} ${response}`.trim(), embed);
 	}
 	idle(afk = true){
 		if (typeof this.client !== 'undefined')
@@ -478,7 +480,7 @@ class Server {
 	}
 	addErrorMessageToResponse(err, response){
 		if (err)
-			response += '\n(' + (this.hasOwner ? this.mention(config.OWNER_ID) + ' ' : '') + err.message + (err.response ? ': ' + err.response.message : '') + ')';
+			response += '\n(' + (this.hasOwner ? util.mentionUser(config.OWNER_ID) + ' ' : '') + err.message + (err.response ? ': ' + err.response.message : '') + ')';
 		return response;
 	}
 	commandExists(command){
@@ -675,37 +677,19 @@ class Server {
 	 */
 	mention(thing){
 		if (thing instanceof Discord.User)
-			return this.mentionUser(thing.id);
+			return util.mentionUser(thing.id);
 		if (thing instanceof Discord.TextChannel)
-			return this.mentionChannel(thing.id);
+			return util.mentionChannel(thing.id);
 		if (thing instanceof Discord.Role)
-			return this.mentionRole(thing.id);
+			return util.mentionRole(thing.id);
 
 		throw new Error(`Cannot mention unknown object ${thing.constructor.name}`);
 	}
 	/**
 	 * @return {string}
 	 */
-	mentionUser(id){
-		return `<@!${id}>`;
-	}
-	/**
-	 * @return {string}
-	 */
-	mentionChannel(id){
-		return `<#${id}>`;
-	}
-	/**
-	 * @return {string}
-	 */
-	mentionRole(id){
-		return `<@&${id}>`;
-	}
-	/**
-	 * @return {string}
-	 */
 	mentionOwner(authorID){
-		return (this.hasOwner ? (config.OWNER_ID === authorID ? 'You' : this.mentionUser(config.OWNER_ID)) : 'The bot owner');
+		return (this.hasOwner ? (config.OWNER_ID === authorID ? 'You' : util.mentionUser(config.OWNER_ID)) : 'The bot owner');
 	}
 }
 

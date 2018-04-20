@@ -1,6 +1,7 @@
 const
 	Command = require('../classes/Command'),
 	Server = require('../classes/Server');
+	util = require('../shared-utils');
 
 module.exports = new Command({
 	name: 'fixnick',
@@ -37,7 +38,7 @@ module.exports = new Command({
 		let originalNick = targetUserData.nick.replace(/^(?:.*\(([a-zA-Z\d-]{1,20})\)|([a-zA-Z\d-]{1,20})\s\|.*)$/,'$1$2'),
 			nick = format.replace('da',originalNick).replace('disc',targetUserData.username);
 		targetUserData.member.setNickname(nick).then(() => {
-			Server.reply(args.message, `${args.authorID === targetUserData.id ? 'Your nickname' : `The nickname of ${Server.mentionUser(targetUserData.id)}`} has been updated to \`${nick}\``);
+			Server.reply(args.message, `${args.authorID === targetUserData.id ? 'Your nickname' : `The nickname of ${util.mentionUser(targetUserData.id)}`} has been updated to \`${nick}\``);
 		}).catch(e => {
 			if (e.message === 'Privilege is too low...')
 				return Server.reply(args.message, 'Changing nick failed: Due to Discord API limitations the bot can only set the nicks of users whose roles are under the bot\'s in the hierarchy.');
