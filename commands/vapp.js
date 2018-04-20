@@ -18,12 +18,12 @@ module.exports = new Command({
 			return new Promise(resolve =>{
 				switch (which){
 					case '+':
-						Server.addRole(args.author, role).catch(err =>{
+						Server.addRole(args.author, role).catch(err => {
 							Server.reply(args.message, util.addErrorMessageToResponse(err, `Failed to add ${role} role to ${Server.mention(args.author)}`));
 						}).then(resolve);
 					break;
 					case '-':
-						Server.removeRole(args.author, role).catch(err =>{
+						Server.removeRole(args.author, role).catch(err => {
 							Server.reply(args.message, util.addErrorMessageToResponse(err, `Failed to remove ${role} role from ${Server.mention(args.author)}`));
 						}).then(resolve);
 					break;

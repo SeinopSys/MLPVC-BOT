@@ -300,6 +300,7 @@ class Server {
 		return new Promise(async (resolve, reject) => {
 			const to = isAdding ? 'to' : 'from';
 			const role = this.findRole(rolename);
+			const action = isAdding ? 'addRole' : 'removeRole';
 			if (!role){
 				const add = isAdding ? 'add' : 'remove';
 				console.error(`Trying to ${add} non-existing role "${rolename}" ${to} ${this.getIdent(user)}`);
@@ -310,7 +311,7 @@ class Server {
 				console.error(`No member found with the ID ${user.id}`);
 				return reject();
 			}
-			member.addRole(role, reason).then(resolve).catch(err => {
+			member[action](role, reason).then(resolve).catch(err => {
 				const adding = isAdding ? 'adding' : 'removing';
 				console.error(`Error while ${adding} "${rolename}" role ${to} ${this.getIdent(user)}`, err);
 				reject(err);
@@ -500,7 +501,12 @@ class Server {
 	callCommand(message){
 		const
 			isPM = this.isPrivateChannel(message.channel),
-			{ author, authorID, channel, channelID, command, argStr, argArr, silentFail } = this.processCommand(message);
+			processed = this.processCommand(message);
+
+		if (!processed)
+			return;
+
+		const { author, authorID, channel, channelID, command, argStr, argArr, silentFail } = processed;
 
 		switch (command){
 			// Ignore Discord's own commands
