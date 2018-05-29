@@ -6,5 +6,6 @@ module.exports = {
 	YT_API_KEY: '',
 	MASHAPE_KEY: '',
 	SITE_ABSPATH: 'http://localhost/',
+	SITE_APIPATH: 'api/private',
 	LOCAL: true,
 };
