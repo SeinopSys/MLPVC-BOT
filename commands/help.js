@@ -2,7 +2,8 @@ const
 	fs = require('fs'),
 	table = require('text-table'),
 	Command = require('../classes/Command'),
-	Server = require('../classes/Server');
+	Server = require('../classes/Server'),
+	aliases = require('../command-aliases');
 
 module.exports = new Command({
 	name: 'help',
@@ -45,7 +46,7 @@ module.exports = new Command({
 				'__Usable by:__ '+Server.perm[cmd.perm].name+'\n'+
 				'__Usable in:__ '+(cmd.allowPM?"Server's channels and PMs":"Server's channels only (no PMs)")+'\n'+
 				'__Description:__\n'+(cmd.help.replace(/^(.)/gm,'\t\t$1'))+
-				(cmd.aliases?'\n__Aliases:__ `'+(cmd.aliases.join('`, `'))+'`':'')+
+				(aliases.list[cmd.name]?'\n__Aliases:__ `'+(aliases.list[cmd.name].join('`, `'))+'`':'')+
 				(usage.length?(typeof usage === 'string' ? `\n__Usage:__ ${usage}` : '\n__Usage, examples:__\n```\n'+(usage.join('\n'))+'\n```'):'')
 			);
 		}
