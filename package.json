@@ -20,5 +20,8 @@
     "zlib-sync": "^0.1.4"
   },
   "author": "SeinopSys <seinopsys@gmail.com> (https://github.com/SeinopSys)",
-  "private": true
+  "private": true,
+  "engines": {
+    "yarn": "YARN NO LONGER USED - use npm instead."
+  }
 }

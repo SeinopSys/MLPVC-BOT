@@ -1,5 +1,11 @@
 // jshint -W014
 'use strict';
+require("console-stamp")(console, {
+	formatter: function(){
+		return moment().format('YYYY-MM-DD HH:MM:ss.SSS');
+	},
+});
+
 const
 	moment = require('moment'),
 	config = require('./config'),
@@ -8,12 +14,6 @@ Array.prototype.randomElement = function(){ return this[Math.floor(Math.random()
 
 if (config.LOCAL === true && /^https:/.test(config.SITE_ABSPATH))
 	process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
-require("console-stamp")(console, {
-	formatter: function(){
-		return moment().format('YYYY-MM-DD HH:MM:ss.SSS');
-	},
-});
 
 process.on('unhandledRejection', r => console.error(r));
 process.on('SIGINT', () => {

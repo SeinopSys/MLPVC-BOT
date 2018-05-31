@@ -11,7 +11,7 @@ module.exports = new Command({
 		'Displays a list of available commands. Takes a command name as an additional parameter to provide detailed information on that specific command.\n' +
 		'If a command is specified as the first parameter and the second parameter is `here` the help text will be output inside the current channel instead of being sent via a PM (the parameter does nothing when the command is called via PM).',
 	perm: 'everyone',
-	usage: [true, 'google', 'cg', 'ver here'],
+	usage: [true, 'fixnick', 'cg', 'ver here'],
 	allowPM: true,
 	action: async args => {
 		if (typeof args.argArr[0] === 'string'){
