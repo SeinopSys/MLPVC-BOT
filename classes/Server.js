@@ -13,7 +13,7 @@ class Server {
 	constructor(){
 		this.perm = {
 			isOwner: new Permission('Bot Developer', userID => {
-				return userID === config.OWNER_ID;
+				return Promise.resolve(userID === config.OWNER_ID);
 			}),
 			isStaff: new Permission('Staff', async userID => {
 				const member = await this.findMember(userID);
@@ -25,7 +25,9 @@ class Server {
 			}),
 			everyone: new Permission('Everyone',function(){ return true }),
 			nonmembers: new Permission('Non-members', async userID => {
-				return !(await this.perm.isStaff.check(userID)) && !(await this.perm.isMember.check(userID));
+				const isStaff = await this.perm.isStaff.check(userID);
+				const isMember = await this.perm.isMember.check(userID);
+				return !isStaff && !isMember;
 			}),
 			informed: new Permission('Informed', async userID => {
 				const member = await this.findMember(userID);
@@ -500,7 +502,7 @@ class Server {
 
 		return require(moduleName);
 	}
-	callCommand(message){
+	async callCommand(message){
 		const
 			isPM = this.isPrivateChannel(message.channel),
 			processed = this.processCommand(message);
@@ -540,7 +542,8 @@ class Server {
 			return message.reply(`Command file \`${command}.js\` is exporting an invalid value${this.hasOwner ? '\n' + this.mentionOwner(authorID) + ' should see what caused this issue' : ''}`);
 		if (typeof cmd.action !== 'function')
 			return message.reply(`The specified command has no associated action`);
-		if (!this.commandPermCheck(cmd, authorID))
+		const hasPerm = await this.commandPermCheck(cmd, authorID);
+		if (!hasPerm)
 			return message.reply(`You don't have permission to use this command`);
 		if (isPM && cmd.allowPM !== true)
 			return this.reply(message, util.onserver);
