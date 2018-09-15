@@ -642,7 +642,7 @@ class Server {
 	 * @return {Discord.Channel|null}
 	 */
 	findChannel(value, key = 'name'){
-		return key === 'id' ? this.guild.channels.get(value) : this.guild.channels.find(key, value);
+		return key === 'id' ? this.guild.channels.get(value) : this.guild.channels.find(x => x[key] === value);
 	}
 	/**
 	 * @return {boolean}
@@ -654,13 +654,13 @@ class Server {
 	 * @return {Discord.Role|null}
 	 */
 	findRole(name){
-		return this.guild.roles.find('name', name);
+		return this.guild.roles.find(x => x.name === name);
 	}
 	/**
 	 * @return {Discord.User|null}
 	 */
 	findUser(value, key = 'id'){
-		return key === 'id' ? this.client.users.get(value) : this.client.users.find(key, value);
+		return key === 'id' ? this.client.users.get(value) : this.client.users.find(x => x[key] === value);
 	}
 	/**
 	 * @return {Discord.GuildMember|null}
@@ -672,7 +672,7 @@ class Server {
 				member = await this.guild.fetchMember(value);
 			return member;
 		}
-		return this.guild.members.find(key, value);
+		return this.guild.members.find(x => x[key] === value);
 	}
 	/**
 	 * @param {Discord.User|Discord.TextChannel|Discord.Role} thing
