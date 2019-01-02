@@ -7,6 +7,7 @@ const list = {
 	'eval':       ['e'],
 	'nextep':     ['horsewhen','cd'],
 	'youtube':    ['yt'],
+	'vectorapp':  ['vapp'],
 };
 
 const assoc = {};

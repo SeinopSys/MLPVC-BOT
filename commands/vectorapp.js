@@ -4,7 +4,7 @@ const
 	util = require('../shared-utils');
 
 module.exports = new Command({
-	name: 'vapp',
+	name: 'vectorapp',
 	help: 'Adds and removes roles related to vector apps. Use `+` or `-` before an app name to indicate add/remove.\nApp names:\n\t- `is`: Inkscape\n\t- `ai`: Illustrator',
 	perm: 'everyone',
 	usage: ['+ai', '+ai -is', '-is -ai'],
