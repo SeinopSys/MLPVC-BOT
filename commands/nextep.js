@@ -13,7 +13,7 @@ module.exports = new Command({
 	usage: [true],
 	allowPM: true,
 	action: args =>{
-		unirest.get(config.SITE_ABSPATH + config.SITE_APIPATH + '/episode/next')
+		unirest.get(config.SITE_ABSPATH + config.SITE_APIPATH + '/show/next')
 			.header("Accept", "application/json")
 			.end(function(result){
 				if (result.error || typeof result.body !== 'object'){
