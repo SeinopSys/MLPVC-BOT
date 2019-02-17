@@ -9,4 +9,4 @@
     #spoilers: Here you can talk about upcoming or recently aired episodes and movies, as well as the comics
     #superspoilers: This chanel is only open when major leaks happen to avoid posting such content in #spoilers
     #bot-sandbox: Here you can play around with the features of our very own bot, @me, without distrupting the conversation in other channels.
-    #nsfw: This room is invite-only, and as the name suggests, it's for discussing adult material and sensitive topics. You can use the command `/nsfw join` to enter and `/nsfw leave` to leave
+    #nsfw: This channel is for discussing adult material and sensitive topics. You will be given a warning message by Discord on your first visit which you'll need to accept before you can chat here.

@@ -362,8 +362,9 @@ class Server {
 	async getUserData(targetUser, args){
 		let user,
 			membership,
-			userIDregex = /^<@!?(\d+)>$/;
-		if (typeof targetUser !== 'string' || targetUser.trim().length === 0){
+			userIDregex = /^<@!?(\d+)>$/,
+			targetUserIsString = typeof targetUser === 'string';
+		if (!targetUserIsString || targetUser.trim().length === 0){
 			this.reply(args.message, 'The user identifier is missing');
 			return false;
 		}
@@ -371,16 +372,14 @@ class Server {
 			user = args.author;
 		else if (/^\d+$/.test(targetUser))
 			user = this.findUser(targetUser);
-		else if (typeof targetUser === 'string'){
-			if (userIDregex.test(targetUser))
-				user = this.findUser(targetUser.replace(userIDregex,'$1'));
-			else {
-				user = this.findUser(targetUser, 'username');
-				if (user === null){
-					membership = await this.findMember(targetUser, 'nickname');
-					if (membership !== null)
-						user = membership.user;
-				}
+		else if (userIDregex.test(targetUser))
+			user = this.findUser(targetUser.replace(userIDregex,'$1'));
+		else {
+			user = this.findUser(targetUser, 'username');
+			if (user === null){
+				membership = await this.findMember(targetUser, 'nickname');
+				if (membership !== null)
+					user = membership.user;
 			}
 		}
 
@@ -578,12 +577,6 @@ class Server {
 			command = commandMatch[1].toLowerCase(),
 			argStr = commandMatch[2] ? commandMatch[2].trim() : '',
 			argArr = argStr ? argStr.split(/\s+/) : [];
-
-		if (command === 'join' && argStr.trim().toLowerCase() === 'nsfw'){
-			command = 'nsfw';
-			argStr = 'join';
-			argArr = [argStr];
-		}
 
 		return { author, authorID, channel, channelID, command, argStr, argArr, silentFail };
 	}
