@@ -1,12 +1,13 @@
 const list = {
-	'colorguide': ['cg','guide','colors'],
-	'define':     ['def'],
-	'derpibooru': ['db','derpi'],
-	'version':    ['ver'],
-	'tutorials':  ['tut'],
-	'eval':       ['e'],
-	'nextep':     ['horsewhen','cd'],
-	'vectorapp':  ['vapp'],
+	'colorguide':  ['cg','guide','colors'],
+	'define':      ['def'],
+	'derpibooru':  ['db','derpi'],
+	'version':     ['ver'],
+	'tutorials':   ['tut'],
+	'eval':        ['e'],
+	'nextep':      ['horsewhen','cd'],
+	'vectorapp':   ['vapp'],
+	'welcomemsg':  ['wm'],
 };
 
 const assoc = {};

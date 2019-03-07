@@ -485,18 +485,21 @@ class Server {
 		return response;
 	}
 	commandExists(command){
-		return fs.existsSync(util.root+`/commands/${command}.js`) || typeof this.aliases.assoc[command] !== 'undefined';
+		return fs.existsSync(`${util.root}/commands/${command}.js`) || typeof this.aliases.assoc[command] !== 'undefined';
 	}
 	getCommand(command){
-		let
-			path = `${util.root}/commands/${command}.js`,
-			moduleName;
-		if (fs.existsSync(path))
-			moduleName = path;
-		else  moduleName = `${util.root}/commands/${this.aliases.assoc[command]}.js`;
+		let moduleName;
+		try {
+			moduleName = require.resolve(`${util.root}/commands/${command}`);
+		} catch(e) {
+			try {
+				moduleName = require.resolve(`${util.root}/commands/${this.aliases.assoc[command]}`);
+			}
+			catch (e) { }
+		}
 
 		// Invalidate cached command code
-		if (typeof require.cache[moduleName] !== 'undefined')
+		if (moduleName && typeof require.cache[moduleName] !== 'undefined')
 			delete require.cache[moduleName];
 
 		return require(moduleName);
