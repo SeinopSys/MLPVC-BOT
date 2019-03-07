@@ -4,6 +4,7 @@
 
 **3.** We do not have any formal rules as of yet, but kindly try to keep topics in their respective chat rooms. Use your notification settings (Screenshot: <https://goo.gl/WdRVUm>) to mute any channels you don't want to be notified of new messages in.
     #casual: This is the place for discussions of all kind, but strictly SFW. You can also share art, music, or funny pictures with the rest of the members
+    #games: If possible, keep gaming-related discussion in this channel to avoid disrupting the conversation in #casual. If you want to notify others about game deals and discounts this is the place to do so.
     #vectors: Request critique, suggestions or help with vectors - for all vector editing applications
     #support: Ask questions about the request/color guide site, the group, or the Discord server
     #spoilers: Here you can talk about upcoming or recently aired episodes and movies, as well as the comics
