@@ -12,6 +12,7 @@ module.exports = new Command({
 		if (!args.isPM)
 			Server.wipeMessage(args.message);
 
-		Server.send(args.author, '__**Server rules:**__\n\n'+Server.getRules());
+    const rulesText = `__**Server rules:**__\n\n${Server.getRules()}`;
+    Server.sendSlices(args.author, rulesText);
 	},
 });

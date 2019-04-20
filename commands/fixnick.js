@@ -42,10 +42,10 @@ module.exports = new Command({
 		}).catch(e => {
 			if (e.message === 'Privilege is too low...')
 				return Server.reply(args.message, 'Changing nick failed: Due to Discord API limitations the bot can only set the nicks of users whose roles are under the bot\'s in the hierarchy.');
-			const nickmatch = /Must be (\d+)/;
+			const lengthMatch = /Must be (\d+)/;
 			console.error(e);
-			if (nickmatch.test(e.message))
-				return Server.reply(args.message, `The resulting nickname (\`${nick}\`) exceeds Discord's ${e.message.match(nickmatch)[1]} character limit.`);
+			if (lengthMatch.test(e.message))
+				return Server.reply(args.message, `The resulting nickname (\`${nick}\`) exceeds Discord's ${e.message.match(lengthMatch)[1]} character limit.`);
 			return Server.reply(args.message, `Changing nick failed.\`\`\`${e.message})\`\`\``);
 		});
 	},

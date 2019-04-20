@@ -172,7 +172,7 @@ class Server {
 				this.client.user.setPresence({ game: { name: 'a local  version' } });
 			else this.getGitData(config.OWNER_ID,config.OWNER_ID).then(data => {
 				this.client.user.setPresence({ game: { name: `version ${data.hash}` } });
-			}).catch(e => {
+			}).catch(() => {
 				// Ignored, because the function already logs an error to the console
 			});
 		}
@@ -347,6 +347,17 @@ class Server {
 		});
 	}
 	/**
+	 * @param {Discord.TextBasedChannel} channel
+	 * @param {string[]} message
+	 * @return {Promise}
+	 */
+	async sendSlices(channel, message){
+		const messageSlices = message.split(/-----/g);
+    while (messageSlices.length){
+      await this.send(channel, messageSlices.splice(0, 1)[0]);
+    }
+	}
+	/**
 	 * @param {Discord.Message} message
 	 * @param {string} response
 	 * @param {Discord.RichEmbed} embed
@@ -378,8 +389,11 @@ class Server {
 			user = this.findUser(targetUser, 'username');
 			if (user === null){
 				membership = await this.findMember(targetUser, 'nickname');
-				if (membership !== null)
-					user = membership.user;
+				if (membership === null) {
+					this.reply(args.message, `Could not find server member based on the following nickname: \`${targetUser}\``);
+					return false;
+				}
+				user = membership.user;
 			}
 		}
 

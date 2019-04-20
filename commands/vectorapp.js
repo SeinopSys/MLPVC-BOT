@@ -9,11 +9,11 @@ module.exports = new Command({
 	perm: 'everyone',
 	usage: ['+ai', '+ai -is', '-is -ai'],
 	allowPM: true,
-	action: args =>{
+	action: args => {
 		if (args.argArr.length < 1)
-			return Server.reply(args.message, 'This command requires at least 1 argument');
+			return Server.reply(args.message, 'This command requires at least 1 argument, see `/help '+args.command+'`');
 		if (args.argArr.length > 2)
-			return Server.reply(args.message, 'This command does not accept more than 2 arguments');
+			return Server.reply(args.message, 'This command does not accept more than 2 arguments, see `/help '+args.command+'`');
 		const action = (which, role) =>{
 			return new Promise(resolve =>{
 				switch (which){
