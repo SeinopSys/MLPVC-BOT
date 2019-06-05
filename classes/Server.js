@@ -46,13 +46,7 @@ class Server {
 				"Nu-uh",
 				"Nope",
 				"Nah",
-			],
-			cgSunset: [
-				"It's in the plans, but the iTunes Raw 1080p version isn't available yet. PLease be patient, we'll let everyone know when it's done.",
-				"Not yet, but it's on guild radar.",
-				"There isn't one yet, but rest assured it'll be made as soon as we can pick accurate colors for her.",
-				"Patience is a virtue.",
-			],
+			]
 		};
 	}
 	/**
@@ -616,10 +610,7 @@ class Server {
 				query = (match[1]||match[2]).replace(eqgTest, '').trim(),
 				eqg = eqgTest.test(normalized);
 
-			if (!eqg && /\bsunset(?:\s?shimmer)?/.test(query))
-				return this.reply(this.interactions.cgSunset.randomElement());
-
-			unirest.get(config.SITE_ABSPATH+'cg'+(eqg?'/eqg':'')+'/1?js=true&q='+encodeURIComponent(query)+'&GOFAST=true')
+			unirest.get(`${config.SITE_ABSPATH}api/private/cg/appearances?q=${encodeURIComponent(query)}&EQG=${eqg ? 'true' : 'false'}`)
 				.header("Accept", "application/json")
 				.end(result => {
 					if (result.error || typeof result.body !== 'object'){
