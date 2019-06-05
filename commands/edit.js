@@ -5,7 +5,7 @@ const
 
 module.exports = new Command({
 	name: 'edit',
-	help: 'Allows editing messages posted by the bot in the current channel. The first parameter is a message ID, which you can get by turning on Developer mode in Discord settings, then right-clikcing a message and selecting "Copy ID", and the second parameter is a replacement command, where the first character is a separator, followed by a pattern, the sepearator, the replacement string and the separator again, optionally followed by flags.\nFlags are identical to the ones shown here: <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp#Parameters>\nThe only exception is the `g`flag, which is enabled by default even if it\'s not specified. Passing an uppercase `G` in the flags will disable the automatic `g` flag.',
+	help: 'Allows editing messages posted by the bot in the current channel. The first parameter is a message ID, which you can get by turning on Developer mode in Discord settings, then right-clicking a message and selecting "Copy ID", and the second parameter is a replacement command, where the first character is a separator, followed by a pattern, the separator, the replacement string and the separator again, optionally followed by flags.\nFlags are identical to the ones shown here: <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp#Parameters>\nThe only exception is the `g` flag, which is enabled by default even if it\'s not specified. Passing an uppercase `G` in the flags will disable the automatic `g` flag.',
 	perm: 'isStaff',
 	usage: ['98713564826483 |this|that|','92384962349237 |first occurrence|1st occurrence|G'],
 	allowPM: false,
