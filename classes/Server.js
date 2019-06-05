@@ -620,14 +620,12 @@ class Server {
 
 					let data = result.body;
 
-					if (!data.status){
-						console.error(`Color guide not found for "${query}" because: ${data.message}`);
-						if (data.unavail === true)
-							return;
+					if (data.status === false || data.length < 1){
+						console.error(`Color guide not found for "${query}" because: ${data.message || JSON.stringify(data)}`);
 						return this.reply(message, this.interactions.cgnotfound.randomElement());
 					}
 
-					this.reply(message, this.interactions.cgfound.randomElement()+' '+config.SITE_ABSPATH+(data.goto.substring(1)));
+					this.reply(message, this.interactions.cgfound.randomElement()+' '+config.SITE_ABSPATH+(data[0].url.substring(1)));
 				});
 			return;
 		}
