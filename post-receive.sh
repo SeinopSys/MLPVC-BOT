@@ -3,13 +3,14 @@ read oldrev newrev refname
 echo "Push triggered update to revision $newrev ($refname)"
 
 GIT="env -i git"
-CMD_PWD="cd .. && pwd"
+CMD_CD="cd .."
 CMD_FETCH="$GIT fetch"
 CMD_NPM="npm install --production --no-save"
 CMD_RESTART="pm2 restart pm2.json"
 
-echo "$ $CMD_PWD"
-eval $CMD_PWD
+echo "$ $CMD_CD"
+eval $CMD_CD
+pwd
 echo "$ $CMD_FETCH"
 eval $CMD_FETCH
 
