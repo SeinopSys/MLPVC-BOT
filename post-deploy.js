@@ -4,7 +4,7 @@ const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 
 async function createVersionsFile(filename) {
-  const output = (await exec('git log -1 --date=short  --pretty="format:%h;%cr"')).stdout.toString();
+  const output = (await exec('env -i git log -1 --date=short  --pretty="format:%h;%cr"')).stdout.toString();
   const [commitId, commitAgo] = output.trim().split(';');
 
   const content =
