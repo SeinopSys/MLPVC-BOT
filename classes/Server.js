@@ -126,7 +126,7 @@ class Server {
 		console.info('Found our server (Name: '+this.guild.name+')');
 
 		const staffRole = this.findRole('Staff');
-		if (false === staffRole instanceof Discord.Role)
+		if (!staffRole instanceof Discord.Role)
 			console.warn('A role with the name of Staff must exist to enable admin-only functionality.');
 		else {
 			this.staffroleid = staffRole.id;
@@ -475,7 +475,7 @@ class Server {
 	getGitData(){
 		return new Promise((res, rej) => {
 			const separator = ';';
-			const command = shellescape(`git log -1 --date=short --pretty=format:%h${separator}%cr`.split(' '));
+			const command = shellescape(`env -i git log -1 --date=short --pretty=format:%h${separator}%cr`.split(' '));
 			exec(command, { cwd: util.root }, (err, data) => {
 				if (err){
 					console.error('Error getting commit data', err);
@@ -548,7 +548,7 @@ class Server {
 		}
 
 		const cmd = this.getCommand(command);
-		if (false === cmd instanceof Command)
+		if (!cmd instanceof Command)
 			return message.reply(`Command file \`${command}.js\` is exporting an invalid value${this.hasOwner ? '\n' + this.mentionOwner(authorID) + ' should see what caused this issue' : ''}`);
 		if (typeof cmd.action !== 'function')
 			return message.reply(`The specified command has no associated action`);

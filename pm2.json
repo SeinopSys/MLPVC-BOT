@@ -3,7 +3,6 @@
 		{
 			"name": "PennyCurve",
 			"script": "./discord-bot.js",
-			"cwd": ".",
 			"node_args": "--max-old-space-size=128",
 			"log_date_format": "YYYY-MM-DD HH:mm:ss Z"
 		}

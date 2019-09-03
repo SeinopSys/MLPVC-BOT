@@ -20,8 +20,8 @@ module.exports = {
 	replyTo: (author, message) => `${mentionUser(author.id)} ${message}`,
 	reqparams: cmd => `This command requires additional parameters. Use \`/help ${cmd}\` for more information.`,
 	onserver: 'This command must be run from within a channel on our server.',
+	root: __dirname.replace(/[\\\/]$/,''),
 	mentionUser,
 	mentionChannel,
 	mentionRole,
-	...require('./git'),
 };
