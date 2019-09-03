@@ -1,7 +1,7 @@
 {
-  "name": "mlpvc-bot",
+  "name": "pennycurve",
   "version": "1.0.0",
-  "description": "Discord bot for MLPVC-RR",
+  "description": "Chat bot for the MLP Vector Club's Discord server",
   "dependencies": {
     "chalk": "^2.4.0",
     "console-stamp": "^0.2.4",
@@ -19,8 +19,5 @@
     "zlib-sync": "^0.1.4"
   },
   "author": "SeinopSys <seinopsys@gmail.com> (https://github.com/SeinopSys)",
-  "private": true,
-  "engines": {
-    "yarn": "YARN NO LONGER USED - use npm instead."
-  }
+  "private": true
 }

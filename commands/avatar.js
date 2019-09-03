@@ -7,7 +7,7 @@ module.exports = new Command({
 	name: 'avatar',
 	help: "This command can be used to change the bot's avatar by passing an image URL, or set it back to the default by passing `reset`.",
 	perm: 'isStaff',
-	usage: ['http://placehold.it/300x300/000000/ffffff.png?text=MLPVC-BOT', 'reset'],
+	usage: ['http://placehold.it/300x300/000000/ffffff.png?text=Penny%20Curve', 'reset'],
 	allowPM: true,
 	action: args => {
 		let url = args.argStr.trim(),

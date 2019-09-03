@@ -1,6 +1,6 @@
-# MLPVC-BOT
+# Penny Curve
 
-Discord chat bot written in Node.js for [https://github.com/ponydevs/MLPVC-RR](https://github.com/ponydevs/MLPVC-RR) using [discord.js](https://www.npmjs.com/package/discord.js)
+Chat bot written in Node.js (using [discord.js](https://www.npmjs.com/package/discord.js)) for the [MLP Vector Club](https://github.com/MLP-VectorClub)'s Discord server 
 
 ```
 $ sudo npm install -g pm2

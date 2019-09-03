@@ -10,7 +10,7 @@ module.exports = new Command({
 	allowPM: true,
 	action: args => {
 		Server.getGitData().then(data => {
-			Server.reply(args.message, `Bot is running version \`${data.hash}\` created ${data.timeago}\nView commit on GitHub: http://github.com/ponydevs/MLPVC-BOT/commit/${data.hash}`);
+			Server.reply(args.message, `Bot is running version \`${data.hash}\` created ${data.timeago}\nView commit on GitHub: https://github.com/MLP-VectorClub/PennyCurve/commit/${data.hash}`);
 		}).catch(e => {
 			Server.reply(args.message, e);
 		});
