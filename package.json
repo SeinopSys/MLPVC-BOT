@@ -2,6 +2,9 @@
   "name": "pennycurve",
   "version": "1.0.0",
   "description": "Chat bot for the MLP Vector Club's Discord server",
+  "scripts": {
+    "write-git-info": "node post-deploy.js"
+  },
   "dependencies": {
     "chalk": "^2.4.0",
     "console-stamp": "^0.2.4",
