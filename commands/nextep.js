@@ -12,7 +12,7 @@ module.exports = new Command({
 	perm: 'everyone',
 	usage: [true],
 	allowPM: true,
-	action: args =>{
+	action: args => {
 		unirest.get(config.SITE_ABSPATH + config.SITE_APIPATH + '/show/next')
 			.header("Accept", "application/json")
 			.end(function(result){
@@ -23,8 +23,18 @@ module.exports = new Command({
 
 				const data = result.body;
 
-				if (!data.status)
+				if (!data.status) {
+					if (data.hiatus){
+						const dbSearchQuery = 'animated, safe, crying, sad, -happy, -webm, screencap, -meme, -text, -telekinesis, -star tracker';
+						unirest.get(`https://derpibooru.org/search.json?q=${dbSearchQuery}&filter_id=8575&sf=random&perpage=1`)
+							.header("Accept", "application/json")
+							.end(function(result){
+								Server.reply(args.message, 'https:' + result.body.search[0].representations.full);
+							});
+						return;
+					}
 					return Server.reply(args.message, data.message);
+				}
 
 				const
 					which = data.episode === 1 ? 'first' : nth.appendSuffix(data.episode),
