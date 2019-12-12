@@ -9,7 +9,7 @@ const failure = (err, args) => {
 
 module.exports = new Command({
   name: 'welcomemsg',
-  help: `Sends the welcome message to the ${Server.mention(Server.findChannel('welcome'))} channel.`,
+  help: () => `Sends the welcome message to the ${Server.mention(Server.findChannel('welcome'))} channel.`,
   perm: 'isStaff',
   usage: [true],
   allowPM: true,
@@ -32,7 +32,7 @@ module.exports = new Command({
 
       // Notify the staff channel
       Server.send(Server.findChannel('staffchat'), `${Server.mention(args.author)} updated the rules in ${Server.mention(welcomeChannel)}`);
-    } catch (err){
+    } catch (err) {
       console.log('fail', err);
       failure(err, args);
     }

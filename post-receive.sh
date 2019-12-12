@@ -14,10 +14,10 @@ echo "$ $CMD_FETCH"
 eval $CMD_FETCH
 
 if $GIT diff --name-only $oldrev $newrev | grep "^package-lock.json"; then
-	echo "$ $CMD_NPM"
-	eval $CMD_NPM
+  echo "$ $CMD_NPM"
+  eval $CMD_NPM
 else
-	echo "# Skipping npm install, lockfile not modified"
+  echo "# Skipping npm install, lockfile not modified"
 fi
 
 echo "$ $CMD_RESTART"
