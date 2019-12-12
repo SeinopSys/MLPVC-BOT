@@ -5,7 +5,7 @@ const
 
 module.exports = new Command({
   name: 'casual',
-  help: () => `Politely asks everyone in the room to move to the ${Server.mention(Server.findChannel('asdasdasdasdasdsads'))} channel (does nothing in said channel)`,
+  help: () => `Politely asks everyone in the room to move to the ${Server.mention(Server.findChannel('casual'))} channel (does nothing in said channel)`,
   perm: 'everyone',
   usage: [true],
   allowPM: false,
