@@ -8,6 +8,7 @@ const list = {
   'nextep': ['horsewhen', 'cd'],
   'vectorapp': ['vapp'],
   'welcomemsg': ['wm'],
+  'help': ['cmds','commands'],
 };
 
 const assoc = {};
