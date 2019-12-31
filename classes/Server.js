@@ -432,13 +432,13 @@ class Server {
   }
 
   respondWithDerpibooruImage(args, image, brief = false) {
-    if (!image.is_rendered)
+    if (!image.processed)
       return this.reply(args.message, 'The requested image is not yet processed by Derpibooru, please try again in a bit');
 
-    const tagArray = image.tags.split(', ');
+    const tagArray = image.tags;
     const url = `https://derpibooru.org/${image.id}`;
     const isImage = /^image\//.test(image.mime_type);
-    const format = image.original_format.toUpperCase();
+    const format = image.format.toUpperCase();
     const maxArtists = 8, maxDescriptionLength = 256;
 
     let artists = tagArray.filter(t => /^artist:/.test(t)),
@@ -477,7 +477,7 @@ class Server {
       embed.addField('Comments', this.derpiStatValue(image.comment_count), true);
     }
     if (isImage) {
-      embed.setImage(`https:${image.image}`);
+      embed.setImage(image.view_url);
     } else {
 
       embed.setThumbnail(`https://via.placeholder.com/160/E2EBF2/3D92D0?text=${format}`);

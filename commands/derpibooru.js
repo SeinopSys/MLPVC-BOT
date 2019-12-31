@@ -72,7 +72,7 @@ module.exports = new Command({
         }
 
         let data = result.body;
-        if (typeof data.search === 'undefined' || typeof data.search[0] === 'undefined')
+        if (typeof data.images === 'undefined' || typeof data.images[0] === 'undefined')
           return Server.reply(args.message, 'Derpibooru search returned no results.' +
             (
               /(questionable|explicit|grimdark|grotesque)/.test(query) && !inNSFW ?
@@ -80,7 +80,7 @@ module.exports = new Command({
             ) + ' Don\'t forget that artist and OC tags need to be prefixed with `artist:` and `oc:` respectively.'
           );
 
-        Server.respondWithDerpibooruImage(args, data.search[0], briefEmbed);
+        Server.respondWithDerpibooruImage(args, data.images[0], briefEmbed);
       });
   },
 });
