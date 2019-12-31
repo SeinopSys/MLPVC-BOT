@@ -10,7 +10,7 @@ module.exports = new Command({
   usage: [true],
   allowPM: true,
   action: args => {
-    unirest.get('https://derpibooru.org/images/1308747.json')
+    unirest.get('https://derpibooru.org/api/v1/json/images/1308747')
       .header("Accept", "application/json")
       .end(function (result) {
         if (result.error || typeof result.body !== 'object') {

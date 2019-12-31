@@ -448,7 +448,7 @@ class Server {
       author.name = artists.slice(0, maxArtists).map(t => t.replace(/^artist:/, '')).join(', ');
       if (artistCount > maxArtists)
         author.name += `, \u2026 (${artistCount - maxArtists} more)`;
-      author.url = artistCount > 1 ? url : `https://derpibooru.org/search?q=${encodeURIComponent(artists[0])}`;
+      author.url = artistCount > 1 ? url : `https://derpibooru.org/api/v1/json/search/images?q=${encodeURIComponent(artists[0])}`;
     }
 
     const embed = new Discord.RichEmbed({

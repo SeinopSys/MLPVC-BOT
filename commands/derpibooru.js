@@ -56,36 +56,10 @@ module.exports = new Command({
       let sortby = query.match(sortbyTest);
       query = query.replace(sortbyTest, '').trim();
       extra += '&sf=' + sortby[1];
-      if (!query.length && sortby[1] === 'random') {
-        console.log('Derpi search for random image (without tags)');
-        return unirest.get('https://derpibooru.org/images/random.json')
-          .header("Accept", "application/json")
-          .end(function (result) {
-            if (result.error || typeof result.body !== 'object') {
-              console.log(result.error, result.body);
-              return Server.respond(args.channelID, util.replyTo(args.userID, 'Derpibooru random image search failed (HTTP ' + result.status + '). ' + Server.mentionOwner(args.userID) + ' should see what caused the issue in the logs.'));
-            }
-
-            let data = result.body;
-            if (typeof data.id === 'undefined')
-              return Server.respond(args.channelID, util.replyTo(args.userID, 'Failed to get random Derpibooru image ID'));
-
-            unirest.get('https://derpibooru.org/images/' + data.id + '.json')
-              .header("Accept", "application/json")
-              .end(function (result) {
-                if (result.error || typeof result.body !== 'object') {
-                  console.log(result.error, result.body);
-                  return Server.respond(args.channelID, util.replyTo(args.userID, 'Derpibooru random image data retrieval failed (HTTP ' + result.status + '). ' + Server.mentionOwner(args.userID) + ' should see what caused the issue in the logs.'));
-                }
-
-                Server.respondWithDerpibooruImage(args, result.body);
-              });
-          });
-      }
     }
 
     query = query.replace(/,{2,}/g, ',').trim().replace(/(^,|,$)/, '');
-    let url = 'https://derpibooru.org/search.json?q=' + encodeURIComponent(query) + extra;
+    let url = 'https://derpibooru.org/api/v1/json/search/images?q=' + encodeURIComponent(query) + extra;
     if (returnAsLink)
       return Server.reply(args.message, url.replace('/search.json', '/search'));
     console.info('Derpi search for ' + chalk.blue(url));

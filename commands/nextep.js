@@ -25,7 +25,7 @@ module.exports = new Command({
         if (!data.status) {
           if (data.hiatus) {
             const dbSearchQuery = 'animated, safe, crying, sad, -happy, -webm, screencap, -meme, -text, -telekinesis, -star tracker';
-            unirest.get(`https://derpibooru.org/search.json?q=${dbSearchQuery}&filter_id=8575&sf=random&perpage=1`)
+            unirest.get(`https://derpibooru.org/api/v1/json/search/images?q=${dbSearchQuery}&filter_id=8575&sf=random&perpage=1`)
               .header("Accept", "application/json")
               .end(function (result) {
                 Server.reply(args.message, 'https:' + result.body.search[0].representations.full);
