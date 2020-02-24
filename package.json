@@ -8,7 +8,7 @@
   "dependencies": {
     "chalk": "^2.4.0",
     "console-stamp": "^0.2.4",
-    "discord.js": "^11.4.2",
+    "discord.js": "^11.5.1",
     "dotenv": "^8.2.0",
     "erlpack": "github:discordapp/erlpack",
     "moment": "^2.22.2",
