@@ -41,7 +41,9 @@ module.exports = new Command({
     args.argArr.forEach(arg => {
       const match = arg.match(/^([+-])(ai|is)$/);
       if (!match) {
-        Server.reply(args.message, 'Invalid argument: `' + arg + '`');
+        if (typeof rolemap[arg] !== 'undefined')
+          Server.reply(args.message, "Don't forget to add `+` to add or `-` to remove the respective role!");
+        else Server.reply(args.message, 'Invalid argument: `' + arg + '`');
         return (cont = false);
       }
 

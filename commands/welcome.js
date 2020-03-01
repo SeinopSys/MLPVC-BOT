@@ -3,11 +3,6 @@ const
   Server = require('../classes/Server'),
   util = require('../shared-utils');
 
-const failure = (err, args) => {
-  console.error(err);
-  args.channel.send(`A message to ${Server.mention(Server.findChannel('casual'))} failed to send. (HTTP ${err.statusCode})\n${Server.mentionOwner(args.authorID)} should see what caused the issue in the logs.`);
-};
-
 module.exports = new Command({
   name: 'welcome',
   help: () => `Welcomes the specified user as the bot`,
@@ -22,9 +17,6 @@ module.exports = new Command({
     if (user === false)
       return;
 
-    Server.send(Server.findChannel('casual'), `Please welcome ${util.mentionUser(user.id)} to our server!`, function (err) {
-      if (err)
-        failure(err, args);
-    });
+    Server.send(Server.findChannel('casual'), `Please welcome ${util.mentionUser(user.id)} to our server!`);
   }
 });

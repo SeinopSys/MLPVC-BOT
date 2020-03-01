@@ -18,7 +18,7 @@ module.exports = new Command({
       Server.wipeMessage(args.message);
 
     const welcomeChannel = Server.findChannel('welcome');
-    const oldMessages = await welcomeChannel.fetchMessages();
+    const oldMessages = await welcomeChannel.messages.fetch({ limit: 10 });
 
     try {
       // Post rules to #welcome

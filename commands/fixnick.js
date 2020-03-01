@@ -46,13 +46,13 @@ module.exports = new Command({
     targetUserData.member.setNickname(nick).then(() => {
       Server.reply(args.message, `${args.authorID === targetUserData.id ? 'Your nickname' : `The nickname of ${util.mentionUser(targetUserData.id)}`} has been updated to \`${nick}\``);
     }).catch(e => {
-      if (e.message === 'Privilege is too low...')
+      if (e.code === 50013)
         return Server.reply(args.message, 'Changing nick failed: Due to Discord API limitations the bot can only set the nicks of users whose roles are under the bot\'s in the hierarchy.');
       const lengthMatch = /Must be (\d+)/;
       console.error(e);
       if (lengthMatch.test(e.message))
         return Server.reply(args.message, `The resulting nickname (\`${nick}\`) exceeds Discord's ${e.message.match(lengthMatch)[1]} character limit.`);
-      return Server.reply(args.message, `Changing nick failed.\`\`\`${e.message})\`\`\``);
+      return Server.reply(args.message, `Changing nick failed.\`\`\`${e.message}\`\`\``);
     });
   },
 });

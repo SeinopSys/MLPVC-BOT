@@ -16,11 +16,11 @@ class Server {
       }),
       isStaff: new Permission('Staff', async userID => {
         const member = await this.findMember(userID);
-        return member.roles.some(el => el.id === this.staffroleid);
+        return member.roles.cache.some(el => el.id === this.staffroleid);
       }),
       isMember: new Permission('Club Members', async userID => {
         const member = await this.findMember(userID);
-        return member.roles.some(el => el.name === 'Club Members');
+        return member.roles.cache.some(el => el.name === 'Club Members');
       }),
       everyone: new Permission('Everyone', function () {
         return true
@@ -32,7 +32,7 @@ class Server {
       }),
       informed: new Permission('Informed', async userID => {
         const member = await this.findMember(userID);
-        return member.roles.some(el => el.name === 'Informed');
+        return member.roles.cache.some(el => el.name === 'Informed');
       }),
     };
     this.aliases = require('../command-aliases');
@@ -73,7 +73,8 @@ class Server {
         Discord.Constants.Events.TYPING_STOP,
       ]
     });
-    this.client.login(process.env.DISCORD_BOT_TOKEN).then(() => {
+    this.client.login(process.env.DISCORD_BOT_TOKEN);
+    this.client.on('ready', () => {
       this.account();
     });
   }
@@ -82,7 +83,7 @@ class Server {
     this.idle(false);
     console.info(`Using account ${this.getIdent()} (ID: ${this.client.user.id})`);
 
-    let serverIDs = this.client.guilds.array(),
+    let serverIDs = this.client.guilds.cache.array(),
       getClientID = function () {
         if (typeof process.env.DISCORD_CLIENT_ID === 'undefined') {
           console.error('DISCORD_CLIENT_ID configuration option is not set, exiting');
@@ -109,7 +110,7 @@ class Server {
       return;
     }
 
-    let _theServer = this.client.guilds.get(process.env.SERVER_ID);
+    let _theServer = this.client.guilds.cache.get(process.env.SERVER_ID);
 
     if (typeof _theServer === 'undefined') {
       console.error('Home server not configured, listing currently joined servers:');
@@ -154,20 +155,15 @@ class Server {
       this.onMessage(message);
     });
 
-    this.client.on('raw', data => {
-      if (data.t !== 'MESSAGE_UPDATE' || typeof data.d.author === 'undefined')
-        return;
-
-      const channel = this.findChannel(data.d.channel_id, 'id');
-      const message = new Discord.Message(channel, data.d, this.client);
+    this.client.on('messageUpdate', (_, message) => {
       this.onMessage(message);
     });
 
     if (this.hasOwner) {
       if (process.env.LOCAL === 'true')
-        this.client.user.setPresence({game: {name: 'a local  version'}});
+        this.client.user.setPresence({activity: {name: 'a local  version'}});
       else this.getGitData(process.env.BOT_OWNER_ID, process.env.BOT_OWNER_ID).then(data => {
-        this.client.user.setPresence({game: {name: `version ${data.hash}`}});
+        this.client.user.setPresence({activity: {name: `version ${data.hash}`}});
       }).catch(() => {
         // Ignored, because the function already logs an error to the console
       });
@@ -306,7 +302,7 @@ class Server {
     return new Promise((resolve, reject) => {
       const to = isAdding ? 'to' : 'from';
       const role = this.findRole(rolename);
-      const action = isAdding ? 'addRole' : 'removeRole';
+      const action = isAdding ? 'add' : 'remove';
       if (!role) {
         const add = isAdding ? 'add' : 'remove';
         console.error(`Trying to ${add} non-existing role "${rolename}" ${to} ${this.getIdent(user)}`);
@@ -317,7 +313,7 @@ class Server {
           console.error(`No member found with the ID ${user.id}`);
           return reject();
         }
-        member[action](role, reason).then(resolve).catch(err => {
+        member.roles[action](role, reason).then(resolve).catch(err => {
           const adding = isAdding ? 'adding' : 'removing';
           console.error(`Error while ${adding} "${rolename}" role ${to} ${this.getIdent(user)}`, err);
           reject(err);
@@ -341,7 +337,7 @@ class Server {
   /**
    * @param {Discord.TextBasedChannel} channel
    * @param {string} message
-   * @param {Discord.RichEmbed} embed
+   * @param {Discord.MessageEmbed} embed
    * @return {Promise}
    */
   send(channel, message, embed) {
@@ -370,7 +366,7 @@ class Server {
   /**
    * @param {Discord.Message} message
    * @param {string} response
-   * @param {Discord.RichEmbed} embed
+   * @param {Discord.MessageEmbed} embed
    * @return {Promise}
    */
   reply(message, response, embed) {
@@ -451,7 +447,7 @@ class Server {
       author.url = artistCount > 1 ? url : `https://derpibooru.org/api/v1/json/search/images?q=${encodeURIComponent(artists[0])}`;
     }
 
-    const embed = new Discord.RichEmbed({
+    const embed = new Discord.MessageEmbed({
       title: "View image",
       url,
       color: 6393795,
@@ -669,7 +665,7 @@ class Server {
    * @return {Discord.Channel|null}
    */
   findChannel(value, key = 'name') {
-    const channel = key === 'id' ? this.guild.channels.get(value) : this.guild.channels.find(x => x[key] === value);
+    const channel = key === 'id' ? this.guild.channels.cache.get(value) : this.guild.channels.cache.find(x => x[key] === value);
     if (!channel)
       throw new Error(`Could not find channel matching {${key}: ${value}}`);
     return channel;
@@ -679,21 +675,21 @@ class Server {
    * @return {boolean}
    */
   channelExists(value, key = 'name') {
-    return key === 'id' ? this.guild.channels.get(value) instanceof Discord.Channel : this.guild.channels.some(el => el[key] === value);
+    return key === 'id' ? this.guild.channels.cache.get(value) instanceof Discord.Channel : this.guild.channels.cache.some(el => el[key] === value);
   }
 
   /**
    * @return {Discord.Role|null}
    */
   findRole(name) {
-    return this.guild.roles.find(x => x.name === name);
+    return this.guild.roles.cache.find(x => x.name === name);
   }
 
   /**
    * @return {Discord.User|null}
    */
   findUser(value, key = 'id') {
-    return key === 'id' ? this.client.users.get(value) : this.client.users.find(x => x[key] === value);
+    return key === 'id' ? this.client.users.cache.get(value) : this.client.users.cache.find(x => x[key] === value);
   }
 
   /**
@@ -701,12 +697,12 @@ class Server {
    */
   async findMember(value, key = 'id') {
     if (key === 'id') {
-      let member = this.guild.members.get(value);
+      let member = this.guild.members.cache.get(value);
       if (typeof member === 'undefined')
         member = await this.guild.fetchMember(value);
       return member;
     }
-    return this.guild.members.find(x => x[key] === value);
+    return this.guild.members.cache.find(x => x[key] === value);
   }
 
   /**

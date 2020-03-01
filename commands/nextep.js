@@ -28,7 +28,7 @@ module.exports = new Command({
             unirest.get(`https://derpibooru.org/api/v1/json/search/images?q=${dbSearchQuery}&filter_id=8575&sf=random&perpage=1`)
               .header("Accept", "application/json")
               .end(function (result) {
-                Server.reply(args.message, 'https:' + result.body.search[0].representations.full);
+                Server.respondWithDerpibooruImage(args, result.body.images[0], true);
               });
             return;
           }

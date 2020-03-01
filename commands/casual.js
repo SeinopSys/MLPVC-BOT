@@ -10,7 +10,7 @@ module.exports = new Command({
   usage: [true],
   allowPM: false,
   action: args => {
-    if (args.channel.name === 'causal')
+    if (args.channel.name === 'casual')
       return Server.wipeMessage(args.message);
 
     let possible_images = [

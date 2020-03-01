@@ -1,6 +1,9 @@
 const
   Command = require('../classes/Command'),
-  Server = require('../classes/Server');
+  Server = require('../classes/Server'),
+  treeify = require('treeify');
+
+const channelToString = channel => `${channel.type === 'text' ? '#' : ''}${channel.name} (${channel.id})`;
 
 module.exports = new Command({
   name: 'channels',
@@ -9,11 +12,28 @@ module.exports = new Command({
   usage: [true],
   allowPM: true,
   action: args => {
-    let ids = [];
-    Server.guild.channels.array().forEach(channel => {
-      ids.push(`├ ${channel.type === 'text' ? '#' : ' '}${channel.name} (${channel.id})`);
+    const top = Symbol.for('top');
+    const ids = {};
+    Server.guild.channels.cache.array().forEach(channel => {
+      const parent = channel.parentID || top;
+      if (typeof ids[parent] === 'undefined')
+        ids[parent] = [];
+      const {type, name, id} = channel;
+      ids[parent].push({type, name, id});
     });
-    ids.push(ids.pop().replace('├', '└'));
-    Server.reply(args.message, "```" + Server.guild.name + " (" + Server.guild.id + ")\n" + ids.join('\n') + '```');
+
+    const simplifiedTree = {};
+    ids[top].forEach(topLevelChannel => {
+      const topLevelChannelName = channelToString(topLevelChannel);
+      simplifiedTree[topLevelChannelName] = {};
+      if (Array.isArray(ids[topLevelChannel.id])) {
+        ids[topLevelChannel.id].forEach(channel => {
+          const channelName = channelToString(channel);
+          simplifiedTree[topLevelChannelName][channelName] = null;
+        })
+      }
+    });
+
+    Server.reply(args.message, "```" + Server.guild.name + " (" + Server.guild.id + ")\n" + treeify.asTree(simplifiedTree) + '```');
   }
 });

@@ -33,7 +33,7 @@ module.exports = new Command({
       flags = (flags || '') + 'g';
     else flags = flags.replace('G', '');
 
-    args.channel.fetchMessage(messageID).then(message => {
+    args.channel.messages.fetch(messageID).then(message => {
       const newContent = message.content.replace(new RegExp(pattern, flags), replacement);
 
       if (newContent === message.content)

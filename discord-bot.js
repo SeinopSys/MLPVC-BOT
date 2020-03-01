@@ -1,6 +1,5 @@
-// jshint -W014
 'use strict';
-require("console-stamp")(console, {
+require('console-stamp')(console, {
   formatter: function () {
     return moment().format('YYYY-MM-DD HH:MM:ss.SSS');
   },
