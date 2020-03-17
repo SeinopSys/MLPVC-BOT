@@ -699,7 +699,7 @@ class Server {
     if (key === 'id') {
       let member = this.guild.members.cache.get(value);
       if (typeof member === 'undefined')
-        member = await this.guild.fetchMember(value);
+        member = await this.guild.members.fetch(value);
       return member;
     }
     return this.guild.members.cache.find(x => x[key] === value);
