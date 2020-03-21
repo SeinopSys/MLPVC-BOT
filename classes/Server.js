@@ -6,7 +6,8 @@ const
   util = require('../shared-utils'),
   Command = require('./Command'),
   unirest = require('unirest'),
-  shellescape = require('shell-escape');
+  shellescape = require('shell-escape'),
+  sample = require('lodash-es/sample');
 
 class Server {
   constructor() {
@@ -645,10 +646,10 @@ class Server {
 
           if (data.status === false || data.length < 1) {
             console.error(`Color guide not found for "${query}" because: ${data.message || JSON.stringify(data)}`);
-            return this.reply(message, this.interactions.cgnotfound.randomElement());
+            return this.reply(message, sample(this.interactions.cgnotfound));
           }
 
-          this.reply(message, this.interactions.cgfound.randomElement() + ' ' + process.env.SITE_ABSPATH + (data[0].url.substring(1)));
+          this.reply(message, sample(this.interactions.cgfound) + ' ' + process.env.SITE_ABSPATH + (data[0].url.substring(1)));
         });
       return;
     }

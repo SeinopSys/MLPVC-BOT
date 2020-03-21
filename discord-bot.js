@@ -1,18 +1,11 @@
 'use strict';
 require('console-stamp')(console, {
-  formatter: function () {
-    return moment().format('YYYY-MM-DD HH:MM:ss.SSS');
-  },
+  format: ':date(yyyy-mm-dd HH:MM:ss.l) :label'
 });
 
 require('dotenv').config();
 
-const
-  moment = require('moment'),
-  Server = require('./classes/Server');
-Array.prototype.randomElement = function () {
-  return this[Math.floor(Math.random() * this.length)]
-};
+const Server = require('./classes/Server');
 
 if (process.env.LOCAL === 'true' && /^https:/.test(process.env.SITE_ABSPATH))
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
