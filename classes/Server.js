@@ -7,7 +7,7 @@ const
   Command = require('./Command'),
   unirest = require('unirest'),
   shellescape = require('shell-escape'),
-  sample = require('lodash-es/sample');
+  sample = require('lodash/sample');
 
 class Server {
   constructor() {
