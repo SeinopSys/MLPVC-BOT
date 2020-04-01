@@ -554,7 +554,6 @@ class Server {
       case "unflip":
       case "shrug":
       case "nick":
-      case "say":
         return;
     }
 
