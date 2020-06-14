@@ -12,7 +12,7 @@ module.exports = new Command({
   usage: [true],
   allowPM: true,
   action: args => {
-    unirest.get(process.env.SITE_ABSPATH + process.env.SITE_APIPATH + '/show/next')
+    unirest.get(process.env.API_BASE_URL + 'api/private/show/next')
       .header("Accept", "application/json")
       .end(function (result) {
         if (result.error || typeof result.body !== 'object') {

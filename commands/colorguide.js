@@ -19,7 +19,7 @@ module.exports = new Command({
       eqg = humanRegex.test(query);
     if (eqg)
       query = query.replace(humanRegex, '');
-    unirest.get(`${process.env.SITE_ABSPATH}cg${eqg ? '/eqg' : '/pony'}?btnl&json&q=${encodeURIComponent(query)}`)
+    unirest.get(`${process.env.FRONTEND_BASE_URL}cg${eqg ? '/eqg' : '/pony'}?btnl&json&q=${encodeURIComponent(query)}`)
       .header("Accept", "application/json")
       .end(function (result) {
         if (result.error || typeof result.body !== 'object') {
@@ -31,7 +31,7 @@ module.exports = new Command({
         if (!data.status)
           return Server.reply(args.message, data.message);
 
-        Server.reply(args.message, process.env.SITE_ABSPATH + (data.goto.substring(1)));
+        Server.reply(args.message, process.env.FRONTEND_BASE_URL + (data.goto.substring(1)));
       });
   }
 });

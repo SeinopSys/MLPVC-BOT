@@ -194,7 +194,7 @@ class Server {
     if (member.guild.id !== this.guild.id)
       return;
     const userId = member.id;
-    unirest.post(`${process.env.SITE_ABSPATH}discord-connect/bot-update/${userId}`)
+    unirest.post(`${process.env.API_BASE_URL}discord-connect/bot-update/${userId}`)
       .header("Accept", "application/json")
       .send({key: process.env.WS_SERVER_KEY})
       .end(result => {
@@ -633,7 +633,7 @@ class Server {
         query = (match[1] || match[2]).replace(eqgTest, '').trim(),
         eqg = eqgTest.test(normalized);
 
-      unirest.get(`${process.env.SITE_ABSPATH}api/private/cg/appearances?q=${encodeURIComponent(query)}&EQG=${eqg ? 'true' : 'false'}`)
+      unirest.get(`${process.env.API_BASE_URL}api/private/cg/appearances?q=${encodeURIComponent(query)}&EQG=${eqg ? 'true' : 'false'}`)
         .header("Accept", "application/json")
         .end(result => {
           if (result.error || typeof result.body !== 'object') {
@@ -648,7 +648,7 @@ class Server {
             return this.reply(message, sample(this.interactions.cgnotfound));
           }
 
-          this.reply(message, sample(this.interactions.cgfound) + ' ' + process.env.SITE_ABSPATH + (data[0].url.substring(1)));
+          this.reply(message, sample(this.interactions.cgfound) + ' ' + process.env.FRONTEND_BASE_URL + (data[0].url.substring(1)));
         });
       return;
     }

@@ -24,6 +24,6 @@ module.exports = new Command({
       k = moment().minutes() % image_count;
 
     Server.wipeMessage(args.message);
-    Server.send(args.channel, `Please continue this discussion in ${Server.mention(Server.findChannel('casual'))}\n${process.env.SITE_ABSPATH}img/discord/casual/${possible_images[k]}.png`);
+    Server.send(args.channel, `Please continue this discussion in ${Server.mention(Server.findChannel('casual'))}\n${process.env.FRONTEND_BASE_URL}img/discord/casual/${possible_images[k]}.png`);
   },
 });
