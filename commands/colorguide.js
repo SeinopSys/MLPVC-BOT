@@ -19,7 +19,7 @@ module.exports = new Command({
       eqg = humanRegex.test(query);
     if (eqg)
       query = query.replace(humanRegex, '');
-    unirest.get(`${process.env.FRONTEND_BASE_URL}cg${eqg ? '/eqg' : '/pony'}?btnl&json&q=${encodeURIComponent(query)}`)
+    unirest.get(`${process.env.BACKEND_BASE_URL}cg${eqg ? '/eqg' : '/pony'}?btnl&json&q=${encodeURIComponent(query)}`)
       .header("Accept", "application/json")
       .end(function (result) {
         if (result.error || typeof result.body !== 'object') {
