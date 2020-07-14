@@ -14,6 +14,7 @@ module.exports = new Command({
   action: args => {
     unirest.get(process.env.BACKEND_BASE_URL + 'api/private/show/next')
       .header("Accept", "application/json")
+      .header("User-Agent", process.env.UA_STRING)
       .end(function (result) {
         if (result.error || typeof result.body !== 'object') {
           console.log(result.error, result.body);
@@ -27,6 +28,7 @@ module.exports = new Command({
             const dbSearchQuery = 'animated, safe, crying, sad, -happy, -webm, screencap, -meme, -text, -telekinesis, -star tracker';
             unirest.get(`https://derpibooru.org/api/v1/json/search/images?q=${dbSearchQuery}&filter_id=8575&sf=random&perpage=1`)
               .header("Accept", "application/json")
+              .header("User-Agent", process.env.UA_STRING)
               .end(function (result) {
                 Server.respondWithDerpibooruImage(args, result.body.images[0], true);
               });

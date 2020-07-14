@@ -32,6 +32,7 @@ module.exports = new Command({
     unirest.get("https://wordsapiv1.p.mashape.com/words/" + encodeURIComponent(args.argStr))
       .header("X-Mashape-Key", process.env.WORDSAPI_MASHAPE_KEY)
       .header("Accept", "application/json")
+      .header("User-Agent", process.env.UA_STRING)
       .end(function (result) {
         if ((result.error || typeof result.body !== 'object') && result.status !== 404) {
           console.error(result.error, result.body);

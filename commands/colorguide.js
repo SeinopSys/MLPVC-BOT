@@ -21,6 +21,7 @@ module.exports = new Command({
       query = query.replace(humanRegex, '');
     unirest.get(`${process.env.BACKEND_BASE_URL}cg${eqg ? '/eqg' : '/pony'}?btnl&json&q=${encodeURIComponent(query)}`)
       .header("Accept", "application/json")
+      .header("User-Agent", process.env.UA_STRING)
       .end(function (result) {
         if (result.error || typeof result.body !== 'object') {
           console.error(result.error, result.body);

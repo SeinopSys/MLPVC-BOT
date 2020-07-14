@@ -196,6 +196,7 @@ class Server {
     const userId = member.id;
     unirest.post(`${process.env.BACKEND_BASE_URL}discord-connect/bot-update/${userId}`)
       .header("Accept", "application/json")
+      .header("User-Agent", process.env.UA_STRING)
       .send({key: process.env.WS_SERVER_KEY})
       .end(result => {
         let owner;
@@ -635,6 +636,7 @@ class Server {
 
       unirest.get(`${process.env.BACKEND_BASE_URL}api/private/cg/appearances?q=${encodeURIComponent(query)}&EQG=${eqg ? 'true' : 'false'}`)
         .header("Accept", "application/json")
+        .header("User-Agent", process.env.UA_STRING)
         .end(result => {
           if (result.error || typeof result.body !== 'object') {
             console.error(result.error, result.body);

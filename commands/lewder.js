@@ -12,6 +12,7 @@ module.exports = new Command({
   action: args => {
     unirest.get('https://derpibooru.org/api/v1/json/images/1308747')
       .header("Accept", "application/json")
+      .header("User-Agent", process.env.UA_STRING)
       .end(function (result) {
         if (result.error || typeof result.body !== 'object' || typeof result.body.image !== 'object') {
           console.error(result.error, result.body);

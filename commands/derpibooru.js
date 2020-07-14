@@ -65,6 +65,7 @@ module.exports = new Command({
     console.info('Derpi search for ' + chalk.blue(url));
     unirest.get(url)
       .header("Accept", "application/json")
+      .header("User-Agent", process.env.UA_STRING)
       .end(function (result) {
         if (result.error || typeof result.body !== 'object') {
           console.error(result.error, result.body);
