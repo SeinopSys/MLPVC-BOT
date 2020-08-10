@@ -50,6 +50,12 @@ class Server {
         "Nah",
       ]
     };
+    this.suspiciousNames = typeof process.env.SUSPICIOUS_NAMES === 'string' && process.env.SUSPICIOUS_NAMES.length > 0
+      ? process.env.SUSPICIOUS_NAMES.split(',').filter(el => el.length > 0)
+      : [];
+    if (this.suspiciousNames.length > 0) {
+      console.info(`Registered suspicious names: ${this.suspiciousNames}`);
+    }
   }
 
   /**
@@ -175,9 +181,27 @@ class Server {
       process.exit();
     });
 
-    this.client.on('guildMemberAdd', member => this.updateWebsiteUserLink(member));
-    this.client.on('guildMemberRemove', member => this.updateWebsiteUserLink(member));
-    this.client.on('guildMemberUpdate', member => this.updateWebsiteUserLink(member));
+    this.client.on('guildMemberAdd', member => {
+      const suspiciousName = this.isNameSuspicious(member.user.username);
+      if (suspiciousName) {
+        this.send(this.findChannel('staffchat'), `**Heads up!** ${this.mention(member)} (username \`${this.escapeBackticks(member.user.username)}\` containing "${suspiciousName}") just joined the server.`);
+      }
+      this.updateWebsiteUserLink(member);
+    });
+    this.client.on('guildMemberRemove', member => {
+      const suspiciousName = this.isNameSuspicious(member.user.username);
+      if (suspiciousName) {
+        this.send(this.findChannel('staffchat'), `*Crisis averted?* ${this.mention(member)} (username \`${this.escapeBackticks(member.user.username)}\` containing "${suspiciousName}") just left the server`);
+      }
+      this.updateWebsiteUserLink(member);
+    });
+    this.client.on('guildMemberUpdate', (oldMember, newMember) => {
+      const suspiciousName = this.isNameSuspicious(oldMember.user.username);
+      if (suspiciousName && !this.isNameSuspicious(newMember.user.username)) {
+        this.send(this.findChannel('staffchat'), `**Heads up!** ${this.mention(newMember)} (formerly \`${this.escapeBackticks(oldMember.user.username)}\` containing) just changed their username to \`${this.escapeBackticks(oldMember.user.username)}\``);
+      }
+      this.updateWebsiteUserLink(newMember);
+    });
     this.client.on('userUpdate', async user => {
       if (user.bot)
         return;
@@ -188,6 +212,10 @@ class Server {
     });
 
     console.info('~ Ready ~');
+  }
+
+  escapeBackticks(string) {
+    return string.replace(/(^|[^\\])`/g, '$1\\`');
   }
 
   updateWebsiteUserLink(member) {
@@ -257,7 +285,20 @@ class Server {
     this.interact(message);
   }
 
+  isNameSuspicious(name) {
+    if (typeof name !== 'string') return false;
+    const sanitizedName = name.toLowerCase().replace(/[^a-z\d]/g, '');
+    return this.suspiciousNames.find(candidate => sanitizedName === candidate) || false;
+  }
+
   handleRulesRead(message) {
+    const suspiciousName = this.isNameSuspicious(message.author.username);
+    if (suspiciousName) {
+      this.send(this.findChannel('staffchat'), `**Heads up!** ${this.mention(message.author)} (whose username contains "${suspiciousName}") just tried to run the /read command. They were asked to message one of you to verify their identity, please use an existing social media platform to conduct said verification, and once complete manually give them the Informed role.`);
+      this.send(message.author, `Welcome to the ${this.guild.name}'s Discord server! Your username was previously used to impersonate well-known people in the fandom, so we've implemented additional measures to prevent this. Please message one of our staff members to confirm your identity and give you access to the rest of the channels.`);
+      return;
+    }
+
     this.addRole(message.author, 'Informed', 'Read the rules').then(() => {
       this.send(this.findChannel('casual'), `Please welcome ${this.mention(message.author)} to our server!`);
     }).catch(() => {
@@ -708,13 +749,15 @@ class Server {
   }
 
   /**
-   * @param {Discord.User|Discord.TextChannel|Discord.Role} thing
+   * @param {Discord.User|Discord.GuildMember|Discord.TextChannel|Discord.Role} thing
    * @return {string}
    */
   mention(thing) {
     if (!thing)
       throw new Error(`Cannot mention thing of type ${typeof thing}`);
 
+    if (thing instanceof Discord.GuildMember)
+      return util.mentionUser(thing.user.id);
     if (thing instanceof Discord.User)
       return util.mentionUser(thing.id);
     if (thing instanceof Discord.TextChannel)
