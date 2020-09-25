@@ -28,7 +28,7 @@ module.exports = new Command({
       await Server.send(welcomeChannel, `Please send the command **/read** to this channel to reveal the rest of the channels on our server and start chatting. You can always get this information again by running the \`/rules\` command.`);
 
       // Scrub old messages
-      oldMessages.forEach(async message => await message.delete());
+      await Promise.all(oldMessages.map(message => message.delete()));
 
       // Notify the staff channel
       Server.send(Server.findChannel('staffchat'), `${Server.mention(args.author)} updated the rules in ${Server.mention(welcomeChannel)}`);
