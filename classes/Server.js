@@ -186,29 +186,18 @@ class Server {
       if (suspiciousName) {
         this.send(this.findChannel('staffchat'), `**Heads up!** ${this.mention(member)} (username \`${this.escapeBackticks(member.user.username)}\` containing "${suspiciousName}") just joined the server.`);
       }
-      this.updateWebsiteUserLink(member);
     });
     this.client.on('guildMemberRemove', member => {
       const suspiciousName = this.isNameSuspicious(member.user.username);
       if (suspiciousName) {
         this.send(this.findChannel('staffchat'), `*Crisis averted?* ${this.mention(member)} (username \`${this.escapeBackticks(member.user.username)}\` containing "${suspiciousName}") just left the server`);
       }
-      this.updateWebsiteUserLink(member);
     });
     this.client.on('guildMemberUpdate', (oldMember, newMember) => {
       const suspiciousName = this.isNameSuspicious(oldMember.user.username);
       if (suspiciousName && !this.isNameSuspicious(newMember.user.username)) {
         this.send(this.findChannel('staffchat'), `**Heads up!** ${this.mention(newMember)} (formerly \`${this.escapeBackticks(oldMember.user.username)}\` containing) just changed their username to \`${this.escapeBackticks(oldMember.user.username)}\``);
       }
-      this.updateWebsiteUserLink(newMember);
-    });
-    this.client.on('userUpdate', async user => {
-      if (user.bot)
-        return;
-
-      const member = await this.findMember(user.id);
-      if (member !== null)
-        this.updateWebsiteUserLink(member);
     });
 
     console.info('~ Ready ~');
@@ -216,34 +205,6 @@ class Server {
 
   escapeBackticks(string) {
     return string.replace(/(^|[^\\])`/g, '$1\\`');
-  }
-
-  updateWebsiteUserLink(member) {
-    if (member.guild.id !== this.guild.id)
-      return;
-    const userId = member.id;
-    unirest.post(`${process.env.BACKEND_BASE_URL}discord-connect/bot-update/${userId}`)
-      .header("Accept", "application/json")
-      .header("User-Agent", process.env.UA_STRING)
-      .send({key: process.env.WS_SERVER_KEY})
-      .end(result => {
-        let owner;
-        const message = `Updating linked user on the site failed for ID ${userId}`;
-        if (this.hasOwner)
-          owner = this.findUser(process.env.BOT_OWNER_ID);
-        if (result.error || typeof result.body !== 'object') {
-          console.error(result.error, result.body);
-          if (this.hasOwner)
-            this.send(owner, `${message} (HTTP ${result.status})`);
-          return;
-        }
-
-        let data = result.body;
-        if (data.status)
-          return;
-
-        this.send(owner, `${message}: ${data.message}`);
-      });
   }
 
   isPrivateChannel(channel) {
