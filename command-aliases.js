@@ -1,6 +1,5 @@
 const list = {
   'colorguide': ['cg', 'guide', 'colors'],
-  'define': ['def'],
   'derpibooru': ['db', 'derpi'],
   'version': ['ver'],
   'tutorials': ['tut'],
