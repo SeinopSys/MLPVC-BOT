@@ -1,7 +1,8 @@
 const
   Command = require('../classes/Command'),
   Server = require('../classes/Server'),
-  util = require('../shared-utils');
+  util = require('../shared-utils'),
+  channelNames = require('../channel-names');
 
 module.exports = new Command({
   name: 'edit',
@@ -11,7 +12,7 @@ module.exports = new Command({
   allowPM: false,
   action: args => {
     // Don't post responses in the #welcome channel
-    const inWelcome = args.channel.name === 'welcome';
+    const inWelcome = args.channel.name === channelNames.WELCOME;
     const notify = inWelcome ? args.author : args.channel;
 
     if (args.argArr.length < 2)

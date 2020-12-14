@@ -3,7 +3,8 @@ const
   chalk = require('chalk'),
   Command = require('../classes/Command'),
   util = require('../shared-utils'),
-  Server = require('../classes/Server');
+  Server = require('../classes/Server'),
+  channelNames = require('../channel-names');
 
 const
   ordering = 'o:(desc|asc)',
@@ -30,7 +31,7 @@ module.exports = new Command({
 
     let query = args.argStr,
       extra = '',
-      inNSFW = args.channel.name === 'nsfw' || args.isPM,
+      inNSFW = args.channel.name === channelNames.NSFW,
       orderTest = new RegExp(`(^|\\s)${ordering}(\\s|$)`, 'i'),
       sortbyTest = new RegExp(`(^|\\s)${sorting}(\\s|$)`, 'i'),
       asLinkTest = new RegExp(`(^|\\s)${linking}(\\s|$)`, 'ig'),

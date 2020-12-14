@@ -3,13 +3,13 @@
 **2.** If your Discord username is different from your DeviantArt username we'll give you a nickname that matches your DA name. This is especially important if you're a member or someone who interacts with the group frequently. If you want to keep your Discord name visible, you can use the `/fixnick` command. To learn more, use `/help fixnick`.
 -----
 **3.** Kindly try to keep topics in their respective chat rooms. Use your notification settings (Screenshot: <https://goo.gl/WdRVUm>) to mute any channels you don't want to be notified of new messages in.
-    #casual: The place for general discussion. You can share art, music, or funny pictures with the rest of the members.
-    #games: For all things gaming. If you want to notify others about game deals and discounts this is the place to do so.
-    #vectors: Vector artwork helpline - you can ask for critique on or help with your vectors here. You can use the `/vectorapp` command to give yourself roles that let others know what application you make vectors with.
-    #support: Questions about the color guide website, the DeviantArt group and the Discord server should go here.
-    #spoilers: Talk about upcoming or recently aired episodes and movies, as well as the comics.
-    #superspoilers: This channel is only open when major leaks happen to avoid posting such content in #spoilers
-    #bot-sandbox: Play around with the features of @me without disrupting the conversation in other channels.
-    #nsfw: Discussions of adult material. You will be given a warning message by Discord on your first visit which you'll need to accept before you can chat here.
+    #CASUAL: The place for general discussion. You can share art, music, or funny pictures with the rest of the members.
+    #GAMES: For all things gaming. If you want to notify others about game deals and discounts this is the place to do so.
+    #VECTORS: Vector artwork helpline - you can ask for critique on or help with your vectors here. You can use the `/vectorapp` command to give yourself roles that let others know what application you make vectors with.
+    #SUPPORT: Questions about the color guide website, the DeviantArt group and the Discord server should go here.
+    #SPOILERS: Talk about upcoming or recently aired episodes and movies, as well as the comics.
+    #SUPER_SPOILERS: This channel is only open when major leaks happen to avoid posting such content in #SPOILERS
+    #BOT_SANDBOX: Play around with the features of @me without disrupting the conversation in other channels.
+    #NSFW: Discussions of adult material. You will be given a warning message by Discord on your first visit which you'll need to accept before you can chat here.
 
 **4.** We have a zero tolerance policy for harassment and impersonation on the server, if you have received inappropriate DMs from server members or fell victim to an impersonator do not hesitate to contact any one of our staff members.

@@ -1,15 +1,16 @@
 const
   Command = require('../classes/Command'),
-  Server = require('../classes/Server');
+  Server = require('../classes/Server'),
+  channelNames = require('../channel-names');
 
 const failure = (err, args) => {
   console.error(err);
-  args.channel.send(`A message to ${Server.mention(Server.findChannel('welcome'))} failed to send. (HTTP ${err.statusCode})\n${Server.mentionOwner(args.authorID)} should see what caused the issue in the logs.`);
+  args.channel.send(`A message to ${Server.mention(Server.findChannel(channelNames.WELCOME))} failed to send. (HTTP ${err.statusCode})\n${Server.mentionOwner(args.authorID)} should see what caused the issue in the logs.`);
 };
 
 module.exports = new Command({
   name: 'welcomemsg',
-  help: () => `Sends the welcome message to the ${Server.mention(Server.findChannel('welcome'))} channel.`,
+  help: () => `Sends the welcome message to the ${Server.mention(Server.findChannel(channelNames.WELCOME))} channel.`,
   perm: 'isStaff',
   usage: [true],
   allowPM: true,
@@ -17,7 +18,7 @@ module.exports = new Command({
     if (!args.isPM)
       Server.wipeMessage(args.message);
 
-    const welcomeChannel = Server.findChannel('welcome');
+    const welcomeChannel = Server.findChannel(channelNames.WELCOME);
     const oldMessages = await welcomeChannel.messages.fetch({ limit: 10 });
 
     try {
@@ -31,7 +32,7 @@ module.exports = new Command({
       await Promise.all(oldMessages.map(message => message.delete()));
 
       // Notify the staff channel
-      Server.send(Server.findChannel('staffchat'), `${Server.mention(args.author)} updated the rules in ${Server.mention(welcomeChannel)}`);
+      Server.send(Server.findChannel(channelNames.STAFF_CHAT), `${Server.mention(args.author)} updated the rules in ${Server.mention(welcomeChannel)}`);
     } catch (err) {
       console.log('fail', err);
       failure(err, args);

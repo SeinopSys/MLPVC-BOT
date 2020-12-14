@@ -1,12 +1,13 @@
 const
   Command = require('../classes/Command'),
-  Server = require('../classes/Server');
+  Server = require('../classes/Server'),
+  channelNames = require('../channel-names');
 
 module.exports = new Command({
   name: 'say',
   help: () => `Send a message to the specified channel as the bot.`,
   perm: 'isStaff',
-  usage: ["#casual What nice weather we're having"],
+  usage: [`#${channelNames.CASUAL} What nice weather we're having`],
   allowPM: true,
   action: async args => {
     if (!args.isPM)

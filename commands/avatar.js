@@ -1,7 +1,8 @@
 const
   Discord = require('discord.js'),
   Command = require('../classes/Command'),
-  Server = require('../classes/Server');
+  Server = require('../classes/Server'),
+  channelNames = require('../channel-names');
 
 module.exports = new Command({
   name: 'avatar',
@@ -16,11 +17,11 @@ module.exports = new Command({
       setAvatar = function (avatarPath) {
         Server.client.user.setAvatar(avatarPath).then(() => {
           let
-            outputChannel = Server.findChannel('staffchat'),
+            outputChannel = Server.findChannel(channelNames.STAFF_CHAT),
             staffChatExists = outputChannel instanceof Discord.Channel;
-          if (!Server.channelExists('staffchat')) {
+          if (!Server.channelExists(channelNames.STAFF_CHAT)) {
             if (args.isPM)
-              console.warn('#staffchat channel does not exist, could not send avatar update message');
+              console.warn(`#${channelNames.STAFF_CHAT} channel does not exist, could not send avatar update message`);
             else outputChannel = args.channel;
           }
 

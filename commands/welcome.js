@@ -1,7 +1,8 @@
 const
   Command = require('../classes/Command'),
   Server = require('../classes/Server'),
-  util = require('../shared-utils');
+  util = require('../shared-utils'),
+  channelNames = require('../channel-names');
 
 module.exports = new Command({
   name: 'welcome',
@@ -17,6 +18,6 @@ module.exports = new Command({
     if (user === false)
       return;
 
-    Server.send(Server.findChannel('casual'), `Please welcome ${util.mentionUser(user.id)} to our server!`);
+    Server.send(Server.findChannel(channelNames.CASUAL), `Please welcome ${util.mentionUser(user.id)} to our server!`);
   }
 });

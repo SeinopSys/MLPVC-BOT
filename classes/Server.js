@@ -4,6 +4,7 @@ const
   exec = require('child_process').exec,
   Permission = require('./Permission'),
   util = require('../shared-utils'),
+  channelNames = require('../channel-names'),
   Command = require('./Command'),
   unirest = require('unirest'),
   shellescape = require('shell-escape'),
@@ -184,19 +185,19 @@ class Server {
     this.client.on('guildMemberAdd', member => {
       const suspiciousName = this.isNameSuspicious(member.user.username);
       if (suspiciousName) {
-        this.send(this.findChannel('staffchat'), `**Heads up!** ${this.mention(member)} (username \`${this.escapeBackticks(member.user.username)}\` containing "${suspiciousName}") just joined the server.`);
+        this.send(this.findChannel(channelNames.STAFF_CHAT), `**Heads up!** ${this.mention(member)} (username \`${this.escapeBackticks(member.user.username)}\` containing "${suspiciousName}") just joined the server.`);
       }
     });
     this.client.on('guildMemberRemove', member => {
       const suspiciousName = this.isNameSuspicious(member.user.username);
       if (suspiciousName) {
-        this.send(this.findChannel('staffchat'), `*Crisis averted?* ${this.mention(member)} (username \`${this.escapeBackticks(member.user.username)}\` containing "${suspiciousName}") just left the server`);
+        this.send(this.findChannel(channelNames.STAFF_CHAT), `*Crisis averted?* ${this.mention(member)} (username \`${this.escapeBackticks(member.user.username)}\` containing "${suspiciousName}") just left the server`);
       }
     });
     this.client.on('guildMemberUpdate', (oldMember, newMember) => {
       const suspiciousName = this.isNameSuspicious(oldMember.user.username);
       if (suspiciousName && !this.isNameSuspicious(newMember.user.username)) {
-        this.send(this.findChannel('staffchat'), `**Heads up!** ${this.mention(newMember)} (formerly \`${this.escapeBackticks(oldMember.user.username)}\` containing) just changed their username to \`${this.escapeBackticks(oldMember.user.username)}\``);
+        this.send(this.findChannel(channelNames.STAFF_CHAT), `**Heads up!** ${this.mention(newMember)} (formerly \`${this.escapeBackticks(oldMember.user.username)}\` containing) just changed their username to \`${this.escapeBackticks(oldMember.user.username)}\``);
       }
     });
 
@@ -227,7 +228,7 @@ class Server {
       console.log(`Received PM from @${this.getIdent(message.author)} (${message.author.id}), contents:\n${message.content}`);
     }
 
-    if (message.channel.name === 'welcome') {
+    if (message.channel.name === channelNames.WELCOME) {
       if (message.content.trim().indexOf('/read') === 0) {
         this.handleRulesRead(message);
       }
@@ -235,7 +236,7 @@ class Server {
       else if (!(await this.perm.isStaff.check(message.author.id)) || message.content.trim().indexOf('/edit') !== 0) {
         // Notify in a PM if not already informed
         if (!(await this.perm.informed.check(message.author.id)))
-          this.send(message.author, `You will not be able to chat on our server until you've read the rules in ${this.mention(this.findChannel('welcome'))}.`);
+          this.send(message.author, `You will not be able to chat on our server until you've read the rules in ${this.mention(this.findChannel(channelNames.WELCOME))}.`);
       }
       this.wipeMessage(message);
       return;
@@ -255,15 +256,16 @@ class Server {
   handleRulesRead(message) {
     const suspiciousName = this.isNameSuspicious(message.author.username);
     if (suspiciousName) {
-      this.send(this.findChannel('staffchat'), `**Heads up!** ${this.mention(message.author)} (whose username contains "${suspiciousName}") just tried to run the /read command. They were asked to message one of you to verify their identity, please use an existing social media platform to conduct said verification, and once complete manually give them the Informed role.`);
+      this.send(this.findChannel(channelNames.STAFF_CHAT), `**Heads up!** ${this.mention(message.author)} (whose username contains "${suspiciousName}") just tried to run the /read command. They were asked to message one of you to verify their identity, please use an existing social media platform to conduct said verification, and once complete manually give them the Informed role.`);
       this.send(message.author, `Welcome to the ${this.guild.name}'s Discord server! Your username was previously used to impersonate well-known people in the fandom, so we've implemented additional measures to prevent this. Please message one of our staff members to confirm your identity and give you access to the rest of the channels.`);
       return;
     }
 
     this.addRole(message.author, 'Informed', 'Read the rules').then(() => {
-      this.send(this.findChannel('casual'), `Please welcome ${this.mention(message.author)} to our server!`);
-    }).catch(() => {
-      this.send(this.findChannel('staffchat'), `Failed to add Informed role to ${this.mention(message.author)}\n${this.mentionOwner()} should see what caused this in the logs.`);
+      this.send(this.findChannel(channelNames.CASUAL), `Please welcome ${this.mention(message.author)} to our server!`);
+    }).catch(e => {
+      console.error(e);
+      this.send(this.findChannel(channelNames.STAFF_CHAT), `Failed to add Informed role to ${this.mention(message.author)}\n${this.mentionOwner()} should see what caused this in the logs.`);
     });
   }
 
@@ -334,7 +336,7 @@ class Server {
 
   getRules() {
     return fs.readFileSync(util.root + '/assets/rules.txt', 'utf8')
-      .replace(/#([a-z_-]+)/g, (_, n) => this.mention(this.findChannel(n)))
+      .replace(/#([A-Z_]+)/g, (_, n) => this.mention(this.findChannel(channelNames[n] || n.toLowerCase())))
       .replace('@me', this.mention(this.client.user));
   }
 
@@ -659,7 +661,7 @@ class Server {
 
     let informedtest = /^(?:.*?\b)?(?:why(?:(?:'?s| is) there|(?: do (?:you|we) )?(even )?have) an?|what(?:'?s| is) the(?: (?:purpose|reason) (?:of|for(?: having)?|behind) the)?) ['"]?informed['"]? role\??$/i;
     if (informedtest.test(normalized)) {
-      this.reply(`The purpose of the Informed role is to distinguish users who've read the server rules in the ${this.mention(this.findChannel('welcome'))} channel. Once new users run the \`/read\` command mentioned in said channel, they will be given this role, which grants them access to view and chat in all other channels. Members who have already been part of the server at the time this change was introduced were given this role manually to spare them the hassle of reading the rules they were already familiar with.`);
+      this.reply(`The purpose of the Informed role is to distinguish users who've read the server rules in the ${this.mention(this.findChannel(channelNames.WELCOME))} channel. Once new users run the \`/read\` command mentioned in said channel, they will be given this role, which grants them access to view and chat in all other channels. Members who have already been part of the server at the time this change was introduced were given this role manually to spare them the hassle of reading the rules they were already familiar with.`);
       // noinspection UnnecessaryReturnStatementJS
       return;
     }
