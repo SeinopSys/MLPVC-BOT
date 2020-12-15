@@ -1,7 +1,7 @@
 module.exports = {
   CASUAL: 'casual',
   GAMES: 'games',
-  SUPPORT: 'support',
+  SUPPORT: 'club-helpdesk',
   VECTORS: 'vectors',
   SPOILERS: 'spoilers',
   SUPER_SPOILERS: 'superspoilers',
