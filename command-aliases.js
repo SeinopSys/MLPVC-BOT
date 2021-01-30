@@ -8,6 +8,7 @@ const list = {
   'vectorapp': ['vapp'],
   'welcomemsg': ['wm'],
   'help': ['cmds','commands'],
+  'rules': ['rule'],
 };
 
 const assoc = {};
